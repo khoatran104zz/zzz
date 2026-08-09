@@ -50,6 +50,55 @@ TaskFlow provides a multi-phase system architecture supporting single-user perso
 | 14 | 3.3.16 | Quản lý Docs/Wiki | Admin / Manager / Staff |
 | 15 | 3.3.17 | Quản lý thông báo | Admin / Manager / Staff |
 
+---
+
+### 2.3 MÔ TẢ CHI TIẾT USE CASE 3.3.15 - XEM DASHBOARD
+
+#### **Hình 3.15 Biểu đồ Use Case Xem Dashboard**
+- **Tên Use Case**: Xem Dashboard (Dashboard Overview)
+- **Actor**: Admin, Manager, Staff
+- **Mục đích**: Cung cấp giao diện tổng quan giúp Admin, Manager và Staff theo dõi tình trạng Workspace, Project và tiến độ công việc trong hệ thống (tùy chỉnh phù hợp theo từng vai trò).
+- **Tiền điều kiện**:
+  1. Người dùng đã đăng nhập vào hệ thống.
+  2. Người dùng (Admin, Manager hoặc Staff) có quyền truy cập Dashboard.
+  3. Hệ thống có dữ liệu Workspace, Project hoặc Task để thống kê.
+
+#### **Quy trình thực hiện chuẩn (Main Flow)**:
+- **Bước 1**: Người dùng truy cập chức năng “Dashboard”.
+- **Bước 2**: Hệ thống kiểm tra quyền truy cập và phân loại dữ liệu hiển thị theo vai trò người dùng (Admin xem toàn hệ thống, Manager xem Workspace/Project team, Staff xem công việc cá nhân).
+- **Bước 3**: Hệ thống tải dữ liệu thống kê từ các Workspace và Project mà người dùng có quyền truy cập.
+- **Bước 4**: Hệ thống hiển thị tổng quan số lượng Workspace, Project và Task.
+- **Bước 5**: Hệ thống hiển thị biểu đồ phân bổ trạng thái Task (*To Do, In Progress, In Review, Done*).
+- **Bước 6**: Hệ thống hiển thị biểu đồ phân bổ mức độ ưu tiên của Task (*Low, Medium, High, Urgent*).
+- **Bước 7**: Hệ thống hiển thị thống kê số lượng Task đã hoàn thành trong 7 ngày gần nhất (Productivity Chart).
+- **Bước 8**: Hệ thống hiển thị danh sách Task sắp đến hạn hoặc đã quá hạn (Overdue Alert List).
+
+#### **Kịch bản phụ (Alternative & Exception Flows)**:
+- **Trường hợp 1 (Lọc Dashboard theo thời gian - extend)**:
+  1. Người dùng lựa chọn khoảng thời gian muốn xem (*Hôm nay, 7 ngày, 30 ngày*).
+  2. Hệ thống cập nhật dữ liệu thống kê theo khoảng thời gian được chọn.
+  3. Dashboard hiển thị lại các biểu đồ và số liệu tương ứng.
+- **Trường hợp 2 (Xem Task sắp đến hạn hoặc quá hạn - extend)**:
+  1. Người dùng chọn khu vực cảnh báo trên Dashboard.
+  2. Hệ thống hiển thị danh sách các Task sắp đến hạn hoặc đã quá hạn.
+  3. Người dùng có thể chọn Task để xem chi tiết.
+- **Trường hợp 3 (Không có dữ liệu thống kê)**:
+  1. Hệ thống không tìm thấy dữ liệu trong khoảng thời gian được chọn.
+  2. Dashboard hiển thị trạng thái không có dữ liệu (Empty State).
+  3. Hệ thống thông báo: *“Không có dữ liệu thống kê trong khoảng thời gian đã chọn.”*
+- **Trường hợp 4 (Người dùng không có quyền truy cập)**:
+  1. Người dùng truy cập Dashboard nhưng không có quyền.
+  2. Hệ thống từ chối yêu cầu.
+  3. Hiển thị thông báo: *“Bạn không có quyền truy cập Dashboard.”*
+- **Trường hợp 5 (Lỗi hệ thống)**:
+  1. Hệ thống gặp lỗi khi tải dữ liệu thống kê.
+  2. Dashboard không thể hiển thị đầy đủ dữ liệu.
+  3. Hệ thống thông báo: *“Không thể tải dữ liệu Dashboard, vui lòng thử lại sau.”*
+
+#### **Hậu điều kiện (Post-conditions)**:
+- **Nếu thành công**: Dashboard hiển thị các số liệu và biểu đồ mới nhất. Admin, Manager và Staff có thể theo dõi tình hình hoạt động của hệ thống và công việc cá nhân. Không có dữ liệu nghiệp vụ bị thay đổi.
+- **Nếu thất bại**: Dashboard không hiển thị đầy đủ dữ liệu. Dữ liệu Workspace, Project và Task không bị thay đổi. Người dùng có thể thử tải lại Dashboard sau.
+
 - **Phase 3: Productivity Extensions**
   - Interactive Kanban boards, integrated Calendar views, rich Notes, and Habit Tracking.
 
