@@ -28,9 +28,7 @@ export function WorkspaceTimelineTab({
   const { t } = useTranslation('workspace');
   const { t: tTask } = useTranslation('task');
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
-  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
-  const canManageTasks = isAdmin || isManager;
+  const canCreateTask = !!user;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [period, setPeriod] = useState<'Today' | 'Weeks' | 'Months' | 'Quarters'>('Months');
@@ -113,8 +111,8 @@ export function WorkspaceTimelineTab({
               )}
             </div>
 
-            {/* Add Task Button - Admin & Manager only */}
-            {canManageTasks && (
+            {/* Add Task Button */}
+            {canCreateTask && (
               <div className="p-2 border-t border-surface-border">
                 <button
                   onClick={onOpenCreateTask}

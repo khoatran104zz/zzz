@@ -34,7 +34,8 @@ export function WorkspaceBacklogTab({
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
   const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
-  const canManageTasks = isAdmin || isManager;
+  const canManageSprint = isAdmin || isManager;
+  const canCreateTask = !!user;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [openSprints, setOpenSprints] = useState<Record<string, boolean>>({
@@ -115,7 +116,7 @@ export function WorkspaceBacklogTab({
                 {filteredTasks.filter((t) => t.status === 'TODO').length} / {filteredTasks.length}
               </span>
 
-              {canManageTasks && (
+              {canManageSprint && (
                 <button className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-hover shadow-xs transition">
                   {t('backlog.completeSprint', { defaultValue: 'Hoàn thành Sprint' })}
                 </button>
@@ -212,8 +213,8 @@ export function WorkspaceBacklogTab({
                 })
               )}
 
-              {/* Create Task Action inside Sprint - Admin & Manager only */}
-              {canManageTasks && (
+              {/* Create Task Action inside Sprint */}
+              {canCreateTask && (
                 <div className="p-2 bg-surface-alt/30">
                   <button
                     onClick={onOpenCreateTask}
@@ -242,7 +243,7 @@ export function WorkspaceBacklogTab({
             </div>
 
             <div className="flex items-center space-x-2">
-              {canManageTasks && (
+              {canManageSprint && (
                 <button className="rounded-lg border border-surface-border bg-surface px-3 py-1 text-xs font-semibold text-text-secondary hover:bg-surface-alt shadow-xs transition">
                   {t('backlog.startSprint', { defaultValue: 'Bắt đầu Sprint' })}
                 </button>
@@ -259,7 +260,7 @@ export function WorkspaceBacklogTab({
                 {t('backlog.planSprintPlaceholder', { defaultValue: 'Lập kế hoạch Sprint bằng cách kéo thả công việc vào đây.' })}
               </div>
 
-              {canManageTasks && (
+              {canCreateTask && (
                 <div className="p-2 bg-surface-alt/30 border-t border-surface-border">
                   <button
                     onClick={onOpenCreateTask}

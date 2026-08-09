@@ -35,7 +35,8 @@ export function WorkspaceBoardTab({
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
   const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
-  const canManageTasks = isAdmin || isManager;
+  const canManageSprint = isAdmin || isManager;
+  const canCreateTask = !!user;
 
   const columns: { id: TaskStatus; title: string; color: string }[] = [
     { id: 'TODO', title: tTask('statuses.TODO', { defaultValue: 'Cần làm' }), color: 'bg-slate-400' },
@@ -86,7 +87,7 @@ export function WorkspaceBoardTab({
         </div>
 
         <div className="flex items-center space-x-2">
-          {canManageTasks && (
+          {canManageSprint && (
             <button className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-primary-hover shadow-xs transition">
               {t('backlog.completeSprint', { defaultValue: 'Hoàn thành Sprint' })}
             </button>
@@ -175,8 +176,8 @@ export function WorkspaceBoardTab({
                 </div>
               </div>
 
-              {/* Bottom Quick Create Button - Admin & Manager only */}
-              {canManageTasks && (
+              {/* Bottom Quick Create Button */}
+              {canCreateTask && (
                 <button
                   onClick={onOpenCreateTask}
                   className="mt-3 flex w-full items-center justify-center space-x-1 rounded-lg border border-dashed border-surface-border p-2 text-xs font-semibold text-text-secondary hover:bg-surface hover:text-primary hover:border-primary/50 transition"
@@ -189,8 +190,8 @@ export function WorkspaceBoardTab({
           );
         })}
 
-        {/* Add Column Button - Admin & Manager only */}
-        {canManageTasks && (
+        {/* Add Column Button */}
+        {canCreateTask && (
           <button
             onClick={() => alert(t('board.createTask', { defaultValue: 'Tạo cột mới' }))}
             className="flex items-center justify-center rounded-xl border border-dashed border-surface-border p-4 text-text-muted hover:border-primary hover:text-primary transition min-h-[420px]"

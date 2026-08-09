@@ -16,9 +16,7 @@ export default function Topbar() {
   const { t: tTask } = useTranslation('task');
   const { t: tNav } = useTranslation('navigation');
 
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
-  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
-  const canCreateTask = isAdmin || isManager;
+  const canCreateTask = !!user;
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 

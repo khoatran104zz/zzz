@@ -27,13 +27,28 @@ TaskFlow provides a multi-phase system architecture supporting single-user perso
 
 ### 2.2 Enterprise Permission Matrix (Ma trận phân quyền 3 Role)
 
-| Chức năng / Thông tin xem | 🛡️ Admin | 👔 Manager | 🧑‍💻 Staff / Member |
-|---|---|---|---|
-| Quản lý Thành viên (User Management) | Toàn quyền (Thêm, Sửa, Khóa user, Đổi Role) | Mời/Xóa thành viên trong Project | Chỉ xem danh sách đồng nghiệp |
-| Dashboard & Báo cáo thống kê | Thống kê toàn hệ thống & doanh nghiệp | Thống kê tiến độ Dự án / Team Sprint | Thống kê task & lịch cá nhân |
-| Quản lý Dự án & Sprints | Xem/Xóa/Archive mọi Project | Tạo & Cấu hình Project / Sprints được giao | Chỉ xem các Project được gán |
-| Giao việc & Duyệt Task | Giao task cho bất kỳ ai, can thiệp toàn bộ | Giao task cho Nhân viên, set Priority/Sprint | Cập nhật status task cá nhân (`To Do` -> `Done`) |
-| Nhật ký hệ thống (Audit Logs) | Xem toàn bộ nhật ký thao tác | Xem nhật ký trong Dự án | Không có quyền xem |
+### 2.2 MA TRẬN PHÂN QUYỀN VÀ USE CASE (USE CASE & ACTOR MATRIX)
+
+> [!NOTE]
+> **Quyền hạn toàn năng của Admin**: Admin có quyền quản lý đối với mọi tác vụ trong hệ thống.
+
+| STT | Mục | Use Case chính | Actor Được Phép Thực Hiện |
+| :---: | :---: | :--- | :--- |
+| 1 | 3.3.3 | Đăng ký tài khoản | Admin / Manager / Staff |
+| 2 | 3.3.4 | Đăng nhập | Admin / Manager / Staff |
+| 3 | 3.3.5 | Tạo Workspace | Admin / Manager |
+| 4 | 3.3.6 | Quản lý Workspace | Admin / Manager |
+| 5 | 3.3.7 | Quản lý thành viên | Admin / Manager |
+| 6 | 3.3.8 | Quản lý biểu mẫu yêu cầu | Admin / Manager |
+| 7 | 3.3.9 | Tạo Task | Admin / Manager / Staff |
+| 8 | 3.3.10 | Quản lý Task | Admin / Manager / Staff |
+| 9 | 3.3.11 | Quản lý Sprint | Admin / Manager |
+| 10 | 3.3.12 | Quản lý Backlog | Admin / Manager / Staff |
+| 11 | 3.3.13 | Quản lý Kanban Board | Admin / Manager / Staff |
+| 12 | 3.3.14 | Xem Timeline | Admin / Manager / Staff |
+| 13 | 3.3.15 | Xem Dashboard | Admin / Manager / Staff |
+| 14 | 3.3.16 | Quản lý Docs/Wiki | Admin / Manager / Staff |
+| 15 | 3.3.17 | Quản lý thông báo | Admin / Manager / Staff |
 
 - **Phase 3: Productivity Extensions**
   - Interactive Kanban boards, integrated Calendar views, rich Notes, and Habit Tracking.
