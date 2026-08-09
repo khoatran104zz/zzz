@@ -11,9 +11,7 @@ import { WorkspaceSummaryTab } from '@/features/workspace/components/tabs/Worksp
 import { WorkspaceBacklogTab } from '@/features/workspace/components/tabs/WorkspaceBacklogTab';
 import { WorkspaceBoardTab } from '@/features/workspace/components/tabs/WorkspaceBoardTab';
 import { WorkspaceTimelineTab } from '@/features/workspace/components/tabs/WorkspaceTimelineTab';
-import { WorkspaceDocsTab } from '@/features/workspace/components/tabs/WorkspaceDocsTab';
 import { WorkspaceFormsTab } from '@/features/workspace/components/tabs/WorkspaceFormsTab';
-import { WorkspaceCodeTab } from '@/features/workspace/components/tabs/WorkspaceCodeTab';
 import { GlobalTaskModal } from '@/features/task/components/global-task-modal';
 import { InviteDialog } from '@/features/team/components/invite-dialog';
 
@@ -77,11 +75,7 @@ export default function WorkspaceDetailPage() {
         />
       )}
 
-      {activeTab === 'code' && <WorkspaceCodeTab />}
-
-      {activeTab === 'docs' && <WorkspaceDocsTab workspaceId={workspaceId} />}
-
-      {activeTab === 'forms' && <WorkspaceFormsTab />}
+      {activeTab === 'forms' && <WorkspaceFormsTab workspaceId={workspaceId} />}
 
       {/* Dialogs */}
       <GlobalTaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} />

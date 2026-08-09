@@ -18,9 +18,22 @@ TaskFlow provides a multi-phase system architecture supporting single-user perso
   - Core Task, Project, Workspace, Tag, and Reminders modeling.
   - Subtask checklists, status tracking, and priority management.
 
-- **Phase 2: Team Workspaces & Roles**
+- **Phase 2: Team Workspaces & Enterprise 3-Role Model**
   - Multi-tenant workspace partitioning.
-  - Fine-grained Role-Based Access Control (RBAC) and permission matrices.
+  - Fine-grained Role-Based Access Control (RBAC) supporting 3 enterprise account roles:
+    - **Quản trị viên (Admin - `ROLE_ADMIN` / `ADMIN`)**: Quản trị toàn bộ hệ thống & workspace, quản lý user, xem nhật ký hệ thống (Audit Logs), thống kê toàn thể.
+    - **Quản lý (Manager - `ROLE_MANAGER` / `MANAGER`)**: Điều phối dự án, lập kế hoạch Sprint, giao việc cho nhân viên, quản lý Backlog & xem báo cáo hiệu suất team.
+    - **Nhân viên (Staff - `ROLE_USER` / `MEMBER`)**: Thực thi công việc cá nhân được giao, cập nhật tiến độ task (To Do -> Done), thêm checklist, thảo luận và làm việc cá nhân.
+
+### 2.2 Enterprise Permission Matrix (Ma trận phân quyền 3 Role)
+
+| Chức năng / Thông tin xem | 🛡️ Admin | 👔 Manager | 🧑‍💻 Staff / Member |
+|---|---|---|---|
+| Quản lý Thành viên (User Management) | Toàn quyền (Thêm, Sửa, Khóa user, Đổi Role) | Mời/Xóa thành viên trong Project | Chỉ xem danh sách đồng nghiệp |
+| Dashboard & Báo cáo thống kê | Thống kê toàn hệ thống & doanh nghiệp | Thống kê tiến độ Dự án / Team Sprint | Thống kê task & lịch cá nhân |
+| Quản lý Dự án & Sprints | Xem/Xóa/Archive mọi Project | Tạo & Cấu hình Project / Sprints được giao | Chỉ xem các Project được gán |
+| Giao việc & Duyệt Task | Giao task cho bất kỳ ai, can thiệp toàn bộ | Giao task cho Nhân viên, set Priority/Sprint | Cập nhật status task cá nhân (`To Do` -> `Done`) |
+| Nhật ký hệ thống (Audit Logs) | Xem toàn bộ nhật ký thao tác | Xem nhật ký trong Dự án | Không có quyền xem |
 
 - **Phase 3: Productivity Extensions**
   - Interactive Kanban boards, integrated Calendar views, rich Notes, and Habit Tracking.

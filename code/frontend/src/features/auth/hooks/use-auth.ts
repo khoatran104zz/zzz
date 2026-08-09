@@ -17,6 +17,8 @@ export function useCurrentUser() {
       return user;
     },
     enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }
 

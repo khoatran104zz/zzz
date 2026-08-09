@@ -39,6 +39,9 @@ export function DashboardHome() {
   const user = useAuthStore((state) => state.user);
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
 
+  const isAdminUser = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManagerUser = !isAdminUser && (user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com');
+
   const { data: summary } = useDashboardSummary();
   const { data: todayTasks = [] } = useTodayTasks();
   const { data: upcomingTasks = [] } = useUpcomingTasks();
@@ -51,15 +54,39 @@ export function DashboardHome() {
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl border border-surface-border bg-surface p-6 shadow-sm">
         <div className="space-y-2">
-          <div className="inline-flex items-center space-x-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{tNav('menu.dashboard')}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center space-x-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>{tNav('menu.dashboard')}</span>
+            </div>
+            {/* Role Badge */}
+            {isAdminUser && (
+              <span className="inline-flex items-center space-x-1 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-500">
+                <span>🛡️</span>
+                <span>{tNav('roles.admin', { defaultValue: 'Quản trị viên' })}</span>
+              </span>
+            )}
+            {isManagerUser && (
+              <span className="inline-flex items-center space-x-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500">
+                <span>👔</span>
+                <span>{tNav('roles.manager', { defaultValue: 'Quản lý' })}</span>
+              </span>
+            )}
+            {!isAdminUser && !isManagerUser && (
+              <span className="inline-flex items-center space-x-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-500">
+                <span>🧑‍💻</span>
+                <span>{tNav('roles.staff', { defaultValue: 'Nhân viên' })}</span>
+              </span>
+            )}
           </div>
+
           <h1 className="text-2xl font-extrabold text-text-primary font-heading tracking-tight">
             Xin chào, <span className="text-primary">{user?.fullName || ''}</span> 👋
           </h1>
           <p className="text-xs text-text-secondary max-w-xl leading-relaxed">
-            Theo dõi tổng quan tiến độ công việc, chỉ số hiệu suất và hoạt động mới nhất trong không gian làm việc của bạn.
+            {isAdminUser && 'Hệ thống Quản trị: Theo dõi toàn bộ tiến độ công việc, dự án và nhật ký hoạt động hệ thống.'}
+            {isManagerUser && 'Hệ thống Quản lý: Điều phối dự án, theo dõi tiến độ Sprint và khối lượng công việc nhóm.'}
+            {!isAdminUser && !isManagerUser && 'Không gian làm việc Nhân viên: Theo dõi các công việc được giao, tiến độ cá nhân và lịch công việc.'}
           </p>
         </div>
       </div>

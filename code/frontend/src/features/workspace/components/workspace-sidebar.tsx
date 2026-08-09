@@ -27,6 +27,8 @@ export function WorkspaceSidebar() {
   const logoutMutation = useLogout();
 
   const isAdminUser = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManagerUser = !isAdminUser && (user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com');
+  const isStaffUser = !isAdminUser && !isManagerUser;
 
   const isDashboardActive = pathname === '/' || pathname === '/dashboard';
   const isCalendarActive = pathname === '/calendar';
@@ -34,6 +36,12 @@ export function WorkspaceSidebar() {
   const isWhiteboardActive = pathname.includes('/whiteboards');
   const isSettingsActive = pathname.startsWith('/settings');
   const isAdminActive = pathname.startsWith('/admin');
+
+  const roleBadgeConfig = isAdminUser
+    ? { label: tNav('roles.admin', { defaultValue: 'Quản trị viên' }), icon: '🛡️', style: 'bg-red-500/10 text-red-500 border-red-500/20' }
+    : isManagerUser
+    ? { label: tNav('roles.manager', { defaultValue: 'Quản lý' }), icon: '👔', style: 'bg-amber-500/10 text-amber-500 border-amber-500/20' }
+    : { label: tNav('roles.staff', { defaultValue: 'Nhân viên' }), icon: '🧑‍💻', style: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
 
   return (
     <aside className="hidden md:flex h-screen w-[260px] flex-col border-r border-surface-border bg-surface-sidebar p-4 text-text-secondary transition-colors">
@@ -60,7 +68,7 @@ export function WorkspaceSidebar() {
             }`}
           >
             <ShieldAlert className="h-4 w-4 shrink-0 text-red-500" />
-            <span className="truncate">Quản trị hệ thống</span>
+            <span className="truncate">{tNav('roles.systemAdmin', { defaultValue: 'Quản trị hệ thống' })}</span>
           </Link>
         )}
 
@@ -136,18 +144,23 @@ export function WorkspaceSidebar() {
       <div className="border-t border-surface-border pt-3 mt-auto">
         <div className="flex items-center justify-between rounded-xl bg-surface-alt p-2 shadow-xs">
           <div className="flex items-center space-x-2.5 truncate">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-sm shrink-0">
               {user?.fullName?.substring(0, 1).toUpperCase() || 'U'}
             </div>
-            <div className="truncate">
+            <div className="truncate min-w-0">
               <p className="text-xs font-semibold text-text-primary truncate">{user?.fullName}</p>
-              <p className="text-[10px] text-text-muted truncate">{user?.email}</p>
+              <div className="mt-0.5 flex items-center space-x-1">
+                <span className={`inline-flex items-center space-x-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold leading-none ${roleBadgeConfig.style}`}>
+                  <span>{roleBadgeConfig.icon}</span>
+                  <span>{roleBadgeConfig.label}</span>
+                </span>
+              </div>
             </div>
           </div>
           <button
             onClick={() => logoutMutation.mutate()}
             title={tNav('user.logout', { defaultValue: 'Đăng xuất' })}
-            className="rounded-lg p-1.5 text-text-muted hover:bg-status-error/10 hover:text-status-error transition"
+            className="rounded-lg p-1.5 text-text-muted hover:bg-status-error/10 hover:text-status-error transition shrink-0"
           >
             <LogOut className="h-4 w-4" />
           </button>

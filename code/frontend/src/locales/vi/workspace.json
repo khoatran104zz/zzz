@@ -19,11 +19,9 @@
   "switchWorkspace": "Chuyển không gian làm việc",
   "tabs": {
     "summary": "Tổng quan",
-    "backlog": "Danh sách đọng",
+    "backlog": "Backlog",
     "board": "Bảng công việc",
-    "code": "Mã nguồn",
-    "timeline": "Tiến độ",
-    "docs": "Tài liệu",
+    "timeline": "Tiến độ (Gantt)",
     "forms": "Biểu mẫu"
   },
   "summary": {
@@ -44,22 +42,31 @@
     "noActivityYet": "Chưa có hoạt động nào",
     "noActivityDesc": "Tạo công việc và mời thành viên vào không gian để xem hoạt động.",
     "priorityBreakdown": "Phân bổ độ ưu tiên",
-    "typesOfWork": "Phân loại công việc"
+    "typesOfWork": "Phân loại công việc",
+    "viewAllItems": "Xem tất cả công việc",
+    "highPriority": "Ưu tiên cao",
+    "mediumPriority": "Ưu tiên trung bình",
+    "lowPriority": "Ưu tiên thấp",
+    "itemsCount": "công việc"
   },
   "backlog": {
-    "searchBacklog": "Tìm kiếm danh sách đọng",
+    "searchBacklog": "Tìm kiếm Backlog...",
     "completeSprint": "Hoàn thành Sprint",
     "startSprint": "Bắt đầu Sprint",
     "noItemsInSprint": "Chưa có công việc nào trong Sprint này.",
-    "planSprintPlaceholder": "Lập kế hoạch Sprint bằng cách kéo thả công việc vào đây."
+    "planSprintPlaceholder": "Lập kế hoạch Sprint bằng cách kéo thả công việc vào đây.",
+    "workItems": "công việc",
+    "create": "Tạo công việc"
   },
   "board": {
-    "searchBoard": "Tìm kiếm trên bảng",
+    "searchBoard": "Tìm kiếm trên bảng...",
     "group": "Nhóm",
-    "createTask": "Tạo công việc"
+    "createTask": "Tạo công việc",
+    "addColumn": "Tạo cột mới",
+    "subtasks": "Việc phụ"
   },
   "timeline": {
-    "searchTimeline": "Tìm kiếm trên tiến độ",
+    "searchTimeline": "Tìm kiếm trên tiến độ...",
     "work": "Công việc",
     "status": "Trạng thái",
     "assignee": "Người thực hiện",
@@ -67,20 +74,9 @@
     "today": "Hôm nay",
     "weeks": "Tuần",
     "months": "Tháng",
-    "quarters": "Quý"
-  },
-  "code": {
-    "title": "Mã nguồn & Kho chứa (Repository)",
-    "subtitle": "Kết nối GitHub, GitLab hoặc Bitbucket để theo dõi commit và pull request.",
-    "connectRepo": "Kết nối kho chứa mã nguồn",
-    "connectDesc": "Tự động liên kết commit, nhánh và pull request với các công việc.",
-    "connectButton": "Kết nối GitHub Repository"
-  },
-  "docs": {
-    "title": "Tài liệu & Wiki Kho tri thức",
-    "subtitle": "Tài liệu tập trung cho dự án, quy trình và thiết kế hệ thống.",
-    "newDocument": "Tạo tài liệu mới",
-    "viewDoc": "Xem tài liệu"
+    "quarters": "Quý",
+    "noTasks": "Không tìm thấy công việc nào trên tiến độ.",
+    "create": "Tạo công việc"
   },
   "forms": {
     "title": "Giải pháp thu thập và theo dõi yêu cầu công việc",
@@ -88,12 +84,26 @@
     "submitForm": "Gửi biểu mẫu",
     "trackRequests": "Theo dõi yêu cầu",
     "captureDetails": "Thu thập chi tiết",
+    "captureDesc": "Thu thập đầy đủ thông tin và yêu cầu trực tiếp từ người dùng.",
     "prioritizeWork": "Ưu tiên xử lý",
+    "prioritizeDesc": "Tự động chuyển đổi yêu cầu thành công việc trong danh sách đọng.",
     "createForm": "Tạo biểu mẫu mới"
   },
   "messages": {
     "createSuccess": "Tạo không gian làm việc thành công!",
     "updateSuccess": "Cập nhật không gian làm việc thành công!",
     "deleteSuccess": "Đã xóa không gian làm việc."
+  },
+  "roles": {
+    "admin": "Quản trị viên Workspace",
+    "manager": "Quản lý Dự án",
+    "staff": "Nhân viên Thực thi",
+    "owner": "Chủ sở hữu"
+  },
+  "permissions": {
+    "adminDesc": "Toàn quyền quản trị và cấu hình không gian làm việc",
+    "managerDesc": "Tạo dự án, giao việc và điều phối thành viên",
+    "staffDesc": "Thực hiện và cập nhật tiến độ công việc được giao",
+    "readOnlyNotice": "Chế độ xem dành cho Nhân viên"
   }
 }

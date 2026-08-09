@@ -16,6 +16,10 @@ export default function Topbar() {
   const { t: tTask } = useTranslation('task');
   const { t: tNav } = useTranslation('navigation');
 
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
+  const canCreateTask = isAdmin || isManager;
+
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   return (
@@ -33,14 +37,16 @@ export default function Topbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Prominent Create Button */}
-        <button
-          onClick={() => setIsTaskModalOpen(true)}
-          className="flex items-center space-x-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-hover active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">{tTask('createTask')}</span>
-        </button>
+        {/* Prominent Create Button - Admin & Manager Only */}
+        {canCreateTask && (
+          <button
+            onClick={() => setIsTaskModalOpen(true)}
+            className="flex items-center space-x-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-hover active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">{tTask('createTask')}</span>
+          </button>
+        )}
 
         <NotificationDropdown />
 

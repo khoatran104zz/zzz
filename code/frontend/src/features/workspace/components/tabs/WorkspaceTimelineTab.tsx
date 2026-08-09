@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   Filter, 
@@ -24,13 +25,28 @@ export function WorkspaceTimelineTab({
   isLoading,
   onOpenCreateTask,
 }: WorkspaceTimelineTabProps) {
+  const { t } = useTranslation('workspace');
+  const { t: tTask } = useTranslation('task');
   const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
+  const canManageTasks = isAdmin || isManager;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [period, setPeriod] = useState<'Today' | 'Weeks' | 'Months' | 'Quarters'>('Months');
 
   const filteredTasks = tasks.filter((t) =>
     t.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getPeriodLabel = (p: 'Today' | 'Weeks' | 'Months' | 'Quarters') => {
+    switch (p) {
+      case 'Today': return t('timeline.today', { defaultValue: 'Hôm nay' });
+      case 'Weeks': return t('timeline.weeks', { defaultValue: 'Tuần' });
+      case 'Months': return t('timeline.months', { defaultValue: 'Tháng' });
+      case 'Quarters': return t('timeline.quarters', { defaultValue: 'Quý' });
+    }
+  };
 
   return (
     <div className="space-y-4 text-text-primary pb-12">
@@ -41,7 +57,7 @@ export function WorkspaceTimelineTab({
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-text-muted" />
             <input
               type="text"
-              placeholder="Search timeline"
+              placeholder={t('timeline.searchTimeline', { defaultValue: 'Tìm kiếm trên tiến độ...' })}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-lg border border-surface-border bg-surface pl-9 pr-3 py-1.5 text-xs focus:border-primary focus:outline-hidden shadow-xs"
@@ -54,7 +70,7 @@ export function WorkspaceTimelineTab({
 
           <button className="flex items-center space-x-1.5 rounded-lg border border-surface-border bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface-alt shadow-xs">
             <Filter className="h-3.5 w-3.5" />
-            <span>Filter</span>
+            <span>{t('summary.filter', { defaultValue: 'Bộ lọc' })}</span>
           </button>
         </div>
       </div>
@@ -66,26 +82,26 @@ export function WorkspaceTimelineTab({
           <div className="w-80 shrink-0 border-r border-surface-border bg-surface">
             {/* Table Header */}
             <div className="grid grid-cols-3 gap-2 bg-surface-alt/70 px-4 py-3 text-[11px] font-bold text-text-muted border-b border-surface-border uppercase">
-              <span className="col-span-1">Work</span>
-              <span className="text-center">Status</span>
-              <span className="text-right">Assignee</span>
+              <span className="col-span-1">{t('timeline.work', { defaultValue: 'Công việc' })}</span>
+              <span className="text-center">{t('timeline.status', { defaultValue: 'Trạng thái' })}</span>
+              <span className="text-right">{t('timeline.assignee', { defaultValue: 'Người thực hiện' })}</span>
             </div>
 
             {/* Sprints Group */}
             <div className="p-3 text-xs font-bold text-text-primary font-heading border-b border-surface-border/50 bg-surface-alt/20">
-              Sprints
+              {t('timeline.sprints', { defaultValue: 'Chuỗi Sprints' })}
             </div>
 
             {/* Task Rows */}
             <div className="divide-y divide-surface-border/40">
               {filteredTasks.length === 0 ? (
-                <div className="p-4 text-xs text-text-muted text-center">No timeline tasks found.</div>
+                <div className="p-4 text-xs text-text-muted text-center">{t('timeline.noTasks', { defaultValue: 'Không tìm thấy công việc nào trên tiến độ.' })}</div>
               ) : (
                 filteredTasks.map((task) => (
                   <div key={task.id} className="grid grid-cols-3 gap-2 items-center px-4 py-2.5 text-xs hover:bg-surface-alt/40 transition">
                     <span className="font-semibold text-text-primary truncate">{task.title}</span>
                     <span className="text-center font-medium text-[10px] uppercase rounded-full bg-surface-alt py-0.5 text-text-secondary">
-                      {task.status || 'TODO'}
+                      {tTask(`statuses.${task.status || 'TODO'}`, { defaultValue: task.status || 'TODO' })}
                     </span>
                     <div className="flex justify-end">
                       <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
@@ -97,16 +113,18 @@ export function WorkspaceTimelineTab({
               )}
             </div>
 
-            {/* Add Task Button */}
-            <div className="p-2 border-t border-surface-border">
-              <button
-                onClick={onOpenCreateTask}
-                className="flex items-center space-x-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Create</span>
-              </button>
-            </div>
+            {/* Add Task Button - Admin & Manager only */}
+            {canManageTasks && (
+              <div className="p-2 border-t border-surface-border">
+                <button
+                  onClick={onOpenCreateTask}
+                  className="flex items-center space-x-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>{t('timeline.create', { defaultValue: 'Tạo công việc' })}</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Right Gantt Calendar View */}
@@ -154,7 +172,7 @@ export function WorkspaceTimelineTab({
                   : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
               }`}
             >
-              {p}
+              {getPeriodLabel(p)}
             </button>
           ))}
           <div className="h-4 w-px bg-surface-border mx-1" />

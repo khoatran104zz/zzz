@@ -25,5 +25,11 @@
   "user": {
     "viewProfile": "Xem trang cá nhân",
     "logout": "Đăng xuất"
+  },
+  "roles": {
+    "admin": "Quản trị viên",
+    "manager": "Quản lý",
+    "staff": "Nhân viên",
+    "systemAdmin": "Quản trị hệ thống"
   }
 }

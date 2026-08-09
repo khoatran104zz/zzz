@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,8 +29,13 @@ interface GlobalTaskModalProps {
 }
 
 export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
+  const [mounted, setMounted] = useState(false);
   const { t: tTask } = useTranslation('task');
   const { t: tCommon } = useTranslation('common');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: workspaces = [] } = useWorkspaces();
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
@@ -55,7 +61,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
 
   const createWorkspaceTaskMutation = useCreateWorkspaceTask(workspaceId);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const onSubmit = (data: TaskFormData) => {
     setErrorMessage(null);
@@ -87,9 +93,15 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
     );
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md">
-      <div className="w-full max-w-lg rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl space-y-4 text-text-primary">
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="relative my-auto w-full max-w-lg rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl space-y-4 text-text-primary max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-surface-border pb-4">
           <div className="flex items-center space-x-2.5">
@@ -106,6 +118,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
           >
@@ -210,4 +223,6 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

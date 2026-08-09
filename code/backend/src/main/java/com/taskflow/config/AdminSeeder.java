@@ -39,32 +39,51 @@ public class AdminSeeder implements CommandLineRunner {
         RoleEntity adminRole = roleRepository.findByName("ROLE_ADMIN")
                 .orElseGet(() -> roleRepository.save(new RoleEntity("ROLE_ADMIN", "System Administrator Role")));
 
+        RoleEntity managerRole = roleRepository.findByName("ROLE_MANAGER")
+                .orElseGet(() -> roleRepository.save(new RoleEntity("ROLE_MANAGER", "Project Manager Role")));
+
         RoleEntity userRole = roleRepository.findByName("ROLE_USER")
-                .orElseGet(() -> roleRepository.save(new RoleEntity("ROLE_USER", "Standard User Role")));
+                .orElseGet(() -> roleRepository.save(new RoleEntity("ROLE_USER", "Standard Staff Role")));
 
-        Set<RoleEntity> roles = new HashSet<>();
-        roles.add(adminRole);
-        roles.add(userRole);
+        // 1. Seed/Update Admin Account (admin@gmail.com)
+        Set<RoleEntity> adminRoles = new HashSet<>();
+        adminRoles.add(adminRole);
+        adminRoles.add(userRole);
+        seedUser(adminEmail, rawPassword, "System Administrator", adminRoles);
 
-        userRepository.findByEmail(adminEmail).ifPresentOrElse(
+        // 2. Seed/Update Manager Account (manager@gmail.com)
+        Set<RoleEntity> managerRoles = new HashSet<>();
+        managerRoles.add(managerRole);
+        managerRoles.add(userRole);
+        seedUser("manager@gmail.com", rawPassword, "Project Manager", managerRoles);
+
+        // 3. Seed/Update Staff Account (staff@gmail.com)
+        Set<RoleEntity> staffRoles = new HashSet<>();
+        staffRoles.add(userRole);
+        seedUser("staff@gmail.com", rawPassword, "Staff Employee", staffRoles);
+    }
+
+    private void seedUser(String email, String password, String fullName, Set<RoleEntity> roles) {
+        userRepository.findByEmail(email).ifPresentOrElse(
                 user -> {
-                    user.setPassword(passwordEncoder.encode(rawPassword));
+                    user.setPassword(passwordEncoder.encode(password));
+                    user.setFullName(fullName);
                     user.setIsEmailVerified(true);
                     user.setStatus("ACTIVE");
                     user.setRoles(roles);
                     userRepository.save(user);
-                    log.info("Successfully updated existing Admin account: {}", adminEmail);
+                    log.info("Successfully updated existing account: {} [{}]", email, fullName);
                 },
                 () -> {
-                    UserEntity adminUser = new UserEntity();
-                    adminUser.setEmail(adminEmail);
-                    adminUser.setPassword(passwordEncoder.encode(rawPassword));
-                    adminUser.setFullName("System Administrator");
-                    adminUser.setIsEmailVerified(true);
-                    adminUser.setStatus("ACTIVE");
-                    adminUser.setRoles(roles);
-                    userRepository.save(adminUser);
-                    log.info("Successfully seeded new Admin account: {}", adminEmail);
+                    UserEntity user = new UserEntity();
+                    user.setEmail(email);
+                    user.setPassword(passwordEncoder.encode(password));
+                    user.setFullName(fullName);
+                    user.setIsEmailVerified(true);
+                    user.setStatus("ACTIVE");
+                    user.setRoles(roles);
+                    userRepository.save(user);
+                    log.info("Successfully seeded new demo account: {} [{}]", email, fullName);
                 }
         );
     }

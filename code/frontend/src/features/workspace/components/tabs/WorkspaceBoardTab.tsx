@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   Filter, 
@@ -26,15 +27,21 @@ export function WorkspaceBoardTab({
   isLoading,
   onOpenCreateTask,
 }: WorkspaceBoardTabProps) {
+  const { t } = useTranslation('workspace');
+  const { t: tTask } = useTranslation('task');
   const user = useAuthStore((state) => state.user);
   const updateStatusMutation = useUpdateTaskStatus();
   const [searchTerm, setSearchTerm] = useState('');
 
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
+  const canManageTasks = isAdmin || isManager;
+
   const columns: { id: TaskStatus; title: string; color: string }[] = [
-    { id: 'TODO', title: 'To Do', color: 'bg-slate-400' },
-    { id: 'IN_PROGRESS', title: 'In Progress', color: 'bg-blue-500' },
-    { id: 'IN_REVIEW', title: 'In Review', color: 'bg-amber-500' },
-    { id: 'DONE', title: 'Done', color: 'bg-emerald-500' },
+    { id: 'TODO', title: tTask('statuses.TODO', { defaultValue: 'Cần làm' }), color: 'bg-slate-400' },
+    { id: 'IN_PROGRESS', title: tTask('statuses.IN_PROGRESS', { defaultValue: 'Đang làm' }), color: 'bg-blue-500' },
+    { id: 'IN_REVIEW', title: tTask('statuses.IN_REVIEW', { defaultValue: 'Đang xem xét' }), color: 'bg-amber-500' },
+    { id: 'DONE', title: tTask('statuses.DONE', { defaultValue: 'Hoàn thành' }), color: 'bg-emerald-500' },
   ];
 
   const formatDueDate = (dateStr?: string) => {
@@ -56,7 +63,7 @@ export function WorkspaceBoardTab({
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-text-muted" />
             <input
               type="text"
-              placeholder="Search board"
+              placeholder={t('board.searchBoard', { defaultValue: 'Tìm kiếm trên bảng...' })}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-lg border border-surface-border bg-surface pl-9 pr-3 py-1.5 text-xs focus:border-primary focus:outline-hidden shadow-xs"
@@ -69,19 +76,21 @@ export function WorkspaceBoardTab({
 
           <button className="flex items-center space-x-1.5 rounded-lg border border-surface-border bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface-alt shadow-xs">
             <Filter className="h-3.5 w-3.5" />
-            <span>Filter</span>
+            <span>{t('summary.filter', { defaultValue: 'Bộ lọc' })}</span>
           </button>
 
           <button className="flex items-center space-x-1.5 rounded-lg border border-surface-border bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface-alt shadow-xs">
             <Layers className="h-3.5 w-3.5" />
-            <span>Group</span>
+            <span>{t('board.group', { defaultValue: 'Nhóm' })}</span>
           </button>
         </div>
 
         <div className="flex items-center space-x-2">
-          <button className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-primary-hover shadow-xs transition">
-            Complete sprint
-          </button>
+          {canManageTasks && (
+            <button className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-primary-hover shadow-xs transition">
+              {t('backlog.completeSprint', { defaultValue: 'Hoàn thành Sprint' })}
+            </button>
+          )}
         </div>
       </div>
 
@@ -130,7 +139,7 @@ export function WorkspaceBoardTab({
 
                         {dueDateStr && (
                           <div className="mt-2.5 flex items-center space-x-1 text-[10px] font-bold text-red-600 dark:text-red-400">
-                            <span>Due date</span>
+                            <span>{tTask('dueDate', { defaultValue: 'Hạn chót' })}</span>
                             <span className="flex items-center space-x-0.5 rounded-sm bg-red-50 px-1.5 py-0.5 dark:bg-red-950/40">
                               <span>{dueDateStr}</span>
                               <AlertTriangle className="h-3 w-3 text-red-500" />
@@ -148,7 +157,7 @@ export function WorkspaceBoardTab({
                             {idx === 1 && (
                               <span className="flex items-center space-x-1 rounded-sm bg-surface-alt px-1.5 py-0.5 text-[10px] font-semibold text-text-muted">
                                 <ListTree className="h-3 w-3" />
-                                <span>Subtasks 0/1</span>
+                                <span>{t('board.subtasks', { defaultValue: 'Việc phụ' })} 0/1</span>
                               </span>
                             )}
 
@@ -166,22 +175,29 @@ export function WorkspaceBoardTab({
                 </div>
               </div>
 
-              {/* Bottom Quick Create Button */}
-              <button
-                onClick={onOpenCreateTask}
-                className="mt-3 flex w-full items-center justify-center space-x-1 rounded-lg border border-dashed border-surface-border p-2 text-xs font-semibold text-text-secondary hover:bg-surface hover:text-primary hover:border-primary/50 transition"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Create</span>
-              </button>
+              {/* Bottom Quick Create Button - Admin & Manager only */}
+              {canManageTasks && (
+                <button
+                  onClick={onOpenCreateTask}
+                  className="mt-3 flex w-full items-center justify-center space-x-1 rounded-lg border border-dashed border-surface-border p-2 text-xs font-semibold text-text-secondary hover:bg-surface hover:text-primary hover:border-primary/50 transition"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{t('board.createTask', { defaultValue: 'Tạo công việc' })}</span>
+                </button>
+              )}
             </div>
           );
         })}
 
-        {/* Add Column Button */}
-        <button className="flex items-center justify-center rounded-xl border border-dashed border-surface-border p-4 text-text-muted hover:border-primary hover:text-primary transition min-h-[420px]">
-          <Plus className="h-6 w-6" />
-        </button>
+        {/* Add Column Button - Admin & Manager only */}
+        {canManageTasks && (
+          <button
+            onClick={() => alert(t('board.createTask', { defaultValue: 'Tạo cột mới' }))}
+            className="flex items-center justify-center rounded-xl border border-dashed border-surface-border p-4 text-text-muted hover:border-primary hover:text-primary transition min-h-[420px]"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+        )}
       </div>
     </div>
   );

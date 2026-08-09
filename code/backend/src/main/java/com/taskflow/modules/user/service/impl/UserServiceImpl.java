@@ -49,7 +49,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "users", key = "#userId")
     public UserDto getCurrentUserProfile(UUID userId) {
         UserEntity user = findEntityById(userId);
         return userMapper.toDto(user);

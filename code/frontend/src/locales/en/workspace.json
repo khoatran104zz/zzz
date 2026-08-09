@@ -21,9 +21,7 @@
     "summary": "Summary",
     "backlog": "Backlog",
     "board": "Board",
-    "code": "Code",
     "timeline": "Timeline",
-    "docs": "Docs",
     "forms": "Forms"
   },
   "summary": {
@@ -44,22 +42,31 @@
     "noActivityYet": "No activity yet",
     "noActivityDesc": "Create a few work items and invite some teammates to your space to see your space activity.",
     "priorityBreakdown": "Priority breakdown",
-    "typesOfWork": "Types of work"
+    "typesOfWork": "Types of work",
+    "viewAllItems": "View all work items",
+    "highPriority": "High priority",
+    "mediumPriority": "Medium priority",
+    "lowPriority": "Low priority",
+    "itemsCount": "items"
   },
   "backlog": {
-    "searchBacklog": "Search backlog",
+    "searchBacklog": "Search backlog...",
     "completeSprint": "Complete sprint",
     "startSprint": "Start sprint",
     "noItemsInSprint": "No work items in this sprint yet.",
-    "planSprintPlaceholder": "Plan a sprint by dragging work items into it, or by dragging the sprint footer."
+    "planSprintPlaceholder": "Plan a sprint by dragging work items into it, or by dragging the sprint footer.",
+    "workItems": "work items",
+    "create": "Create"
   },
   "board": {
-    "searchBoard": "Search board",
+    "searchBoard": "Search board...",
     "group": "Group",
-    "createTask": "Create"
+    "createTask": "Create task",
+    "addColumn": "Add column",
+    "subtasks": "Subtasks"
   },
   "timeline": {
-    "searchTimeline": "Search timeline",
+    "searchTimeline": "Search timeline...",
     "work": "Work",
     "status": "Status",
     "assignee": "Assignee",
@@ -67,20 +74,9 @@
     "today": "Today",
     "weeks": "Weeks",
     "months": "Months",
-    "quarters": "Quarters"
-  },
-  "code": {
-    "title": "Source Code & Repositories",
-    "subtitle": "Connect GitHub, GitLab, or Bitbucket repositories to track code commits and pull requests.",
-    "connectRepo": "Connect your repository",
-    "connectDesc": "Automatically link commits, branches, and pull requests to work items in this space.",
-    "connectButton": "Connect GitHub Repository"
-  },
-  "docs": {
-    "title": "Docs & Wiki Knowledge Base",
-    "subtitle": "Centralized space documentation, notes, and technical specs.",
-    "newDocument": "New Document",
-    "viewDoc": "View Doc"
+    "quarters": "Quarters",
+    "noTasks": "No timeline tasks found.",
+    "create": "Create"
   },
   "forms": {
     "title": "The simple way to collect and track work requests",
@@ -88,12 +84,26 @@
     "submitForm": "Submit a form",
     "trackRequests": "Track requests",
     "captureDetails": "Capture key details",
+    "captureDesc": "Gather exact parameters and requirements directly from users.",
     "prioritizeWork": "Prioritize work",
+    "prioritizeDesc": "Work requests convert directly into backlog tasks on your board.",
     "createForm": "Create form"
   },
   "messages": {
     "createSuccess": "Workspace created successfully!",
     "updateSuccess": "Workspace updated successfully!",
     "deleteSuccess": "Workspace deleted successfully."
+  },
+  "roles": {
+    "admin": "Workspace Admin",
+    "manager": "Project Manager",
+    "staff": "Staff Member",
+    "owner": "Workspace Owner"
+  },
+  "permissions": {
+    "adminDesc": "Full management and configuration access",
+    "managerDesc": "Create projects, assign work, and manage team",
+    "staffDesc": "Execute and update assigned task progress",
+    "readOnlyNotice": "View mode for Staff members"
   }
 }

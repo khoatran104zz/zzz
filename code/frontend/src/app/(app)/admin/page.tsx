@@ -90,6 +90,24 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN') || currentUser?.email === 'admin@gmail.com';
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 text-text-primary">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 shadow-md">
+          <ShieldAlert className="h-8 w-8" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold font-heading text-text-primary">Quyền truy cập bị từ chối (403 Forbidden)</h2>
+          <p className="text-xs text-text-secondary max-w-md mt-1">
+            Trang Cấu hình & Quản trị Hệ thống chỉ dành riêng cho tài khoản Quản trị viên (<span className="font-semibold text-red-500">ROLE_ADMIN</span>). Quản lý dự án và Nhân viên không có quyền truy cập trang này.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const filteredUsers = users.filter(
     (u) =>
       u.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||

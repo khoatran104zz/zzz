@@ -28,8 +28,14 @@ export function WorkspaceBacklogTab({
   onOpenCreateTask,
 }: WorkspaceBacklogTabProps) {
   const { t } = useTranslation('workspace');
+  const { t: tTask } = useTranslation('task');
   const user = useAuthStore((state) => state.user);
   const updateStatusMutation = useUpdateTaskStatus();
+
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
+  const canManageTasks = isAdmin || isManager;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [openSprints, setOpenSprints] = useState<Record<string, boolean>>({
     sprint0: true,
@@ -61,7 +67,7 @@ export function WorkspaceBacklogTab({
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-text-muted" />
             <input
               type="text"
-              placeholder={t('backlog.searchBacklog', { defaultValue: 'Search backlog' })}
+              placeholder={t('backlog.searchBacklog', { defaultValue: 'Tìm kiếm Backlog...' })}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-lg border border-surface-border bg-surface pl-9 pr-3 py-1.5 text-xs focus:border-primary focus:outline-hidden shadow-xs"
@@ -74,7 +80,7 @@ export function WorkspaceBacklogTab({
 
           <button className="flex items-center space-x-1.5 rounded-lg border border-surface-border bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface-alt shadow-xs">
             <Filter className="h-3.5 w-3.5" />
-            <span>{t('summary.filter', { defaultValue: 'Filter' })}</span>
+            <span>{t('summary.filter', { defaultValue: 'Bộ lọc' })}</span>
           </button>
         </div>
       </div>
@@ -101,7 +107,7 @@ export function WorkspaceBacklogTab({
                 SCRUM Sprint 0
               </span>
 
-              <span className="text-[11px] text-text-muted">16 Jun – 20 Jun ({filteredTasks.length} work items)</span>
+              <span className="text-[11px] text-text-muted">16 Jun – 20 Jun ({filteredTasks.length} {t('backlog.workItems', { defaultValue: 'công việc' })})</span>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -109,9 +115,11 @@ export function WorkspaceBacklogTab({
                 {filteredTasks.filter((t) => t.status === 'TODO').length} / {filteredTasks.length}
               </span>
 
-              <button className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-hover shadow-xs transition">
-                {t('backlog.completeSprint', { defaultValue: 'Complete sprint' })}
-              </button>
+              {canManageTasks && (
+                <button className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-hover shadow-xs transition">
+                  {t('backlog.completeSprint', { defaultValue: 'Hoàn thành Sprint' })}
+                </button>
+              )}
 
               <button className="p-1 text-text-muted hover:text-text-primary">
                 <MoreHorizontal className="h-4 w-4" />
@@ -124,7 +132,7 @@ export function WorkspaceBacklogTab({
             <div className="divide-y divide-surface-border">
               {filteredTasks.length === 0 ? (
                 <div className="p-6 text-center text-xs text-text-muted">
-                  {t('backlog.noItemsInSprint', { defaultValue: 'No work items in this sprint yet.' })}
+                  {t('backlog.noItemsInSprint', { defaultValue: 'Chưa có công việc nào trong Sprint này.' })}
                 </div>
               ) : (
                 filteredTasks.map((task, idx) => {
@@ -176,11 +184,11 @@ export function WorkspaceBacklogTab({
                           }
                           className="rounded-lg border border-surface-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-secondary focus:outline-hidden"
                         >
-                          <option value="TODO">To Do</option>
-                          <option value="IN_PROGRESS">In Progress</option>
-                          <option value="IN_REVIEW">In Review</option>
-                          <option value="DONE">Done</option>
-                          <option value="COMPLETED">Completed</option>
+                          <option value="TODO">{tTask('statuses.TODO', { defaultValue: 'Cần làm' })}</option>
+                          <option value="IN_PROGRESS">{tTask('statuses.IN_PROGRESS', { defaultValue: 'Đang làm' })}</option>
+                          <option value="IN_REVIEW">{tTask('statuses.IN_REVIEW', { defaultValue: 'Đang xem xét' })}</option>
+                          <option value="DONE">{tTask('statuses.DONE', { defaultValue: 'Hoàn thành' })}</option>
+                          <option value="COMPLETED">{tTask('statuses.DONE', { defaultValue: 'Hoàn thành' })}</option>
                         </select>
 
                         {/* Due Date Warning */}
@@ -204,16 +212,18 @@ export function WorkspaceBacklogTab({
                 })
               )}
 
-              {/* Create Task Action inside Sprint */}
-              <div className="p-2 bg-surface-alt/30">
-                <button
-                  onClick={onOpenCreateTask}
-                  className="flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Create</span>
-                </button>
-              </div>
+              {/* Create Task Action inside Sprint - Admin & Manager only */}
+              {canManageTasks && (
+                <div className="p-2 bg-surface-alt/30">
+                  <button
+                    onClick={onOpenCreateTask}
+                    className="flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('backlog.create', { defaultValue: 'Tạo công việc' })}</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -228,13 +238,15 @@ export function WorkspaceBacklogTab({
               <span className="text-xs font-bold text-text-primary font-heading uppercase tracking-wide">
                 SCRUM Sprint 1
               </span>
-              <span className="text-[11px] text-text-muted">21 Jun – 28 Jun (0 work items)</span>
+              <span className="text-[11px] text-text-muted">21 Jun – 28 Jun (0 {t('backlog.workItems', { defaultValue: 'công việc' })})</span>
             </div>
 
             <div className="flex items-center space-x-2">
-              <button className="rounded-lg border border-surface-border bg-surface px-3 py-1 text-xs font-semibold text-text-secondary hover:bg-surface-alt shadow-xs transition">
-                {t('backlog.startSprint', { defaultValue: 'Start sprint' })}
-              </button>
+              {canManageTasks && (
+                <button className="rounded-lg border border-surface-border bg-surface px-3 py-1 text-xs font-semibold text-text-secondary hover:bg-surface-alt shadow-xs transition">
+                  {t('backlog.startSprint', { defaultValue: 'Bắt đầu Sprint' })}
+                </button>
+              )}
               <button className="p-1 text-text-muted hover:text-text-primary">
                 <MoreHorizontal className="h-4 w-4" />
               </button>
@@ -244,18 +256,20 @@ export function WorkspaceBacklogTab({
           {openSprints.sprint1 && (
             <div>
               <div className="m-3 flex items-center justify-center rounded-xl border-2 border-dashed border-surface-border p-6 text-center text-xs text-text-muted bg-surface-alt/20">
-                {t('backlog.planSprintPlaceholder', { defaultValue: 'Plan a sprint by dragging work items into it, or by dragging the sprint footer.' })}
+                {t('backlog.planSprintPlaceholder', { defaultValue: 'Lập kế hoạch Sprint bằng cách kéo thả công việc vào đây.' })}
               </div>
 
-              <div className="p-2 bg-surface-alt/30 border-t border-surface-border">
-                <button
-                  onClick={onOpenCreateTask}
-                  className="flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Create</span>
-                </button>
-              </div>
+              {canManageTasks && (
+                <div className="p-2 bg-surface-alt/30 border-t border-surface-border">
+                  <button
+                    onClick={onOpenCreateTask}
+                    className="flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('backlog.create', { defaultValue: 'Tạo công việc' })}</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

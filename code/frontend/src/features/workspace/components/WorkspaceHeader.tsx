@@ -7,7 +7,6 @@ import {
   Globe, 
   ListTodo, 
   LayoutGrid, 
-  Code2, 
   GitCommitHorizontal, 
   BookOpen, 
   FileSpreadsheet, 
@@ -20,8 +19,9 @@ import {
   Edit3
 } from 'lucide-react';
 import type { WorkspaceDto } from '../types';
+import { useAuthStore } from '@/store/auth-store';
 
-export type WorkspaceTab = 'summary' | 'backlog' | 'board' | 'code' | 'timeline' | 'docs' | 'forms';
+export type WorkspaceTab = 'summary' | 'backlog' | 'board' | 'timeline' | 'forms';
 
 interface WorkspaceHeaderProps {
   workspace: WorkspaceDto | null;
@@ -38,21 +38,28 @@ export function WorkspaceHeader({
 }: WorkspaceHeaderProps) {
   const router = useRouter();
   const { t } = useTranslation('workspace');
+  const user = useAuthStore((state) => state.user);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+
+  const role = workspace?.userRole?.toUpperCase() || '';
+  const isAdmin = role === 'OWNER' || role === 'ADMIN' || user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManager = !isAdmin && (role === 'MANAGER' || user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com');
+  const isStaff = !isAdmin && !isManager;
+
+  const canInviteMembers = isAdmin || isManager;
+  const canEditWorkspace = isAdmin;
 
   const tabs: { id: WorkspaceTab; labelKey: string; defaultLabel: string; icon: React.ElementType }[] = [
     { id: 'summary', labelKey: 'tabs.summary', defaultLabel: 'Summary', icon: Globe },
     { id: 'backlog', labelKey: 'tabs.backlog', defaultLabel: 'Backlog', icon: ListTodo },
     { id: 'board', labelKey: 'tabs.board', defaultLabel: 'Board', icon: LayoutGrid },
-    { id: 'code', labelKey: 'tabs.code', defaultLabel: 'Code', icon: Code2 },
     { id: 'timeline', labelKey: 'tabs.timeline', defaultLabel: 'Timeline', icon: GitCommitHorizontal },
-    { id: 'docs', labelKey: 'tabs.docs', defaultLabel: 'Docs', icon: BookOpen },
     { id: 'forms', labelKey: 'tabs.forms', defaultLabel: 'Forms', icon: FileSpreadsheet },
   ];
 
   const handleGoToEdit = () => {
     setShowOptionsMenu(false);
-    if (workspace?.id) {
+    if (workspace?.id && canEditWorkspace) {
       router.push(`/workspaces/${workspace.id}/settings`);
     }
   };
@@ -60,8 +67,31 @@ export function WorkspaceHeader({
   return (
     <div className="space-y-4 border-b border-surface-border pb-1 text-text-primary">
       {/* Spaces Breadcrumb */}
-      <div className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">
-        Spaces
+      <div className="flex items-center justify-between">
+        <div className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+          Spaces
+        </div>
+        {/* Role Badge Indicator */}
+        <div className="flex items-center space-x-1.5">
+          {isAdmin && (
+            <span className="inline-flex items-center space-x-1 rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-0.5 text-[10px] font-bold text-red-500">
+              <span>🛡️</span>
+              <span>{t('roles.admin', { defaultValue: 'Quản trị viên Workspace' })}</span>
+            </span>
+          )}
+          {isManager && (
+            <span className="inline-flex items-center space-x-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold text-amber-500">
+              <span>👔</span>
+              <span>{t('roles.manager', { defaultValue: 'Quản lý Dự án' })}</span>
+            </span>
+          )}
+          {isStaff && (
+            <span className="inline-flex items-center space-x-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-500">
+              <span>🧑‍💻</span>
+              <span>{t('roles.staff', { defaultValue: 'Nhân viên Thực thi' })}</span>
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Main Title Row */}
@@ -80,40 +110,44 @@ export function WorkspaceHeader({
             {workspace?.name || 'Workspace'}
           </h1>
 
-          {/* Add Member Button - Opens Invite Modal */}
-          <button
-            onClick={onOpenInviteMember}
-            className="rounded-lg p-1.5 text-text-secondary hover:bg-primary/10 hover:text-primary transition"
-            title={t('addMember', { defaultValue: 'Thêm thành viên' })}
-          >
-            <UserPlus className="h-4 w-4" />
-          </button>
-
-          {/* More Options Dropdown (...) */}
-          <div className="relative">
+          {/* Add Member Button - Allowed for Admin & Manager */}
+          {canInviteMembers && (
             <button
-              onClick={() => setShowOptionsMenu(!showOptionsMenu)}
-              className="rounded-lg p-1.5 text-text-secondary hover:bg-surface-alt hover:text-text-primary transition"
-              title="Options"
+              onClick={onOpenInviteMember}
+              className="rounded-lg p-1.5 text-text-secondary hover:bg-primary/10 hover:text-primary transition"
+              title={t('addMember', { defaultValue: 'Thêm thành viên' })}
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <UserPlus className="h-4 w-4" />
             </button>
+          )}
 
-            {showOptionsMenu && (
-              <div
-                className="absolute left-0 top-full z-40 mt-1 w-48 rounded-xl border border-surface-border bg-surface p-1.5 shadow-xl backdrop-blur-md"
-                onMouseLeave={() => setShowOptionsMenu(false)}
+          {/* More Options Dropdown (...) - Admin only for Edit */}
+          {canEditWorkspace && (
+            <div className="relative">
+              <button
+                onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+                className="rounded-lg p-1.5 text-text-secondary hover:bg-surface-alt hover:text-text-primary transition"
+                title="Options"
               >
-                <button
-                  onClick={handleGoToEdit}
-                  className="flex w-full items-center space-x-2 px-3 py-2 text-xs font-medium text-text-primary hover:bg-surface-alt rounded-lg transition"
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+
+              {showOptionsMenu && (
+                <div
+                  className="absolute left-0 top-full z-40 mt-1 w-48 rounded-xl border border-surface-border bg-surface p-1.5 shadow-xl backdrop-blur-md"
+                  onMouseLeave={() => setShowOptionsMenu(false)}
                 >
-                  <Edit3 className="h-4 w-4 text-primary" />
-                  <span>{t('editWorkspace', { defaultValue: 'Chỉnh sửa Workspace' })}</span>
-                </button>
-              </div>
-            )}
-          </div>
+                  <button
+                    onClick={handleGoToEdit}
+                    className="flex w-full items-center space-x-2 px-3 py-2 text-xs font-medium text-text-primary hover:bg-surface-alt rounded-lg transition"
+                  >
+                    <Edit3 className="h-4 w-4 text-primary" />
+                    <span>{t('editWorkspace', { defaultValue: 'Chỉnh sửa Workspace' })}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Top Right Action Icons */}

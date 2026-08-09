@@ -25,5 +25,11 @@
   "user": {
     "viewProfile": "View Profile",
     "logout": "Sign Out"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "manager": "Project Manager",
+    "staff": "Staff Employee",
+    "systemAdmin": "System Admin"
   }
 }
