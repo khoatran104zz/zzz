@@ -446,6 +446,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         if (workspace.getOwnerId().equals(userId)) {
             return;
         }
+        UserEntity user = userRepository.findById(userId).orElse(null);
+        if (user != null && user.getRoles() != null) {
+            boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()));
+            if (isAdmin) {
+                return;
+            }
+        }
         boolean isMember = workspaceMemberRepository.existsByWorkspaceIdAndUserId(workspace.getId(), userId);
         if (!isMember) {
             throw new AppException(ResultCode.FORBIDDEN, "Access denied to this workspace");

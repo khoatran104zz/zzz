@@ -49,9 +49,13 @@ export function NotificationDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(false);
+          router.push('/notifications' as any);
+        }}
         className="relative rounded-lg p-2 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
         aria-label="Notifications"
+        title="Trung tâm thông báo"
       >
         <Bell className="h-5 w-5" />
         <NotificationBadge className="absolute -top-0.5 -right-0.5" />

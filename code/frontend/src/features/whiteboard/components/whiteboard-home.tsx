@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { PenLine, Plus, Loader2, Trash2, ArrowLeft, Grid, Search, Network, GitMerge, Lightbulb, LayoutGrid, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import {
   useWorkspaceWhiteboards,
   useWhiteboardDetails,
@@ -10,6 +11,7 @@ import {
   useSyncWhiteboardElements,
   useDeleteWhiteboard,
 } from '../hooks/use-whiteboard';
+import { whiteboardService } from '../services/whiteboard-service';
 import { WhiteboardCanvas } from './whiteboard-canvas';
 import { ConfirmDeleteModal } from '@/components/confirm-delete-modal';
 import { useWorkspaceStore } from '@/store/workspace-store';
@@ -94,13 +96,22 @@ export function WhiteboardHome({ workspaceId }: WhiteboardHomeProps) {
         description: description || 'Bảng trắng trực quan để vẽ ý tưởng, sơ đồ quy trình và kiến trúc hệ thống',
       },
       {
-        onSuccess: (newBoard) => {
+        onSuccess: async (newBoard) => {
           setActiveBoardId(newBoard.id);
           // If template elements provided, sync them immediately
           if (templateElements && templateElements.length > 0) {
             const elementsWithBoardId = templateElements.map((el) => ({ ...el, whiteboardId: newBoard.id }));
-            syncMutation.mutate({ elements: elementsWithBoardId });
+            try {
+              await whiteboardService.syncElements(newBoard.id, { elements: elementsWithBoardId });
+            } catch (e) {
+              console.error('Failed to sync template elements', e);
+            }
           }
+          toast.success('Tạo bảng vẽ mới thành công!');
+        },
+        onError: (err: any) => {
+          const msg = err.response?.data?.message || 'Không thể tạo bảng vẽ mới, vui lòng thử lại.';
+          toast.error(msg);
         },
       }
     );

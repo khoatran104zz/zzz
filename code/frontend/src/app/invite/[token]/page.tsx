@@ -1,10 +1,11 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, CheckCircle2, Loader2, Users, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Loader2, Users, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useGetInvitation, useAcceptInvitation } from '@/features/workspace/hooks/use-workspace';
 import { useAuthStore } from '@/store/auth-store';
+import { toast } from 'sonner';
 
 export default function AcceptInvitationPage({ params }: { params: Promise<{ token: string }> }) {
   const resolvedParams = use(params);
@@ -14,30 +15,43 @@ export default function AcceptInvitationPage({ params }: { params: Promise<{ tok
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: invitation, isLoading, isError } = useGetInvitation(token);
   const acceptMutation = useAcceptInvitation();
-
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleAccept = () => {
+  useEffect(() => {
     if (!isAuthenticated) {
       router.push(`/login?redirect=/invite/${token}` as any);
       return;
     }
 
-    setErrorMsg(null);
-    acceptMutation.mutate(token, {
-      onSuccess: () => {
-        router.push('/workspaces' as any);
-      },
-      onError: (err: any) => {
-        setErrorMsg(err.response?.data?.message || 'Failed to accept invitation');
-      },
-    });
-  };
+    if (invitation && !acceptMutation.isPending && !acceptMutation.isSuccess && !acceptMutation.isError) {
+      acceptMutation.mutate(token, {
+        onSuccess: (wsMember) => {
+          toast.success('Đã chấp nhận lời mời tham gia Workspace!');
+          if (wsMember?.workspaceId) {
+            router.push(`/workspaces/${wsMember.workspaceId}` as any);
+          } else {
+            router.push('/workspaces' as any);
+          }
+        },
+        onError: (err: any) => {
+          setErrorMsg(err.response?.data?.message || 'Không thể chấp nhận lời mời tham gia');
+        },
+      });
+    }
+  }, [isAuthenticated, invitation, token, acceptMutation, router]);
 
-  if (isLoading) {
+  if (isLoading || acceptMutation.isPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#090d16] text-white">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#090d16] p-4 text-white">
+        <div className="flex flex-col items-center space-y-4 rounded-3xl border border-white/10 bg-gray-900/80 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-400">
+            <Loader2 className="h-7 w-7 animate-spin" />
+          </div>
+          <div className="text-center space-y-1">
+            <h2 className="text-base font-bold text-white font-heading">Đang tham gia Workspace...</h2>
+            <p className="text-xs text-gray-400">Vui lòng chờ trong giây lát</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -46,15 +60,15 @@ export default function AcceptInvitationPage({ params }: { params: Promise<{ tok
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#090d16] p-4 text-white">
         <div className="w-full max-w-md space-y-4 rounded-3xl border border-red-500/20 bg-gray-900/80 p-8 text-center backdrop-blur-xl">
-          <h2 className="text-xl font-bold text-red-400 font-heading">Invalid or Expired Link</h2>
+          <h2 className="text-lg font-bold text-red-400 font-heading">Liên kết đã hết hạn hoặc không hợp lệ</h2>
           <p className="text-xs text-gray-400">
-            This workspace invitation link is invalid or has expired. Please ask the workspace owner to send a new invite link.
+            Lời mời tham gia Workspace này không tồn tại hoặc đã hết hiệu lực. Vui lòng yêu cầu Quản trị viên gửi lại liên kết mới.
           </p>
           <button
             onClick={() => router.push('/')}
             className="w-full rounded-xl bg-white/10 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition"
           >
-            Go to Home
+            Về trang chủ
           </button>
         </div>
       </div>
@@ -64,14 +78,14 @@ export default function AcceptInvitationPage({ params }: { params: Promise<{ tok
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#090d16] p-4 text-white">
       <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/10 bg-gray-900/80 p-8 text-center backdrop-blur-xl shadow-2xl">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600/20 text-indigo-400 shadow-xl border border-indigo-500/30">
-          <Users className="h-8 w-8" />
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 shadow-xl border border-emerald-500/30">
+          <ShieldCheck className="h-7 w-7" />
         </div>
 
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-white font-heading">You&apos;re Invited!</h1>
+        <div className="space-y-1.5">
+          <h1 className="text-xl font-bold text-white font-heading">Chấp nhận yêu cầu vào Workspace</h1>
           <p className="text-xs text-gray-400">
-            You have been invited to join a workspace on <strong className="text-white">TaskFlow</strong>.
+            Bạn đã được mời tham gia Workspace trên hệ thống <strong className="text-white">TaskFlow</strong>.
           </p>
         </div>
 
@@ -81,32 +95,21 @@ export default function AcceptInvitationPage({ params }: { params: Promise<{ tok
           </div>
         )}
 
-        <div className="rounded-2xl border border-white/10 bg-gray-950/60 p-4 text-left space-y-2 text-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400">Invited Email</span>
-            <span className="font-semibold text-white">{invitation.email}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400">Assigned Role</span>
-            <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[10px] font-bold text-indigo-400 capitalize">
-              {invitation.role}
-            </span>
-          </div>
-        </div>
-
         <button
-          onClick={handleAccept}
+          onClick={() => {
+            acceptMutation.mutate(token, {
+              onSuccess: (wsMember) => {
+                toast.success('Đã chấp nhận lời mời!');
+                router.push(wsMember?.workspaceId ? (`/workspaces/${wsMember.workspaceId}` as any) : ('/workspaces' as any));
+              },
+            });
+          }}
           disabled={acceptMutation.isPending}
-          className="flex w-full items-center justify-center space-x-2 rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 disabled:opacity-50 active:scale-[0.98]"
+          className="flex w-full items-center justify-center space-x-2 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-500 disabled:opacity-50 active:scale-[0.98]"
         >
-          {acceptMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              <span>Join Workspace</span>
-              <ArrowRight className="h-4 w-4" />
-            </>
-          )}
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Chấp nhận tham gia</span>
+          <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>
