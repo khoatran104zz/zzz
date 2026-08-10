@@ -29,12 +29,12 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-white/10 bg-gray-950/40 p-4">
+    <div className="space-y-3.5 rounded-2xl border border-surface-border bg-surface-alt/30 p-4 sm:p-5 shadow-xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Paperclip className="h-4 w-4 text-indigo-400" />
-          <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
-            Attachments ({attachments.length})
+          <Paperclip className="h-4 w-4 text-primary" />
+          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            Tập tin đính kèm ({attachments.length})
           </h3>
         </div>
 
@@ -42,7 +42,7 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
       </div>
 
       {isLoading ? (
-        <div className="h-10 animate-pulse rounded-lg bg-gray-900/60" />
+        <div className="h-12 animate-pulse rounded-xl bg-surface-alt" />
       ) : (
         <div className="space-y-2 pt-1">
           {attachments.map((attachment) => (
@@ -55,7 +55,7 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
           ))}
 
           {attachments.length === 0 && (
-            <p className="text-center py-2 text-xs text-gray-500 italic">No attachments added to this task.</p>
+            <p className="text-center py-3 text-xs text-text-muted italic">Chưa có tập tin đính kèm nào cho công việc này.</p>
           )}
         </div>
       )}

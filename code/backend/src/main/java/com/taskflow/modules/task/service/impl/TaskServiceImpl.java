@@ -28,6 +28,10 @@ import java.util.stream.Collectors;
 
 import com.taskflow.modules.realtime.service.RealtimePublisher;
 import com.taskflow.modules.automation.engine.AutomationEngine;
+import com.taskflow.modules.notification.dto.CreateNotificationRequest;
+import com.taskflow.modules.notification.service.NotificationService;
+import com.taskflow.modules.workspace.entity.WorkspaceMemberEntity;
+import com.taskflow.modules.workspace.repository.WorkspaceMemberRepository;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -39,6 +43,8 @@ public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
     private final RealtimePublisher realtimePublisher;
     private final AutomationEngine automationEngine;
+    private final NotificationService notificationService;
+    private final WorkspaceMemberRepository workspaceMemberRepository;
 
     public TaskServiceImpl(
             TaskRepository taskRepository,
@@ -47,7 +53,9 @@ public class TaskServiceImpl implements TaskService {
             UserService userService,
             TaskMapper taskMapper,
             RealtimePublisher realtimePublisher,
-            AutomationEngine automationEngine) {
+            AutomationEngine automationEngine,
+            NotificationService notificationService,
+            WorkspaceMemberRepository workspaceMemberRepository) {
         this.taskRepository = taskRepository;
         this.dependencyRepository = dependencyRepository;
         this.projectService = projectService;
@@ -55,13 +63,38 @@ public class TaskServiceImpl implements TaskService {
         this.taskMapper = taskMapper;
         this.realtimePublisher = realtimePublisher;
         this.automationEngine = automationEngine;
+        this.notificationService = notificationService;
+        this.workspaceMemberRepository = workspaceMemberRepository;
     }
 
     @Override
     @Transactional
     public TaskDto createWorkspaceTask(UUID userId, UUID workspaceId, CreateTaskRequest request) {
         ProjectDto defaultProject = projectService.getOrCreateDefaultProject(userId, workspaceId);
-        return createTask(userId, defaultProject.getId(), request);
+        TaskDto result = createTask(userId, defaultProject.getId(), request);
+
+        // Notify Managers and Admins for Task Approval Request
+        try {
+            UserDto creator = userService.getCurrentUserProfile(userId);
+            String creatorName = (creator != null && creator.getFullName() != null) ? creator.getFullName() : "Nhân viên";
+
+            List<WorkspaceMemberEntity> members = workspaceMemberRepository.findByWorkspaceId(workspaceId);
+            for (WorkspaceMemberEntity member : members) {
+                String role = member.getRole() != null ? member.getRole().toUpperCase() : "";
+                if (("OWNER".equals(role) || "ADMIN".equals(role) || "MANAGER".equals(role)) && !member.getUserId().equals(userId)) {
+                    notificationService.createNotification(new CreateNotificationRequest(
+                            "Yêu cầu phê duyệt công việc mới",
+                            "Nhân viên " + creatorName + " vừa đề xuất công việc mới: '" + result.getTitle() + "' và gửi yêu cầu phê duyệt.",
+                            member.getUserId(),
+                            "TASK_APPROVAL_REQUEST",
+                            "/workspaces/" + workspaceId
+                    ));
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return result;
     }
 
     @Override
@@ -94,6 +127,20 @@ public class TaskServiceImpl implements TaskService {
         UserDto assignee = resolveAssignee(saved.getAssigneeId());
         TaskDto result = taskMapper.toDto(saved, assignee);
         automationEngine.evaluateTaskEvent(projectId, "TASK_CREATED", result);
+
+        if (saved.getAssigneeId() != null && !saved.getAssigneeId().equals(userId)) {
+            try {
+                notificationService.createNotification(new CreateNotificationRequest(
+                        "Nhiệm vụ mới được giao",
+                        "Bạn vừa được giao nhiệm vụ: '" + saved.getTitle() + "'",
+                        saved.getAssigneeId(),
+                        "TASK_ASSIGNED",
+                        "/tasks/" + saved.getId()
+                ));
+            } catch (Exception ignored) {
+            }
+        }
+
         return result;
     }
 
@@ -130,6 +177,20 @@ public class TaskServiceImpl implements TaskService {
         task.setAssigneeId(assigneeId);
         TaskEntity saved = taskRepository.save(task);
         UserDto assignee = resolveAssignee(saved.getAssigneeId());
+
+        if (saved.getAssigneeId() != null && !saved.getAssigneeId().equals(userId)) {
+            try {
+                notificationService.createNotification(new CreateNotificationRequest(
+                        "Nhiệm vụ mới được giao",
+                        "Bạn vừa được giao nhiệm vụ: '" + saved.getTitle() + "'",
+                        saved.getAssigneeId(),
+                        "TASK_ASSIGNED",
+                        "/tasks/" + saved.getId()
+                ));
+            } catch (Exception ignored) {
+            }
+        }
+
         return taskMapper.toDto(saved, assignee);
     }
 
@@ -148,6 +209,8 @@ public class TaskServiceImpl implements TaskService {
     public TaskDto updateTask(UUID userId, UUID taskId, UpdateTaskRequest request) {
         TaskEntity task = findActiveTaskById(taskId);
         projectService.getProjectDetails(userId, task.getProjectId());
+
+        UUID oldAssigneeId = task.getAssigneeId();
 
         if (request.getTitle() != null && !request.getTitle().isBlank()) {
             task.setTitle(request.getTitle().trim());
@@ -173,6 +236,19 @@ public class TaskServiceImpl implements TaskService {
         TaskDto result = taskMapper.toDto(updated, assignee);
         realtimePublisher.publishTaskEvent(task.getProjectId(), "TASK_UPDATED", result);
         automationEngine.evaluateTaskEvent(task.getProjectId(), "TASK_UPDATED", result);
+
+        if (updated.getAssigneeId() != null && !updated.getAssigneeId().equals(oldAssigneeId) && !updated.getAssigneeId().equals(userId)) {
+            try {
+                notificationService.createNotification(new CreateNotificationRequest(
+                        "Nhiệm vụ mới được giao",
+                        "Bạn vừa được giao nhiệm vụ: '" + updated.getTitle() + "'",
+                        updated.getAssigneeId(),
+                        "TASK_ASSIGNED",
+                        "/tasks/" + updated.getId()
+                ));
+            } catch (Exception ignored) {
+            }
+        }
         return result;
     }
 

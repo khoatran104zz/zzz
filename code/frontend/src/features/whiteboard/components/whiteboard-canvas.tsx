@@ -89,7 +89,7 @@ export function WhiteboardCanvas({ initialElements, onSave, isSaving }: Whiteboa
   };
 
   return (
-    <div className="relative h-[calc(100vh-160px)] w-full overflow-hidden rounded-3xl border border-white/10 bg-[#0f172a] shadow-2xl">
+    <div className="relative h-[calc(100vh-160px)] w-full overflow-hidden rounded-2xl border border-surface-border bg-surface-alt shadow-xl">
       <WhiteboardToolbar
         activeTool={activeTool}
         onSelectTool={setActiveTool}
@@ -118,7 +118,7 @@ export function WhiteboardCanvas({ initialElements, onSave, isSaving }: Whiteboa
         onWheel={handleWheel}
         style={{
           cursor: isPanMode || isDraggingCanvas ? 'grab' : 'crosshair',
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(var(--color-primary-rgb, 100, 80, 240), 0.12) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }}
         className="h-full w-full select-none"
@@ -134,7 +134,7 @@ export function WhiteboardCanvas({ initialElements, onSave, isSaving }: Whiteboa
           <svg className="absolute inset-0 h-full w-full overflow-visible pointer-events-none">
             <defs>
               <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+                <polygon points="0 0, 10 3.5, 0 7" className="fill-primary" />
               </marker>
             </defs>
             {elements

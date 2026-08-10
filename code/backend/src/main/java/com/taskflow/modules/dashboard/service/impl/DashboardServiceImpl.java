@@ -50,15 +50,15 @@ public class DashboardServiceImpl implements DashboardService {
                 .count();
 
         long upcomingTasksCount = allUserTasks.stream()
-                .filter(t -> t.getDueDate() != null && toLocalDate(t.getDueDate()).isAfter(today))
+                .filter(t -> t.getDueDate() != null && toLocalDate(t.getDueDate()).isAfter(today) && !isTaskCompleted(t.getStatus()))
                 .count();
 
         long overdueTasksCount = allUserTasks.stream()
-                .filter(t -> t.getDueDate() != null && t.getDueDate().isBefore(now) && !"COMPLETED".equals(t.getStatus()))
+                .filter(t -> t.getDueDate() != null && t.getDueDate().isBefore(now) && !isTaskCompleted(t.getStatus()))
                 .count();
 
         long completedTasksCount = allUserTasks.stream()
-                .filter(t -> "COMPLETED".equals(t.getStatus()))
+                .filter(t -> isTaskCompleted(t.getStatus()))
                 .count();
 
         long totalTasksCount = allUserTasks.size();
@@ -68,7 +68,7 @@ public class DashboardServiceImpl implements DashboardService {
         for (TaskDto task : allUserTasks.stream().limit(5).collect(Collectors.toList())) {
             activities.add(new ActivityItemDto(
                     task.getId(),
-                    "COMPLETED".equals(task.getStatus()) ? "TASK_COMPLETED" : "TASK_CREATED",
+                    isTaskCompleted(task.getStatus()) ? "TASK_COMPLETED" : "TASK_CREATED",
                     task.getTitle(),
                     "Status: " + task.getStatus() + " | Priority: " + task.getPriority(),
                     task.getUpdatedAt() != null ? task.getUpdatedAt() : task.getCreatedAt()
@@ -101,7 +101,7 @@ public class DashboardServiceImpl implements DashboardService {
         LocalDate today = LocalDate.now();
         LocalDate nextWeek = today.plusDays(7);
         return getAllUserTasks(userId).stream()
-                .filter(t -> t.getDueDate() != null && toLocalDate(t.getDueDate()).isAfter(today) && !toLocalDate(t.getDueDate()).isAfter(nextWeek))
+                .filter(t -> t.getDueDate() != null && toLocalDate(t.getDueDate()).isAfter(today) && !toLocalDate(t.getDueDate()).isAfter(nextWeek) && !isTaskCompleted(t.getStatus()))
                 .collect(Collectors.toList());
     }
 
@@ -110,7 +110,7 @@ public class DashboardServiceImpl implements DashboardService {
     public List<TaskDto> getOverdueTasks(UUID userId) {
         Instant now = Instant.now();
         return getAllUserTasks(userId).stream()
-                .filter(t -> t.getDueDate() != null && t.getDueDate().isBefore(now) && !"COMPLETED".equals(t.getStatus()))
+                .filter(t -> t.getDueDate() != null && t.getDueDate().isBefore(now) && !isTaskCompleted(t.getStatus()))
                 .collect(Collectors.toList());
     }
 
@@ -124,7 +124,7 @@ public class DashboardServiceImpl implements DashboardService {
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             long completed = allTasks.stream()
-                    .filter(t -> "COMPLETED".equals(t.getStatus()) && t.getUpdatedAt() != null && toLocalDate(t.getUpdatedAt()).equals(date))
+                    .filter(t -> isTaskCompleted(t.getStatus()) && t.getUpdatedAt() != null && toLocalDate(t.getUpdatedAt()).equals(date))
                     .count();
             long created = allTasks.stream()
                     .filter(t -> t.getCreatedAt() != null && toLocalDate(t.getCreatedAt()).equals(date))
@@ -147,6 +147,11 @@ public class DashboardServiceImpl implements DashboardService {
             }
         }
         return allTasks;
+    }
+
+    private boolean isTaskCompleted(String status) {
+        if (status == null) return false;
+        return "COMPLETED".equalsIgnoreCase(status) || "DONE".equalsIgnoreCase(status);
     }
 
     private LocalDate toLocalDate(Instant instant) {

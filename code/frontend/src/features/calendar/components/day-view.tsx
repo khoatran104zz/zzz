@@ -12,7 +12,7 @@ interface DayViewProps {
 
 export function DayView({ currentDate, events, onSelectEvent }: DayViewProps) {
   const dateStr = currentDate.toISOString().slice(0, 10);
-  const formattedHeader = currentDate.toLocaleDateString(undefined, {
+  const formattedHeader = currentDate.toLocaleDateString('vi-VN', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -25,10 +25,10 @@ export function DayView({ currentDate, events, onSelectEvent }: DayViewProps) {
   });
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gray-950/40 p-6 space-y-4">
-      <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
-        <CalendarIcon className="h-5 w-5 text-indigo-400" />
-        <h2 className="text-base font-bold text-white font-heading">{formattedHeader}</h2>
+    <div className="rounded-2xl border border-surface-border bg-surface p-6 space-y-4 shadow-xs">
+      <div className="flex items-center space-x-2 border-b border-surface-border pb-3">
+        <CalendarIcon className="h-5 w-5 text-primary" />
+        <h2 className="text-base font-bold text-text-primary font-heading capitalize">{formattedHeader}</h2>
       </div>
 
       <div className="space-y-3">
@@ -36,36 +36,36 @@ export function DayView({ currentDate, events, onSelectEvent }: DayViewProps) {
           <div
             key={event.id}
             onClick={() => onSelectEvent(event)}
-            style={{ backgroundColor: event.color + '15', borderColor: event.color + '40' }}
-            className="flex items-start justify-between rounded-xl border p-4 text-xs transition cursor-pointer hover:border-white/20"
+            style={{ backgroundColor: (event.color || '#4F46E5') + '15', borderColor: (event.color || '#4F46E5') + '40' }}
+            className="flex items-start justify-between rounded-xl border p-4 text-xs transition cursor-pointer hover:border-primary/40 shadow-xs"
           >
             <div className="space-y-1.5 min-w-0 flex-1">
               <div className="flex items-center space-x-2">
                 <span
-                  className="px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase"
-                  style={{ backgroundColor: event.color }}
+                  className="px-2 py-0.5 rounded-md text-[10px] font-bold text-white uppercase shadow-2xs"
+                  style={{ backgroundColor: event.color || '#4F46E5' }}
                 >
                   {event.eventType}
                 </span>
-                <h3 className="font-bold text-sm text-white truncate">{event.title}</h3>
+                <h3 className="font-bold text-sm text-text-primary truncate">{event.title}</h3>
               </div>
 
-              {event.description && <p className="text-gray-300 line-clamp-2">{event.description}</p>}
+              {event.description && <p className="text-text-secondary leading-relaxed line-clamp-2">{event.description}</p>}
 
-              <div className="flex items-center space-x-4 text-gray-400 text-[11px] pt-1">
+              <div className="flex items-center space-x-4 text-text-muted text-[11px] pt-1 font-medium">
                 <span className="flex items-center">
-                  <Clock className="mr-1 h-3 w-3 text-indigo-400" />
-                  {new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} -{' '}
-                  {new Date(event.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <Clock className="mr-1 h-3 w-3 text-primary" />
+                  {new Date(event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} -{' '}
+                  {new Date(event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 {event.location && (
                   <span className="flex items-center">
-                    <MapPin className="mr-1 h-3 w-3 text-emerald-400" />
+                    <MapPin className="mr-1 h-3 w-3 text-emerald-500" />
                     {event.location}
                   </span>
                 )}
                 {event.status && (
-                  <span className="flex items-center font-semibold text-indigo-300">
+                  <span className="flex items-center font-bold text-primary">
                     <CheckSquare className="mr-1 h-3 w-3" />
                     {event.status}
                   </span>
@@ -76,8 +76,8 @@ export function DayView({ currentDate, events, onSelectEvent }: DayViewProps) {
         ))}
 
         {dayEvents.length === 0 && (
-          <div className="text-center py-12 text-gray-500 text-xs italic">
-            No events or tasks scheduled for this day.
+          <div className="text-center py-12 text-text-muted text-xs italic">
+            Không có sự kiện hoặc công việc nào diễn ra trong ngày này.
           </div>
         )}
       </div>

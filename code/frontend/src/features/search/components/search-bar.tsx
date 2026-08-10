@@ -1,40 +1,32 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, X, FolderKanban, CheckSquare, CornerDownLeft } from 'lucide-react';
+import { Search, X, FolderKanban, CheckSquare, CornerDownLeft, Building2, CheckCircle2, Clock, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useWorkspaceStore } from '@/store/workspace-store';
-import { useProjects } from '@/features/project/hooks/use-project';
-import { useGlobalSearch } from '../hooks/use-search';
-import type { SearchQueryParams } from '../types';
+import { useWorkspaces } from '@/features/workspace/hooks/use-workspace';
+import { useWorkspaceTasks } from '@/features/task/hooks/use-task';
+import { TaskDetailModal } from '@/features/task/components/task-detail-modal';
+import type { TaskDto } from '@/features/task/types';
 
 export function SearchBar() {
   const { t } = useTranslation('search');
   const router = useRouter();
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
-  const { data: projects = [] } = useProjects(activeWorkspace?.id || null);
+  const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
+
+  // Real DB Data
+  const { data: workspaces = [] } = useWorkspaces();
+  const { data: tasks = [], isLoading: isTasksLoading } = useWorkspaceTasks(activeWorkspace?.id || null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'taskflow' | 'home'>('taskflow');
-  const [timeFilter, setTimeFilter] = useState<string>('any');
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-  const [reportedByMe, setReportedByMe] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<{ open: boolean; done: boolean }>({ open: false, done: false });
-
-  const searchParams: SearchQueryParams = {
-    q: query,
-    type: 'ALL',
-    sortBy: 'relevance',
-    page: 0,
-    size: 8,
-  };
-
-  const { data: searchResults, isLoading } = useGlobalSearch(searchParams, isOpen);
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'TASK' | 'WORKSPACE'>('ALL');
+  const [selectedTask, setSelectedTask] = useState<TaskDto | null>(null);
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -63,38 +55,35 @@ export function SearchBar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  const toggleProjectFilter = (projId: string) => {
-    setSelectedProjects((prev) =>
-      prev.includes(projId) ? prev.filter((id) => id !== projId) : [...prev, projId]
-    );
-  };
+  // Realtime search filtering
+  const matchingTasks = tasks.filter(
+    (t) =>
+      t.title.toLowerCase().includes(query.toLowerCase()) ||
+      (t.description && t.description.toLowerCase().includes(query.toLowerCase()))
+  );
 
-  const handleNavigateAll = () => {
-    setIsOpen(false);
-    router.push('/tasks');
-  };
+  const matchingWorkspaces = workspaces.filter(
+    (w) =>
+      w.name.toLowerCase().includes(query.toLowerCase()) ||
+      (w.description && w.description.toLowerCase().includes(query.toLowerCase()))
+  );
 
-  const timePillOptions = [
-    { id: 'any', label: t('time.anyTime') },
-    { id: 'today', label: t('time.today') },
-    { id: 'yesterday', label: t('time.yesterday') },
-    { id: '7days', label: t('time.past7Days') },
-    { id: '30days', label: t('time.past30Days') },
-    { id: 'year', label: t('time.pastYear') },
-  ];
+  const displayTasks = categoryFilter === 'WORKSPACE' ? [] : matchingTasks.slice(0, 5);
+  const displayWorkspaces = categoryFilter === 'TASK' ? [] : matchingWorkspaces.slice(0, 3);
+  const totalResultsCount = displayTasks.length + displayWorkspaces.length;
 
   return (
-    <div ref={containerRef} className="relative">
-      {/* Search Input in Topbar (Jira Style) */}
+    <div ref={containerRef} className="relative text-text-primary">
+      {/* Search Input Box */}
       <div
-        className={`flex h-9 w-64 md:w-80 lg:w-96 items-center justify-between rounded-lg border bg-surface-alt px-3 text-xs transition ${
+        className={`flex h-9 w-64 md:w-80 lg:w-96 items-center justify-between rounded-xl border bg-surface-alt px-3 text-xs transition ${
           isOpen
-            ? 'border-primary ring-1 ring-primary bg-surface shadow-sm'
+            ? 'border-primary ring-2 ring-primary/20 bg-surface shadow-sm'
             : 'border-surface-border hover:border-primary/50 text-text-secondary'
         }`}
       >
         <div className="flex items-center space-x-2 w-full">
-          <Search className="h-3.5 w-3.5 text-text-muted shrink-0" />
+          <Search className="h-4 w-4 text-text-muted shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -104,7 +93,7 @@ export function SearchBar() {
               setQuery(e.target.value);
               if (!isOpen) setIsOpen(true);
             }}
-            placeholder={t('placeholder')}
+            placeholder={t('placeholder', { defaultValue: 'Tìm kiếm công việc, dự án hoặc workspace... (Ctrl + K)' })}
             className="w-full bg-transparent text-xs text-text-primary placeholder:text-text-muted outline-none"
           />
         </div>
@@ -112,314 +101,185 @@ export function SearchBar() {
           <button
             onClick={() => setQuery('')}
             className="text-text-muted hover:text-text-primary p-0.5"
+            title="Xóa nội dung tìm kiếm"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         ) : (
-          <kbd className="hidden sm:inline-block rounded border border-surface-border bg-surface px-1.5 py-0.5 text-[10px] font-mono text-text-muted shrink-0">
+          <kbd className="hidden sm:inline-block rounded-md border border-surface-border bg-surface px-1.5 py-0.5 text-[10px] font-mono font-bold text-text-muted shrink-0 shadow-2xs">
             Ctrl K
           </kbd>
         )}
       </div>
 
-      {/* Jira-Inspired Dropdown Popover Attached Directly Under Search Bar */}
+      {/* Realtime Search Results Popover Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-[740px] max-w-[90vw] z-50 rounded-2xl border border-surface-border bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-text-primary">
-          {/* 2-Column Layout */}
-          <div className="flex flex-1 overflow-hidden">
-            {/* Left Column (60% width): Navigation Tabs, Recent Items & Navigation Shortcuts */}
-            <div className="flex flex-1 flex-col overflow-y-auto border-r border-surface-border p-4 space-y-4">
-              {/* Top Navigation Tabs */}
-              <div className="flex items-center space-x-6 border-b border-surface-border pb-2 text-xs font-semibold">
-                <button
-                  onClick={() => setActiveTab('taskflow')}
-                  className={`pb-2 transition ${
-                    activeTab === 'taskflow'
-                      ? 'border-b-2 border-primary text-primary font-bold'
-                      : 'text-text-secondary hover:text-text-primary'
-                  }`}
-                >
-                  {t('tabTaskFlow')}
-                </button>
-                <button
-                  onClick={() => setActiveTab('home')}
-                  className={`pb-2 transition ${
-                    activeTab === 'home'
-                      ? 'border-b-2 border-primary text-primary font-bold'
-                      : 'text-text-secondary hover:text-text-primary'
-                  }`}
-                >
-                  {t('tabHome')}
-                </button>
+        <div className="absolute left-0 top-full mt-2 w-[600px] max-w-[92vw] z-50 rounded-2xl border border-surface-border bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-text-primary animate-in fade-in duration-150">
+          
+          {/* Category Filter Pills */}
+          <div className="flex items-center justify-between border-b border-surface-border px-4 py-2.5 bg-surface-alt/40">
+            <div className="flex items-center space-x-1.5 text-xs">
+              <button
+                onClick={() => setCategoryFilter('ALL')}
+                className={`rounded-xl px-3 py-1 font-bold transition ${
+                  categoryFilter === 'ALL'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
+                }`}
+              >
+                Tất cả ({matchingTasks.length + matchingWorkspaces.length})
+              </button>
+              <button
+                onClick={() => setCategoryFilter('TASK')}
+                className={`rounded-xl px-3 py-1 font-bold transition ${
+                  categoryFilter === 'TASK'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
+                }`}
+              >
+                Công việc ({matchingTasks.length})
+              </button>
+              <button
+                onClick={() => setCategoryFilter('WORKSPACE')}
+                className={`rounded-xl px-3 py-1 font-bold transition ${
+                  categoryFilter === 'WORKSPACE'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
+                }`}
+              >
+                Workspace ({matchingWorkspaces.length})
+              </button>
+            </div>
+
+            <span className="text-[11px] font-semibold text-text-muted">Dữ liệu thực tế CSDL</span>
+          </div>
+
+          {/* Results Scroll Area */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-4 max-h-[420px] scrollbar-none">
+            {isTasksLoading ? (
+              <div className="p-4 space-y-2">
+                <div className="h-10 animate-pulse rounded-xl bg-surface-alt" />
+                <div className="h-10 animate-pulse rounded-xl bg-surface-alt" />
               </div>
-
-              {/* Section Header */}
-              <div>
-                <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-3">
-                  {t('recentHeader')}
-                </h4>
-
-                {/* Items List */}
-                {isLoading ? (
-                  <div className="space-y-2 py-2">
-                    <div className="h-10 animate-pulse rounded-lg bg-surface-alt" />
-                    <div className="h-10 animate-pulse rounded-lg bg-surface-alt" />
-                  </div>
-                ) : (searchResults?.items || []).length > 0 ? (
-                  <div className="space-y-1">
-                    {(searchResults?.items || []).map((item) => (
+            ) : totalResultsCount === 0 ? (
+              <div className="p-8 text-center text-xs text-text-muted italic space-y-1">
+                <Search className="h-6 w-6 mx-auto text-text-muted opacity-60" />
+                <p>Không tìm thấy kết quả phù hợp cho từ khóa &quot;{query}&quot;</p>
+              </div>
+            ) : (
+              <>
+                {/* Workspaces Section */}
+                {displayWorkspaces.length > 0 && (
+                  <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-extrabold text-text-muted uppercase tracking-wider px-2">
+                      Không gian làm việc (Workspace)
+                    </h4>
+                    {displayWorkspaces.map((ws) => (
                       <div
-                        key={item.id}
+                        key={ws.id}
                         onClick={() => {
                           setIsOpen(false);
-                          router.push(item.link as any);
+                          setActiveWorkspace(ws);
+                          router.push(`/workspaces/${ws.id}`);
                         }}
-                        className="flex items-center space-x-3 rounded-lg px-3 py-2 text-xs cursor-pointer transition hover:bg-surface-alt"
+                        className="flex items-center justify-between rounded-xl px-3 py-2 text-xs cursor-pointer transition hover:bg-surface-alt/80 border border-transparent hover:border-primary/20 group"
                       >
-                        <div className="flex h-7 w-7 items-center justify-center rounded bg-primary/10 text-primary shrink-0">
-                          {item.type === 'PROJECT' ? (
-                            <FolderKanban className="h-4 w-4 text-status-success" />
-                          ) : (
-                            <CheckSquare className="h-4 w-4 text-primary" />
-                          )}
+                        <div className="flex items-center space-x-3 truncate min-w-0">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500 shrink-0 font-bold">
+                            <Building2 className="h-4 w-4" />
+                          </div>
+                          <div className="truncate min-w-0">
+                            <p className="font-bold text-text-primary font-heading group-hover:text-primary transition truncate">
+                              {ws.name}
+                            </p>
+                            <p className="text-[10px] text-text-secondary truncate">
+                              {ws.description || `${ws.memberCount || 1} thành viên`}
+                            </p>
+                          </div>
                         </div>
-                        <div className="truncate flex-1">
-                          <p className="font-semibold text-text-primary truncate">{item.title}</p>
-                          {item.description && (
-                            <p className="text-[11px] text-text-muted truncate">{item.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    {projects.slice(0, 4).map((proj) => (
-                      <div
-                        key={proj.id}
-                        onClick={() => {
-                          setIsOpen(false);
-                          router.push(`/projects/${proj.id}` as any);
-                        }}
-                        className="flex items-center space-x-3 rounded-lg px-3 py-2 text-xs cursor-pointer transition hover:bg-surface-alt"
-                      >
-                        <div
-                          className="flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold text-white shrink-0"
-                          style={{ backgroundColor: proj.color || '#4F46E5' }}
-                        >
-                          {proj.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div className="truncate flex-1">
-                          <p className="font-semibold text-text-primary truncate">{proj.name}</p>
-                          <p className="text-[10px] text-text-muted truncate">Project</p>
-                        </div>
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                          Mở Workspace ➔
+                        </span>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
 
-              {/* Quick Navigation Footer Tags */}
-              <div className="mt-auto pt-4 border-t border-surface-border space-y-3">
-                <div className="flex flex-wrap items-center gap-1.5 text-xs text-text-secondary">
-                  <span className="text-text-muted font-medium">{t('goToAll')}</span>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/workspaces');
-                    }}
-                    className="rounded-md bg-surface-alt px-2.5 py-1 text-[11px] font-semibold text-text-primary hover:bg-menu-active hover:text-menu-activeText transition"
-                  >
-                    {t('boards')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/workspaces');
-                    }}
-                    className="rounded-md bg-surface-alt px-2.5 py-1 text-[11px] font-semibold text-text-primary hover:bg-menu-active hover:text-menu-activeText transition"
-                  >
-                    {t('projects')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/tasks');
-                    }}
-                    className="rounded-md bg-surface-alt px-2.5 py-1 text-[11px] font-semibold text-text-primary hover:bg-menu-active hover:text-menu-activeText transition"
-                  >
-                    {t('filters')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/settings');
-                    }}
-                    className="rounded-md bg-surface-alt px-2.5 py-1 text-[11px] font-semibold text-text-primary hover:bg-menu-active hover:text-menu-activeText transition"
-                  >
-                    {t('people')}
-                  </button>
-                </div>
+                {/* Tasks Section */}
+                {displayTasks.length > 0 && (
+                  <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-extrabold text-text-muted uppercase tracking-wider px-2">
+                      Công việc (Tasks)
+                    </h4>
+                    {displayTasks.map((task) => {
+                      const isCompleted = task.status === 'COMPLETED' || task.status === 'DONE';
+                      return (
+                        <div
+                          key={task.id}
+                          onClick={() => {
+                            setIsOpen(false);
+                            setSelectedTask(task);
+                          }}
+                          className="flex items-center justify-between rounded-xl px-3 py-2.5 text-xs cursor-pointer transition hover:bg-primary/5 border border-transparent hover:border-primary/30 group"
+                        >
+                          <div className="flex items-center space-x-3 truncate min-w-0">
+                            <div className={`flex h-8 w-8 items-center justify-center rounded-xl shrink-0 font-bold ${
+                              isCompleted ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'
+                            }`}>
+                              <CheckSquare className="h-4 w-4" />
+                            </div>
+                            <div className="truncate min-w-0">
+                              <p className="font-bold text-text-primary font-heading group-hover:text-primary transition truncate">
+                                {task.title}
+                              </p>
+                              <div className="flex items-center space-x-2 text-[10px] text-text-muted mt-0.5">
+                                <span className="font-semibold text-text-secondary uppercase">
+                                  {task.status || 'TODO'}
+                                </span>
+                                {task.assignee && (
+                                  <span>• Người làm: {task.assignee.fullName || task.assignee.email}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
-                {/* View all work items action */}
-                <div
-                  onClick={handleNavigateAll}
-                  className="flex items-center justify-between border-t border-surface-border pt-3 text-xs text-text-secondary cursor-pointer hover:text-primary transition"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Search className="h-4 w-4 text-text-muted" />
-                    <span className="font-semibold">{t('viewAllWorkItems')}</span>
+                          <span className="text-[10px] font-bold text-text-muted group-hover:text-primary transition shrink-0 pl-2">
+                            Bấm để xem ➔
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <CornerDownLeft className="h-3.5 w-3.5 text-text-muted" />
-                </div>
-              </div>
-            </div>
+                )}
+              </>
+            )}
+          </div>
 
-            {/* Right Column (40% width): Advanced Jira Filter Panel */}
-            <div className="w-72 overflow-y-auto p-4 space-y-4 bg-surface-alt/30 text-xs">
-              {/* LAST UPDATED */}
-              <div className="space-y-2">
-                <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                  {t('lastUpdated')}
-                </h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {timePillOptions.map((pill) => (
-                    <button
-                      key={pill.id}
-                      onClick={() => setTimeFilter(pill.id)}
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
-                        timeFilter === pill.id
-                          ? 'bg-primary text-white font-semibold shadow-xs'
-                          : 'bg-surface-alt text-text-secondary hover:text-text-primary hover:bg-surface-alt/80'
-                      }`}
-                    >
-                      {pill.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* FILTER BY PROJECT */}
-              <div className="space-y-2 border-t border-surface-border pt-3">
-                <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                  {t('filterByProject')}
-                </h4>
-                <div className="space-y-1.5">
-                  {projects.slice(0, 3).map((proj) => (
-                    <label
-                      key={proj.id}
-                      className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary text-text-secondary"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedProjects.includes(proj.id)}
-                        onChange={() => toggleProjectFilter(proj.id)}
-                        className="rounded border-surface-border text-primary focus:ring-primary h-3.5 w-3.5"
-                      />
-                      <div
-                        className="h-3.5 w-3.5 rounded shrink-0"
-                        style={{ backgroundColor: proj.color || '#4F46E5' }}
-                      />
-                      <span className="truncate">{proj.name}</span>
-                    </label>
-                  ))}
-                  {projects.length > 3 && (
-                    <button className="text-primary hover:underline text-[11px] font-medium">
-                      {t('showMore')}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* FILTER BY ASSIGNEE */}
-              <div className="space-y-2 border-t border-surface-border pt-3">
-                <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                  {t('filterByAssignee')}
-                </h4>
-                <div className="space-y-1.5">
-                  <label className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary text-text-secondary">
-                    <input type="checkbox" className="rounded border-surface-border text-primary focus:ring-primary h-3.5 w-3.5" />
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
-                      KT
-                    </div>
-                    <span>Khoa Tran</span>
-                  </label>
-                  <label className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary text-text-secondary">
-                    <input type="checkbox" className="rounded border-surface-border text-primary focus:ring-primary h-3.5 w-3.5" />
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-bold text-white">
-                      DT
-                    </div>
-                    <span>Dung Tan</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* FILTER BY REPORTER */}
-              <div className="space-y-2 border-t border-surface-border pt-3">
-                <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                  {t('filterByReporter')}
-                </h4>
-                <label className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary text-text-secondary">
-                  <input
-                    type="checkbox"
-                    checked={reportedByMe}
-                    onChange={(e) => setReportedByMe(e.target.checked)}
-                    className="rounded border-surface-border text-primary focus:ring-primary h-3.5 w-3.5"
-                  />
-                  <span>{t('reportedByMe')}</span>
-                </label>
-              </div>
-
-              {/* FILTER BY STATUS */}
-              <div className="space-y-2 border-t border-surface-border pt-3">
-                <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                  {t('filterByStatus')}
-                </h4>
-                <div className="flex items-center space-x-4 text-text-secondary">
-                  <label className="flex items-center space-x-1.5 cursor-pointer hover:text-text-primary">
-                    <input
-                      type="checkbox"
-                      checked={statusFilter.open}
-                      onChange={(e) => setStatusFilter({ ...statusFilter, open: e.target.checked })}
-                      className="rounded border-surface-border text-primary focus:ring-primary h-3.5 w-3.5"
-                    />
-                    <span>{t('statusOpen')}</span>
-                  </label>
-                  <label className="flex items-center space-x-1.5 cursor-pointer hover:text-text-primary">
-                    <input
-                      type="checkbox"
-                      checked={statusFilter.done}
-                      onChange={(e) => setStatusFilter({ ...statusFilter, done: e.target.checked })}
-                      className="rounded border-surface-border text-primary focus:ring-primary h-3.5 w-3.5"
-                    />
-                    <span>{t('statusDone')}</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* FILTER BY LABEL */}
-              <div className="space-y-2 border-t border-surface-border pt-3">
-                <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                  {t('filterByLabel')}
-                </h4>
-                <select className="w-full rounded-lg border border-surface-border bg-surface px-2.5 py-1 text-xs text-text-primary outline-none focus:border-primary">
-                  <option value="">{t('selectLabel')}</option>
-                  <option value="frontend">Frontend</option>
-                  <option value="backend">Backend</option>
-                  <option value="bug">Bug</option>
-                </select>
-              </div>
-
-              {/* Feedback Footer Link */}
-              <div className="border-t border-surface-border pt-2.5 text-right">
-                <button className="text-[11px] text-text-muted hover:text-text-primary transition">
-                  {t('giveFeedback')}
-                </button>
-              </div>
-            </div>
+          {/* Quick Footer Bar */}
+          <div className="flex items-center justify-between border-t border-surface-border px-4 py-2.5 bg-surface-alt/30 text-xs">
+            <span className="text-[11px] text-text-secondary">
+              Mẹo: Nhấn <kbd className="font-mono font-bold text-primary">Esc</kbd> để đóng nhanh
+            </span>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push('/tasks');
+              }}
+              className="flex items-center space-x-1 font-bold text-primary hover:underline text-xs"
+            >
+              <span>Xem tất cả công việc</span>
+              <CornerDownLeft className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       )}
+
+      {/* Task Detail Modal for Search Clicks */}
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
     </div>
   );
 }

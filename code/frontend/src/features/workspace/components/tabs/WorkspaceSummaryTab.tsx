@@ -1,20 +1,14 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   CheckCircle2, 
   Clock, 
   PlusCircle, 
   Calendar, 
-  Filter, 
-  Info, 
-  X,
   Activity,
   CheckSquare,
   Bookmark
 } from 'lucide-react';
-import { useAuthStore } from '@/store/auth-store';
 import type { TaskDto } from '@/features/task/types';
 
 interface WorkspaceSummaryTabProps {
@@ -31,9 +25,6 @@ export function WorkspaceSummaryTab({
   onOpenCreateTask,
 }: WorkspaceSummaryTabProps) {
   const { t } = useTranslation('workspace');
-  const { t: tTask } = useTranslation('task');
-  const user = useAuthStore((state) => state.user);
-  const [showBanner, setShowBanner] = useState(true);
 
   // Compute Statistics
   const totalTasks = tasks.length;
@@ -54,47 +45,30 @@ export function WorkspaceSummaryTab({
   const inProgressPct = totalTasks > 0 ? Math.round((inProgressTasks / totalTasks) * 100) : 0;
   const todoPct = totalTasks > 0 ? Math.round((todoTasks / totalTasks) * 100) : 0;
 
+  // Compute real Assignee Workload Breakdown
+  const assigneeCounts: Record<string, { name: string; count: number }> = {};
+  let unassignedCount = 0;
+
+  tasks.forEach((t) => {
+    if (t.assignee?.fullName || t.assigneeId) {
+      const key = t.assigneeId || t.assignee?.fullName || 'other';
+      const name = t.assignee?.fullName || t.assignee?.email || 'Thành viên';
+      if (!assigneeCounts[key]) {
+        assigneeCounts[key] = { name, count: 0 };
+      }
+      assigneeCounts[key].count += 1;
+    } else {
+      unassignedCount += 1;
+    }
+  });
+
+  const assigneeList = Object.values(assigneeCounts);
+  if (unassignedCount > 0) {
+    assigneeList.push({ name: 'Chưa phân công', count: unassignedCount });
+  }
+
   return (
     <div className="space-y-6 pb-12 text-text-primary">
-      {/* Informational Customisation Banner */}
-      {showBanner && (
-        <div className="relative flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/80 p-4 text-xs dark:border-blue-900/40 dark:bg-blue-950/30">
-          <div className="flex items-start space-x-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white shadow-xs">
-              <Info className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="font-bold text-blue-900 dark:text-blue-200 font-heading">
-                {t('summary.customiseBannerTitle', { defaultValue: 'Customise your Reports view to suit your space.' })}
-              </p>
-              <p className="mt-0.5 text-blue-700 dark:text-blue-300">
-                {t('summary.customiseBannerSubtitle', { defaultValue: 'Head to the Reports tab to easily customise charts and widgets for a dashboard tailored to your space.' })}{' '}
-                <button className="font-semibold underline hover:text-blue-900">
-                  {t('summary.takeMeToReports', { defaultValue: 'Take me to Reports' })}
-                </button>
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowBanner(false)}
-            className="rounded-lg p-1 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/50"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Filter Bar */}
-      <div className="flex items-center space-x-3">
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-xs">
-          {user?.fullName?.substring(0, 1).toUpperCase() || 'U'}
-        </div>
-        <button className="flex items-center space-x-1.5 rounded-lg border border-surface-border bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface-alt hover:text-text-primary shadow-xs">
-          <Filter className="h-3.5 w-3.5" />
-          <span>{t('summary.filter', { defaultValue: 'Filter' })}</span>
-        </button>
-      </div>
-
       {/* 4 Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Completed */}
@@ -314,48 +288,42 @@ export function WorkspaceSummaryTab({
           </div>
         </div>
 
-        {/* Types of Work Card */}
+        {/* Assignee Workload Breakdown Card (REAL DATA) */}
         <div className="rounded-xl border border-surface-border bg-surface p-5 shadow-xs">
           <div className="mb-4">
             <h3 className="text-sm font-bold text-text-primary font-heading">
-              {t('summary.typesOfWork', { defaultValue: 'Types of work' })}
+              {t('summary.assigneeWorkload', { defaultValue: 'Phân công công việc nhóm' })}
             </h3>
             <p className="text-xs text-text-secondary">
-              Get a breakdown of work items by their types.
+              {t('summary.assigneeWorkloadSubtitle', { defaultValue: 'Thống kê phân bổ công việc theo người thực hiện' })}
             </p>
           </div>
 
-          <div className="space-y-3.5 pt-2 text-xs">
-            <div className="flex items-center justify-between border-b border-surface-border pb-1.5 font-bold text-text-muted text-[10px] uppercase">
-              <span>Type</span>
-              <span>Distribution</span>
-            </div>
+          <div className="space-y-3 pt-1 max-h-48 overflow-y-auto pr-1">
+            {assigneeList.length === 0 ? (
+              <p className="text-xs text-text-muted italic py-6 text-center">Chưa có dữ liệu phân công công việc</p>
+            ) : (
+              assigneeList.map((item, idx) => {
+                const pct = totalTasks > 0 ? Math.round((item.count / totalTasks) * 100) : 0;
+                const colors = ['bg-indigo-500', 'bg-purple-500', 'bg-emerald-500', 'bg-amber-500', 'bg-sky-500', 'bg-gray-500'];
+                const barColor = colors[idx % colors.length];
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 font-medium text-text-primary">
-                <CheckSquare className="h-4 w-4 text-blue-500" />
-                <span>Task</span>
-              </div>
-              <div className="flex items-center space-x-3 w-1/2">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-surface-alt">
-                  <div className="h-full bg-blue-500" style={{ width: `${totalTasks > 0 ? 60 : 0}%` }} />
-                </div>
-                <span className="font-bold text-text-primary w-8 text-right">{totalTasks > 0 ? '60%' : '0%'}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 font-medium text-text-primary">
-                <Bookmark className="h-4 w-4 text-emerald-500" />
-                <span>Story</span>
-              </div>
-              <div className="flex items-center space-x-3 w-1/2">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-surface-alt">
-                  <div className="h-full bg-emerald-500" style={{ width: `${totalTasks > 0 ? 25 : 0}%` }} />
-                </div>
-                <span className="font-bold text-text-primary w-8 text-right">{totalTasks > 0 ? '25%' : '0%'}</span>
-              </div>
-            </div>
+                return (
+                  <div key={item.name} className="space-y-1 text-xs">
+                    <div className="flex justify-between font-medium">
+                      <span className="text-text-primary font-semibold flex items-center space-x-1">
+                        <span>👤</span>
+                        <span>{item.name}</span>
+                      </span>
+                      <span className="font-bold text-text-primary">{item.count} ({pct}%)</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-alt">
+                      <div className={`h-full ${barColor} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

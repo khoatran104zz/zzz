@@ -31,27 +31,42 @@ import com.taskflow.modules.workspace.dto.UpdateMemberRoleRequest;
 import com.taskflow.modules.workspace.dto.WorkspaceInvitationDto;
 import com.taskflow.modules.workspace.entity.WorkspaceInvitationEntity;
 import com.taskflow.modules.workspace.repository.WorkspaceInvitationRepository;
+import com.taskflow.modules.notification.dto.CreateNotificationRequest;
+import com.taskflow.modules.notification.service.NotificationService;
+import com.taskflow.modules.user.entity.UserEntity;
+import com.taskflow.modules.user.repository.UserRepository;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class WorkspaceServiceImpl implements WorkspaceService {
+
+    private static final Logger log = LoggerFactory.getLogger(WorkspaceServiceImpl.class);
 
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final WorkspaceInvitationRepository invitationRepository;
     private final UserService userService;
     private final WorkspaceMapper workspaceMapper;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public WorkspaceServiceImpl(
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
             WorkspaceInvitationRepository invitationRepository,
             UserService userService,
-            WorkspaceMapper workspaceMapper) {
+            WorkspaceMapper workspaceMapper,
+            UserRepository userRepository,
+            NotificationService notificationService) {
         this.workspaceRepository = workspaceRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
         this.invitationRepository = invitationRepository;
         this.userService = userService;
         this.workspaceMapper = workspaceMapper;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -184,25 +199,62 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     @Transactional
     public WorkspaceInvitationDto inviteMember(UUID userId, UUID workspaceId, InviteMemberRequest request) {
         WorkspaceEntity workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new AppException(ResultCode.NOT_FOUND, "Workspace not found"));
+                .orElseThrow(() -> new AppException(ResultCode.NOT_FOUND, "Không tìm thấy Workspace"));
 
         String userRole = getUserRoleInWorkspace(workspace, userId);
-        if (!"OWNER".equals(userRole) && !"ADMIN".equals(userRole)) {
-            throw new AppException(ResultCode.FORBIDDEN, "Only Owner or Admin can invite members");
+        if (!"OWNER".equals(userRole) && !"ADMIN".equals(userRole) && !"MANAGER".equals(userRole)) {
+            throw new AppException(ResultCode.FORBIDDEN, "Chỉ Owner, Admin hoặc Manager mới có quyền mời thành viên");
         }
 
+        String targetEmail = request.getEmail().trim().toLowerCase();
+        log.info("Processing workspace invitation for email: {} to workspace: {}", targetEmail, workspaceId);
+
+        // Check if user is ALREADY an active workspace member
+        Optional<UserEntity> targetUserOpt = userRepository.findByEmailIgnoreCase(targetEmail);
+        if (targetUserOpt.isPresent()) {
+            UserEntity targetUser = targetUserOpt.get();
+            log.info("Found user for target email {}: userId={}", targetEmail, targetUser.getId());
+            if (workspaceMemberRepository.findByWorkspaceIdAndUserId(workspaceId, targetUser.getId()).isPresent()) {
+                log.warn("User {} is already an active member of workspace {}", targetEmail, workspaceId);
+                throw new AppException(ResultCode.DATA_ALREADY_EXISTS, "Thành viên với email '" + targetEmail + "' đã tham gia Workspace này rồi.");
+            }
+        } else {
+            log.info("Target email {} is not registered in system yet.", targetEmail);
+        }
+
+        // Save Invitation record with PENDING status
         String token = UUID.randomUUID().toString();
         Instant expiresAt = Instant.now().plus(7, java.time.temporal.ChronoUnit.DAYS);
+        String invitationRole = request.getRole() != null ? request.getRole().toUpperCase() : "MEMBER";
 
         WorkspaceInvitationEntity invitation = new WorkspaceInvitationEntity(
                 workspaceId,
-                request.getEmail().trim().toLowerCase(),
-                request.getRole() != null ? request.getRole().toUpperCase() : "MEMBER",
+                targetEmail,
+                invitationRole,
                 token,
                 expiresAt
         );
 
         WorkspaceInvitationEntity saved = invitationRepository.save(invitation);
+        log.info("Saved workspace invitation id={} for target email {}", saved.getId(), targetEmail);
+
+        // Send in-app Notification to target user account if registered
+        if (targetUserOpt.isPresent()) {
+            UserEntity targetUser = targetUserOpt.get();
+            try {
+                notificationService.createNotification(new CreateNotificationRequest(
+                        "Lời mời tham gia Không gian làm việc",
+                        "Bạn nhận được lời mời tham gia Workspace '" + workspace.getName() + "' với vai trò " + invitationRole + ". Vui lòng nhấn vào đây để chấp nhận tham gia.",
+                        targetUser.getId(),
+                        "WORKSPACE_INVITATION",
+                        "/invite/" + saved.getToken()
+                ));
+                log.info("Successfully created WORKSPACE_INVITATION notification for target userId={}", targetUser.getId());
+            } catch (Exception e) {
+                log.error("Failed to create in-app notification for target userId={}", targetUser.getId(), e);
+            }
+        }
+
         return new WorkspaceInvitationDto(
                 saved.getId(),
                 saved.getWorkspaceId(),
@@ -311,6 +363,23 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             userDto = userService.getCurrentUserProfile(userId);
         } catch (Exception ignored) {
         }
+
+        // Notify Workspace Owner that user has accepted
+        WorkspaceEntity workspace = workspaceRepository.findById(invitation.getWorkspaceId()).orElse(null);
+        if (workspace != null && !workspace.getOwnerId().equals(userId)) {
+            try {
+                String memberName = (userDto != null && userDto.getFullName() != null) ? userDto.getFullName() : "Mới";
+                notificationService.createNotification(new CreateNotificationRequest(
+                        "Thành viên mới tham gia Workspace",
+                        "Thành viên " + memberName + " đã chấp nhận lời mời và chính thức tham gia Workspace '" + workspace.getName() + "'.",
+                        workspace.getOwnerId(),
+                        "WORKSPACE_MEMBER_JOINED",
+                        "/workspaces/" + workspace.getId()
+                ));
+            } catch (Exception ignored) {
+            }
+        }
+
         return workspaceMapper.toMemberDto(saved, userDto);
     }
 

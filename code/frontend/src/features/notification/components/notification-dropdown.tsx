@@ -50,7 +50,7 @@ export function NotificationDropdown() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white transition"
+        className="relative rounded-lg p-2 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -58,26 +58,26 @@ export function NotificationDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 z-50 w-80 sm:w-96 rounded-2xl border border-white/10 bg-[#111827] p-4 shadow-2xl space-y-3">
+        <div className="absolute right-0 mt-2 z-50 w-80 sm:w-96 rounded-2xl border border-surface-border bg-surface text-text-primary p-4 shadow-2xl space-y-3">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white">Notifications</h3>
+          <div className="flex items-center justify-between border-b border-surface-border pb-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary">Thông báo</h3>
 
             <button
               type="button"
               onClick={() => markAllRead.mutate()}
-              className="flex items-center space-x-1 text-[11px] text-indigo-400 hover:text-indigo-300 transition"
+              className="flex items-center space-x-1 text-[11px] font-semibold text-primary hover:text-primary-hover transition"
             >
               <CheckCheck className="h-3.5 w-3.5" />
-              <span>Mark all read</span>
+              <span>Đánh dấu tất cả đã đọc</span>
             </button>
           </div>
 
           {/* List */}
           {isLoading ? (
             <div className="space-y-2 py-2">
-              <div className="h-14 animate-pulse rounded-xl bg-gray-900/60" />
-              <div className="h-14 animate-pulse rounded-xl bg-gray-900/60" />
+              <div className="h-14 animate-pulse rounded-xl bg-surface-alt" />
+              <div className="h-14 animate-pulse rounded-xl bg-surface-alt" />
             </div>
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto pr-0.5">
@@ -91,19 +91,19 @@ export function NotificationDropdown() {
               ))}
 
               {notifications.length === 0 && (
-                <p className="text-center py-6 text-xs text-gray-500 italic">No notifications yet.</p>
+                <p className="text-center py-6 text-xs text-text-muted italic">Chưa có thông báo nào.</p>
               )}
             </div>
           )}
 
           {/* Footer Link */}
-          <div className="border-t border-white/10 pt-2 text-center">
+          <div className="border-t border-surface-border pt-2 text-center">
             <Link
               href={"/notifications" as any}
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center space-x-1 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition"
+              className="inline-flex items-center space-x-1 text-xs font-medium text-primary hover:text-primary-hover transition"
             >
-              <span>View All Notifications</span>
+              <span>Xem tất cả thông báo</span>
               <ExternalLink className="h-3 w-3" />
             </Link>
           </div>

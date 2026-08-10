@@ -1,0 +1,28 @@
+{
+  "welcome": "Xin chào",
+  "welcomeAdmin": "Hệ thống Quản trị: Theo dõi toàn bộ tiến độ công việc, dự án và nhật ký hoạt động hệ thống.",
+  "welcomeManager": "Hệ thống Quản lý: Điều phối dự án, theo dõi tiến độ Sprint và khối lượng công việc nhóm.",
+  "welcomeStaff": "Không gian làm việc Nhân viên: Theo dõi các công việc được giao, tiến độ cá nhân và lịch công việc.",
+  "stats": {
+    "todayTasks": "Hôm nay",
+    "todayTasksSub": "Công việc cần làm hôm nay",
+    "upcomingTasks": "Sắp tới",
+    "upcomingTasksSub": "Hạn chót trong 7 ngày tới",
+    "overdueTasks": "Quá hạn",
+    "overdueTasksSub": "Công việc đã quá hạn",
+    "completionRate": "Tỷ lệ hoàn thành",
+    "completedSub": "{{completed}} / {{total}} đã hoàn thành"
+  },
+  "focus": {
+    "title": "Công việc cần xử lý",
+    "subtitle": "Các công việc cần ưu tiên hoàn thành",
+    "urgentAction": "Cần xử lý gấp",
+    "todayTitle": "Cần làm hôm nay ({{count}})"
+  },
+  "overview": {
+    "title": "Tổng quan Không gian làm việc",
+    "subtitle": "Thông tin chi tiết về Workspace",
+    "members": "Thành viên",
+    "membersCount": "{{count}} người"
+  }
+}

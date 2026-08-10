@@ -8,12 +8,16 @@ import { useWorkspaceStore } from '@/store/workspace-store';
 import { useInviteMember } from '@/features/team/hooks/use-team';
 import { WorkspaceHeader, type WorkspaceTab } from '@/features/workspace/components/WorkspaceHeader';
 import { WorkspaceSummaryTab } from '@/features/workspace/components/tabs/WorkspaceSummaryTab';
-import { WorkspaceBacklogTab } from '@/features/workspace/components/tabs/WorkspaceBacklogTab';
 import { WorkspaceBoardTab } from '@/features/workspace/components/tabs/WorkspaceBoardTab';
 import { WorkspaceTimelineTab } from '@/features/workspace/components/tabs/WorkspaceTimelineTab';
 import { WorkspaceFormsTab } from '@/features/workspace/components/tabs/WorkspaceFormsTab';
+import { WorkspaceMembersTab } from '@/features/workspace/components/tabs/WorkspaceMembersTab';
 import { GlobalTaskModal } from '@/features/task/components/global-task-modal';
+import { AssignTaskModal } from '@/features/task/components/assign-task-modal';
 import { InviteDialog } from '@/features/team/components/invite-dialog';
+
+import { TaskDetailModal } from '@/features/task/components/task-detail-modal';
+import type { TaskDto } from '@/features/task/types';
 
 export default function WorkspaceDetailPage() {
   const params = useParams();
@@ -26,7 +30,9 @@ export default function WorkspaceDetailPage() {
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('summary');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskDto | null>(null);
 
   const inviteMutation = useInviteMember(workspaceId);
   const { data: tasks = [], isLoading: isTasksLoading } = useWorkspaceTasks(workspaceId || null);
@@ -39,6 +45,8 @@ export default function WorkspaceDetailPage() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onOpenInviteMember={() => setIsInviteOpen(true)}
+        onOpenAssignTask={() => setIsAssignModalOpen(true)}
+        onOpenCreateTask={() => setIsTaskModalOpen(true)}
       />
 
       {/* Tab Content Display */}
@@ -51,19 +59,12 @@ export default function WorkspaceDetailPage() {
         />
       )}
 
-      {activeTab === 'backlog' && (
-        <WorkspaceBacklogTab
-          tasks={tasks}
-          isLoading={isTasksLoading}
-          onOpenCreateTask={() => setIsTaskModalOpen(true)}
-        />
-      )}
-
       {activeTab === 'board' && (
         <WorkspaceBoardTab
           tasks={tasks}
           isLoading={isTasksLoading}
           onOpenCreateTask={() => setIsTaskModalOpen(true)}
+          onSelectTask={(task) => setSelectedTask(task)}
         />
       )}
 
@@ -72,19 +73,46 @@ export default function WorkspaceDetailPage() {
           tasks={tasks}
           isLoading={isTasksLoading}
           onOpenCreateTask={() => setIsTaskModalOpen(true)}
+          onSelectTask={(task) => setSelectedTask(task)}
+        />
+      )}
+
+      {activeTab === 'members' && (
+        <WorkspaceMembersTab
+          workspaceId={workspaceId}
+          onOpenInviteMember={() => setIsInviteOpen(true)}
         />
       )}
 
       {activeTab === 'forms' && <WorkspaceFormsTab workspaceId={workspaceId} />}
 
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
+
       {/* Dialogs */}
       <GlobalTaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} />
-      
+
+      {/* Assign Task Dedicated Modal for Admin & Manager */}
+      <AssignTaskModal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        workspaceId={workspaceId}
+      />
+
       {/* Add Member Invite Dialog */}
       <InviteDialog
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
-        onSubmit={(payload) => inviteMutation.mutate(payload)}
+        onSubmit={(payload, callbacks) => {
+          inviteMutation.mutate(payload, {
+            onSuccess: () => callbacks?.onSuccess?.(),
+            onError: (err: any) => callbacks?.onError?.(err),
+          });
+        }}
         isLoading={inviteMutation.isPending}
       />
     </div>

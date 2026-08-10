@@ -122,7 +122,12 @@ export function TeamSettings({ workspaceId }: TeamSettingsProps) {
       <InviteDialog
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
-        onSubmit={(payload) => inviteMutation.mutate(payload)}
+        onSubmit={(payload, callbacks) => {
+          inviteMutation.mutate(payload, {
+            onSuccess: () => callbacks?.onSuccess?.(),
+            onError: (err: any) => callbacks?.onError?.(err),
+          });
+        }}
         isLoading={inviteMutation.isPending}
       />
     </div>

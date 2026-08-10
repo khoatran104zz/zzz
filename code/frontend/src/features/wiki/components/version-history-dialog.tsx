@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, History, Clock, FileText } from 'lucide-react';
+import { X, History, Clock } from 'lucide-react';
 import type { WikiPageVersionDto } from '../types';
 
 interface VersionHistoryDialogProps {
@@ -18,63 +18,67 @@ export function VersionHistoryDialog({ versions, isOpen, onClose }: VersionHisto
   const activeVersion = selectedVersion || versions[0] || null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-      <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-3xl rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl text-text-primary">
+        <div className="flex items-center justify-between border-b border-surface-border pb-4">
           <div className="flex items-center space-x-2">
-            <History className="h-5 w-5 text-indigo-400" />
-            <h3 className="text-lg font-bold text-white font-heading">Version History Snapshots</h3>
+            <History className="h-5 w-5 text-primary" />
+            <h3 className="text-base font-extrabold text-text-primary font-heading">Lịch sử phiên bản tài liệu</h3>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 hover:bg-white/5 hover:text-white"
+            className="rounded-xl p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-4 flex h-[400px] overflow-hidden rounded-xl border border-white/10 bg-white/5">
+        <div className="mt-4 flex h-[400px] overflow-hidden rounded-xl border border-surface-border bg-surface-alt/40">
           {/* Left Version List */}
-          <div className="w-56 shrink-0 border-r border-white/10 bg-[#111827]/80 overflow-y-auto p-2 divide-y divide-white/5">
-            {versions.map((v) => (
-              <div
-                key={v.id}
-                onClick={() => setSelectedVersion(v)}
-                className={`p-2.5 rounded-xl cursor-pointer transition text-xs ${
-                  activeVersion?.id === v.id
-                    ? 'bg-indigo-600/20 text-indigo-300 font-semibold border border-indigo-500/20'
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-white">Version {v.version}</span>
-                  <div className="flex items-center space-x-1 text-[10px] text-gray-400">
-                    <Clock className="h-3 w-3" />
-                    <span>{new Date(v.createdAt).toLocaleDateString()}</span>
+          <div className="w-56 shrink-0 border-r border-surface-border bg-surface overflow-y-auto p-2 divide-y divide-surface-border/40">
+            {versions.length === 0 ? (
+              <p className="p-4 text-center text-xs text-text-muted italic">Chưa có phiên bản nào</p>
+            ) : (
+              versions.map((v) => (
+                <div
+                  key={v.id}
+                  onClick={() => setSelectedVersion(v)}
+                  className={`p-2.5 rounded-xl cursor-pointer transition text-xs ${
+                    activeVersion?.id === v.id
+                      ? 'bg-primary/10 text-primary font-bold border border-primary/20'
+                      : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-text-primary">Phiên bản {v.version}</span>
+                    <div className="flex items-center space-x-1 text-[10px] text-text-muted">
+                      <Clock className="h-3 w-3" />
+                      <span>{new Date(v.createdAt).toLocaleDateString('vi-VN')}</span>
+                    </div>
                   </div>
+                  <p className="mt-1 text-[11px] text-text-muted truncate">{v.changeSummary || 'Cập nhật nội dung'}</p>
                 </div>
-                <p className="mt-1 text-[11px] text-gray-400 truncate">{v.changeSummary || 'Edit'}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Right Snapshot Content View */}
           <div className="flex-1 p-4 overflow-y-auto">
             {activeVersion ? (
               <div className="space-y-3">
-                <div className="border-b border-white/10 pb-2">
-                  <h4 className="text-sm font-bold text-white font-heading">{activeVersion.title}</h4>
-                  <p className="text-[10px] text-gray-400 mt-0.5">
-                    Saved on {new Date(activeVersion.createdAt).toLocaleString()}
+                <div className="border-b border-surface-border pb-2">
+                  <h4 className="text-sm font-extrabold text-text-primary font-heading">{activeVersion.title}</h4>
+                  <p className="text-[10px] text-text-muted mt-0.5">
+                    Đã lưu vào {new Date(activeVersion.createdAt).toLocaleString('vi-VN')}
                   </p>
                 </div>
-                <div className="text-xs text-gray-300 whitespace-pre-wrap font-mono">
-                  {activeVersion.content || <span className="text-gray-500 italic">Empty content</span>}
+                <div className="text-xs text-text-primary whitespace-pre-wrap font-mono leading-relaxed">
+                  {activeVersion.content || <span className="text-text-muted italic">Không có nội dung</span>}
                 </div>
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center text-xs text-gray-500">
-                Select a version to inspect snapshot
+              <div className="flex h-full items-center justify-center text-xs text-text-muted italic">
+                Chọn một phiên bản để xem nội dung tại thời điểm đó
               </div>
             )}
           </div>

@@ -4,6 +4,8 @@ export type NotificationType =
   | 'REMINDER_TRIGGERED'
   | 'COMMENT_ADDED'
   | 'TAG_ADDED'
+  | 'WORKSPACE_INVITATION'
+  | 'PROJECT_MEMBER_ADDED'
   | 'SYSTEM';
 
 export interface NotificationDto {

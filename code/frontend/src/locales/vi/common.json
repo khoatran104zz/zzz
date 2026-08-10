@@ -48,5 +48,10 @@
   "emptyState": {
     "title": "Chưa có dữ liệu",
     "description": "Không tìm thấy dữ liệu phù hợp."
+  },
+  "confirmDelete": {
+    "title": "Xác nhận xóa",
+    "description": "Bạn có chắc chắn muốn xóa không? Thao tác này không thể hoàn tác.",
+    "descriptionWithItem": "Bạn có chắc chắn muốn xóa \"{{name}}\" không? Thao tác này không thể hoàn tác."
   }
 }

@@ -2,6 +2,12 @@
   "title": "Quản lý công việc",
   "subtitle": "Danh sách và trạng thái công việc của bạn",
   "createTask": "Tạo công việc mới",
+  "assignTask": "Giao việc",
+  "assignTaskModalTitle": "Giao công việc cho thành viên",
+  "assignTaskModalSubtitle": "Chọn thành viên và phân công công việc trong dự án",
+  "assignAction": "Phân công công việc",
+  "selectTask": "Chọn công việc cần giao",
+  "newTaskOption": "+ Tạo nhiệm vụ mới để giao",
   "taskDetails": "Chi tiết công việc",
   "quickCreate": "Tạo nhanh công việc",
   "fields": {

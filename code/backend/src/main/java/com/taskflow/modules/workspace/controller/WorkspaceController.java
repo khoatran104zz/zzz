@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.taskflow.modules.workspace.dto.InviteMemberRequest;
 import com.taskflow.modules.workspace.dto.UpdateMemberRoleRequest;
@@ -41,6 +42,7 @@ public class WorkspaceController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
     @Operation(summary = "Create a new workspace")
     public ResponseEntity<ApiResponse<WorkspaceDto>> createWorkspace(
             @AuthenticationPrincipal UserPrincipal principal,

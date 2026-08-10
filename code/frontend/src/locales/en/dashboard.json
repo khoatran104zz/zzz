@@ -1,0 +1,28 @@
+{
+  "welcome": "Welcome",
+  "welcomeAdmin": "Admin System: Monitor system-wide task progress, projects, and activity logs.",
+  "welcomeManager": "Manager System: Coordinate projects, monitor sprint progress, and team workload.",
+  "welcomeStaff": "Staff Workspace: Track assigned tasks, personal progress, and work schedule.",
+  "stats": {
+    "todayTasks": "Due Today",
+    "todayTasksSub": "Tasks due today",
+    "upcomingTasks": "Upcoming",
+    "upcomingTasksSub": "Due in next 7 days",
+    "overdueTasks": "Overdue",
+    "overdueTasksSub": "Tasks overdue",
+    "completionRate": "Completion Rate",
+    "completedSub": "{{completed}} / {{total}} completed"
+  },
+  "focus": {
+    "title": "Tasks Focus",
+    "subtitle": "Tasks requiring immediate attention",
+    "urgentAction": "Action Required",
+    "todayTitle": "Due Today ({{count}})"
+  },
+  "overview": {
+    "title": "Workspace Overview",
+    "subtitle": "Details about current space",
+    "members": "Members",
+    "membersCount": "{{count}} members"
+  }
+}

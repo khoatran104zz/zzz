@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, AlignLeft, Palette } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, AlignLeft, Palette, Loader2 } from 'lucide-react';
 import type { CalendarEventItemDto } from '../types';
 import { useCreateCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent } from '../hooks/use-calendar';
 
@@ -83,35 +83,42 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
   const isReadOnlyTask = event?.eventType === 'TASK';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <h3 className="text-sm font-bold text-white font-heading">
-            {isReadOnlyTask ? 'Task Details' : event ? 'Edit Event' : 'Create Event'}
-          </h3>
-          <button onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-white/5 hover:text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl space-y-4 text-text-primary">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-surface-border pb-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Calendar className="h-4 w-4" />
+            </div>
+            <h3 className="text-sm font-bold text-text-primary font-heading">
+              {isReadOnlyTask ? 'Chi tiết công việc' : event ? 'Chỉnh sửa sự kiện' : 'Tạo sự kiện mới'}
+            </h3>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           <div>
-            <label className="block text-gray-400 font-medium mb-1">Title</label>
+            <label className="block text-text-secondary font-semibold mb-1">Tiêu đề sự kiện *</label>
             <input
               type="text"
               required
               disabled={isReadOnlyTask}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Event title"
-              className="w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+              placeholder="Nhập tiêu đề sự kiện..."
+              className="w-full rounded-xl border border-surface-border bg-surface-alt px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none disabled:opacity-70"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-gray-400 font-medium mb-1 flex items-center">
-                <Clock className="mr-1 h-3 w-3" /> Start
+              <label className="block text-text-secondary font-semibold mb-1 flex items-center">
+                <Clock className="mr-1 h-3 w-3 text-primary" /> Bắt đầu
               </label>
               <input
                 type="datetime-local"
@@ -119,12 +126,12 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
                 disabled={isReadOnlyTask}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-gray-900 px-2.5 py-1.5 text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+                className="w-full rounded-xl border border-surface-border bg-surface-alt px-2.5 py-1.5 text-text-primary focus:border-primary focus:outline-none disabled:opacity-70"
               />
             </div>
             <div>
-              <label className="block text-gray-400 font-medium mb-1 flex items-center">
-                <Clock className="mr-1 h-3 w-3" /> End
+              <label className="block text-text-secondary font-semibold mb-1 flex items-center">
+                <Clock className="mr-1 h-3 w-3 text-primary" /> Kết thúc
               </label>
               <input
                 type="datetime-local"
@@ -132,43 +139,43 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
                 disabled={isReadOnlyTask}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-gray-900 px-2.5 py-1.5 text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+                className="w-full rounded-xl border border-surface-border bg-surface-alt px-2.5 py-1.5 text-text-primary focus:border-primary focus:outline-none disabled:opacity-70"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-gray-400 font-medium mb-1 flex items-center">
-              <MapPin className="mr-1 h-3 w-3" /> Location / Link
+            <label className="block text-text-secondary font-semibold mb-1 flex items-center">
+              <MapPin className="mr-1 h-3 w-3 text-emerald-500" /> Địa điểm / Liên kết cuộc họp
             </label>
             <input
               type="text"
               disabled={isReadOnlyTask}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Optional meeting link or room"
-              className="w-full rounded-lg border border-white/10 bg-gray-900 px-3 py-1.5 text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+              placeholder="Nhập địa điểm hoặc link Google Meet / Zoom..."
+              className="w-full rounded-xl border border-surface-border bg-surface-alt px-3 py-1.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none disabled:opacity-70"
             />
           </div>
 
           <div>
-            <label className="block text-gray-400 font-medium mb-1 flex items-center">
-              <AlignLeft className="mr-1 h-3 w-3" /> Description
+            <label className="block text-text-secondary font-semibold mb-1 flex items-center">
+              <AlignLeft className="mr-1 h-3 w-3 text-text-muted" /> Ghi chú / Mô tả
             </label>
             <textarea
-              rows={2}
+              rows={2.5}
               disabled={isReadOnlyTask}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Event description..."
-              className="w-full resize-none rounded-lg border border-white/10 bg-gray-900 px-3 py-1.5 text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+              placeholder="Mô tả nội dung sự kiện..."
+              className="w-full resize-none rounded-xl border border-surface-border bg-surface-alt px-3 py-1.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none disabled:opacity-70"
             />
           </div>
 
           {!isReadOnlyTask && (
             <div>
-              <label className="block text-gray-400 font-medium mb-1 flex items-center">
-                <Palette className="mr-1 h-3 w-3" /> Badge Color
+              <label className="block text-text-secondary font-semibold mb-1.5 flex items-center">
+                <Palette className="mr-1 h-3 w-3 text-purple-500" /> Màu sắc hiển thị
               </label>
               <div className="flex items-center space-x-2">
                 {PRESET_COLORS.map((c) => (
@@ -177,21 +184,21 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
                     type="button"
                     onClick={() => setColor(c)}
                     style={{ backgroundColor: c }}
-                    className={`h-5 w-5 rounded-full transition ${color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}`}
+                    className={`h-5 w-5 rounded-full transition shadow-xs ${color === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-surface' : ''}`}
                   />
                 ))}
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between border-t border-white/10 pt-3">
+          <div className="flex items-center justify-between border-t border-surface-border pt-3.5">
             {event && event.eventType === 'CUSTOM' ? (
               <button
                 type="button"
                 onClick={handleDelete}
-                className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-red-400 hover:bg-red-600 hover:text-white transition"
+                className="rounded-xl border border-status-error/30 bg-status-error/10 px-3 py-1.5 text-status-error hover:bg-status-error hover:text-white transition font-semibold"
               >
-                Delete
+                Xóa sự kiện
               </button>
             ) : <div />}
 
@@ -199,17 +206,21 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-white/10 px-3 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white transition"
+                className="rounded-xl border border-surface-border bg-surface-alt px-3.5 py-1.5 font-semibold text-text-secondary hover:bg-surface hover:text-text-primary transition"
               >
-                Cancel
+                Hủy
               </button>
               {!isReadOnlyTask && (
                 <button
                   type="submit"
                   disabled={createEvent.isPending || updateEvent.isPending}
-                  className="rounded-lg bg-indigo-600 px-4 py-1.5 font-semibold text-white hover:bg-indigo-500 disabled:opacity-40 transition"
+                  className="flex items-center space-x-1.5 rounded-xl bg-primary px-4 py-1.5 font-semibold text-white shadow-xs hover:bg-primary-hover disabled:opacity-50 transition"
                 >
-                  Save
+                  {createEvent.isPending || updateEvent.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <span>Lưu sự kiện</span>
+                  )}
                 </button>
               )}
             </div>

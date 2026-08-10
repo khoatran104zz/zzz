@@ -12,6 +12,8 @@ import {
   FileSpreadsheet, 
   Plus, 
   UserPlus, 
+  UserCheck,
+  Users,
   MoreHorizontal, 
   Share2, 
   Zap, 
@@ -21,13 +23,15 @@ import {
 import type { WorkspaceDto } from '../types';
 import { useAuthStore } from '@/store/auth-store';
 
-export type WorkspaceTab = 'summary' | 'backlog' | 'board' | 'timeline' | 'forms';
+export type WorkspaceTab = 'summary' | 'board' | 'timeline' | 'members' | 'forms';
 
 interface WorkspaceHeaderProps {
   workspace: WorkspaceDto | null;
   activeTab: WorkspaceTab;
   onTabChange: (tab: WorkspaceTab) => void;
   onOpenInviteMember: () => void;
+  onOpenAssignTask?: () => void;
+  onOpenCreateTask?: () => void;
 }
 
 export function WorkspaceHeader({
@@ -35,9 +39,12 @@ export function WorkspaceHeader({
   activeTab,
   onTabChange,
   onOpenInviteMember,
+  onOpenAssignTask,
+  onOpenCreateTask,
 }: WorkspaceHeaderProps) {
   const router = useRouter();
   const { t } = useTranslation('workspace');
+  const { t: tTask } = useTranslation('task');
   const user = useAuthStore((state) => state.user);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
@@ -50,11 +57,11 @@ export function WorkspaceHeader({
   const canEditWorkspace = isAdmin;
 
   const tabs: { id: WorkspaceTab; labelKey: string; defaultLabel: string; icon: React.ElementType }[] = [
-    { id: 'summary', labelKey: 'tabs.summary', defaultLabel: 'Summary', icon: Globe },
-    { id: 'backlog', labelKey: 'tabs.backlog', defaultLabel: 'Backlog', icon: ListTodo },
-    { id: 'board', labelKey: 'tabs.board', defaultLabel: 'Board', icon: LayoutGrid },
-    { id: 'timeline', labelKey: 'tabs.timeline', defaultLabel: 'Timeline', icon: GitCommitHorizontal },
-    { id: 'forms', labelKey: 'tabs.forms', defaultLabel: 'Forms', icon: FileSpreadsheet },
+    { id: 'summary', labelKey: 'tabs.summary', defaultLabel: 'Tổng quan', icon: Globe },
+    { id: 'board', labelKey: 'tabs.board', defaultLabel: 'Bảng công việc', icon: LayoutGrid },
+    { id: 'timeline', labelKey: 'tabs.timeline', defaultLabel: 'Tiến độ (Gantt)', icon: GitCommitHorizontal },
+    { id: 'members', labelKey: 'tabs.members', defaultLabel: 'Thành viên', icon: Users },
+    { id: 'forms', labelKey: 'tabs.forms', defaultLabel: 'Biểu mẫu', icon: FileSpreadsheet },
   ];
 
   const handleGoToEdit = () => {
@@ -150,17 +157,17 @@ export function WorkspaceHeader({
           )}
         </div>
 
-        {/* Top Right Action Icons */}
-        <div className="flex items-center space-x-1">
-          <button className="rounded-lg p-2 text-text-muted hover:bg-surface-alt hover:text-text-primary transition">
-            <Share2 className="h-4 w-4" />
-          </button>
-          <button className="rounded-lg p-2 text-text-muted hover:bg-surface-alt hover:text-text-primary transition">
-            <Zap className="h-4 w-4" />
-          </button>
-          <button className="rounded-lg p-2 text-text-muted hover:bg-surface-alt hover:text-text-primary transition">
-            <Maximize2 className="h-4 w-4" />
-          </button>
+        {/* Top Right Action Controls: Task Assignment Button for Admin & Manager */}
+        <div className="flex items-center space-x-2">
+          {(isAdmin || isManager) && (onOpenAssignTask || onOpenCreateTask) && (
+            <button
+              onClick={onOpenAssignTask || onOpenCreateTask}
+              className="flex items-center space-x-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-hover active:scale-95"
+            >
+              <UserCheck className="h-4 w-4" />
+              <span>{tTask('assignTask', { defaultValue: 'Giao việc' })}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -186,14 +193,6 @@ export function WorkspaceHeader({
             </button>
           );
         })}
-
-        <button
-          onClick={() => alert('Add view')}
-          className="p-2 text-text-muted hover:text-text-primary transition"
-          title="Add view"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );

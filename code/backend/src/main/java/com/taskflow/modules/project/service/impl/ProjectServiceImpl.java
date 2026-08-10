@@ -29,6 +29,8 @@ import com.taskflow.modules.project.repository.ProjectMemberRepository;
 import com.taskflow.modules.user.dto.UserDto;
 import com.taskflow.modules.user.service.UserService;
 import com.taskflow.modules.workspace.dto.UpdateMemberRoleRequest;
+import com.taskflow.modules.notification.dto.CreateNotificationRequest;
+import com.taskflow.modules.notification.service.NotificationService;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
@@ -38,18 +40,21 @@ public class ProjectServiceImpl implements ProjectService {
     private final WorkspaceService workspaceService;
     private final UserService userService;
     private final ProjectMapper projectMapper;
+    private final NotificationService notificationService;
 
     public ProjectServiceImpl(
             ProjectRepository projectRepository,
             ProjectMemberRepository memberRepository,
             WorkspaceService workspaceService,
             UserService userService,
-            ProjectMapper projectMapper) {
+            ProjectMapper projectMapper,
+            NotificationService notificationService) {
         this.projectRepository = projectRepository;
         this.memberRepository = memberRepository;
         this.workspaceService = workspaceService;
         this.userService = userService;
         this.projectMapper = projectMapper;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -213,6 +218,20 @@ public class ProjectServiceImpl implements ProjectService {
 
         ProjectMemberEntity member = new ProjectMemberEntity(projectId, request.getUserId(), request.getRole() != null ? request.getRole() : "MEMBER");
         ProjectMemberEntity saved = memberRepository.save(member);
+
+        if (!request.getUserId().equals(userId)) {
+            try {
+                notificationService.createNotification(new CreateNotificationRequest(
+                        "Tham gia Dự án mới",
+                        "Bạn đã được thêm vào dự án '" + project.getName() + "'.",
+                        request.getUserId(),
+                        "PROJECT_MEMBER_ADDED",
+                        "/workspaces"
+                ));
+            } catch (Exception ignored) {
+            }
+        }
+
         UserDto u = userService.getCurrentUserProfile(saved.getUserId());
         return new ProjectMemberDto(saved.getId(), saved.getProjectId(), saved.getUserId(), saved.getRole(), saved.getCreatedAt(), u);
     }

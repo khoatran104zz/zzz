@@ -2,6 +2,12 @@
   "title": "Task Management",
   "subtitle": "Track your tasks and work items",
   "createTask": "Create New Task",
+  "assignTask": "Assign Task",
+  "assignTaskModalTitle": "Assign Task to Member",
+  "assignTaskModalSubtitle": "Select team member and assign work item",
+  "assignAction": "Assign Task",
+  "selectTask": "Select Task to Assign",
+  "newTaskOption": "+ Create new task to assign",
   "taskDetails": "Task Details",
   "quickCreate": "Quick Create Task",
   "fields": {

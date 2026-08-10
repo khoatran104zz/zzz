@@ -7,8 +7,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckSquare, Loader2, X, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/store/auth-store';
 import { useWorkspaceStore } from '@/store/workspace-store';
-import { useWorkspaces } from '@/features/workspace/hooks/use-workspace';
+import { useWorkspaces, useWorkspaceMembers } from '@/features/workspace/hooks/use-workspace';
 import { useCreateWorkspaceTask } from '../hooks/use-task';
 import type { TaskPriority, TaskStatus } from '../types';
 
@@ -18,6 +19,7 @@ const taskSchema = z.object({
   status: z.enum(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'CANCELLED']),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   dueDate: z.string().optional(),
+  assigneeId: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -32,6 +34,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
   const [mounted, setMounted] = useState(false);
   const { t: tTask } = useTranslation('task');
   const { t: tCommon } = useTranslation('common');
+  const currentUser = useAuthStore((state) => state.user);
 
   useEffect(() => {
     setMounted(true);
@@ -39,7 +42,23 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
 
   const { data: workspaces = [] } = useWorkspaces();
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
-  const workspaceId = activeWorkspace?.id || workspaces[0]?.id || '';
+
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
+
+  useEffect(() => {
+    if (activeWorkspace?.id) {
+      setSelectedWorkspaceId(activeWorkspace.id);
+    } else if (workspaces.length > 0 && !selectedWorkspaceId) {
+      setSelectedWorkspaceId(workspaces[0].id);
+    }
+  }, [activeWorkspace, workspaces]);
+
+  const workspaceId = selectedWorkspaceId || activeWorkspace?.id || workspaces[0]?.id || '';
+  const { data: members = [] } = useWorkspaceMembers(workspaceId || null);
+
+  const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN') || currentUser?.email === 'admin@gmail.com';
+  const isManager = currentUser?.roles?.includes('ROLE_MANAGER') || currentUser?.email === 'manager@gmail.com';
+  const isStaff = !isAdmin && !isManager;
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -56,6 +75,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
       status: 'TODO',
       priority: 'MEDIUM',
       dueDate: '',
+      assigneeId: '',
     },
   });
 
@@ -80,6 +100,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
         status: data.status as TaskStatus,
         priority: data.priority as TaskPriority,
         dueDate: dueDateInstant,
+        assigneeId: data.assigneeId || undefined,
       },
       {
         onSuccess: () => {
@@ -110,10 +131,10 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-text-primary font-heading">
-                {tTask('createTask', { defaultValue: 'Tạo công việc mới' })}
+                {isStaff ? 'Yêu cầu tạo công việc mới' : tTask('createTask', { defaultValue: 'Tạo công việc mới' })}
               </h2>
               <p className="text-[11px] text-text-secondary">
-                {activeWorkspace ? `Tạo công việc trong Workspace "${activeWorkspace.name}"` : 'Thêm công việc mới vào Workspace của bạn'}
+                {isStaff ? 'Gửi đề xuất công việc tới Quản lý (Manager) để phê duyệt' : 'Tạo công việc và chỉ định thành viên thực hiện'}
               </p>
             </div>
           </div>
@@ -132,14 +153,44 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
           </div>
         )}
 
+        {isStaff && (
+          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3.5 text-xs text-primary space-y-1">
+            <div className="font-bold flex items-center space-x-1.5 text-xs">
+              <span>💡</span>
+              <span>Đề xuất tạo công việc dành cho Nhân viên</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-text-secondary">
+              Sau khi bạn gửi yêu cầu, Quản lý (Manager) của Workspace sẽ nhận được thông báo để xem xét, duyệt và phân công công việc.
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Workspace Picker Dropdown */}
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-text-secondary">Chọn Workspace / Dự án *</label>
+            <select
+              value={selectedWorkspaceId}
+              onChange={(e) => setSelectedWorkspaceId(e.target.value)}
+              required
+              className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs font-bold text-text-primary focus:border-primary focus:outline-none cursor-pointer"
+            >
+              {workspaces.map((w) => (
+                <option key={w.id} value={w.id} className="bg-surface text-text-primary font-medium">
+                  📂 {w.name}
+                </option>
+              ))}
+            </select>
+          </div>
           {/* Task Title */}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-text-secondary">Tên công việc *</label>
+            <label className="text-xs font-medium text-text-secondary">
+              {isStaff ? 'Tên công việc đề xuất *' : 'Tên công việc *'}
+            </label>
             <input
               {...register('title')}
               type="text"
-              placeholder="Ví dụ: Thiết kế giao diện Dashboard"
+              placeholder={isStaff ? 'Ví dụ: Đề xuất cập nhật lại quy trình tài liệu' : 'Ví dụ: Thiết kế giao diện Dashboard'}
               className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary placeholder:text-text-muted transition focus:border-primary focus:outline-none"
             />
             {errors.title && <p className="text-[11px] text-status-error">{errors.title.message}</p>}
@@ -147,13 +198,39 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
 
           {/* Description */}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-text-secondary">Mô tả công việc</label>
+            <label className="text-xs font-medium text-text-secondary">
+              {isStaff ? 'Mô tả chi tiết & Lý do đề xuất' : 'Mô tả công việc'}
+            </label>
             <textarea
               {...register('description')}
               rows={3}
-              placeholder="Chi tiết công việc và yêu cầu..."
+              placeholder={isStaff ? 'Nêu chi tiết nội dung công việc và lý do đề xuất...' : 'Chi tiết công việc và yêu cầu...'}
               className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary placeholder:text-text-muted transition focus:border-primary focus:outline-none"
             />
+          </div>
+
+          {/* Assignee Dropdown Picker (Optional) */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-text-secondary">
+              {tTask('fields.assignee', { defaultValue: 'Người thực hiện' })} (Không bắt buộc)
+            </label>
+            <select
+              {...register('assigneeId')}
+              className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary focus:border-primary focus:outline-none cursor-pointer"
+            >
+              <option value="" className="bg-surface text-text-muted">
+                {tTask('fields.unassigned', { defaultValue: '-- Chưa phân công --' })}
+              </option>
+              {members.map((m) => {
+                const name = m.fullName || m.email || 'Thành viên';
+                const roleBadge = m.role ? `[${m.role}]` : '';
+                return (
+                  <option key={m.userId} value={m.userId} className="bg-surface text-text-primary">
+                    👤 {name} {roleBadge} ({m.email || 'No email'})
+                  </option>
+                );
+              })}
+            </select>
           </div>
 
           {/* Status, Priority, Due Date */}
@@ -214,7 +291,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  <span>{tTask('createTask', { defaultValue: 'Tạo công việc' })}</span>
+                  <span>{isStaff ? 'Gửi yêu cầu tạo công việc' : tTask('createTask', { defaultValue: 'Tạo công việc' })}</span>
                 </>
               )}
             </button>

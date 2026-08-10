@@ -16,12 +16,15 @@
   "addMember": "Thêm thành viên",
   "myWorkspaces": "Không gian làm việc của tôi",
   "noWorkspaces": "Bạn chưa có không gian làm việc nào",
+  "noWorkspacesStaffTitle": "Chưa tham gia không gian làm việc nào",
+  "noWorkspacesStaffDesc": "Bạn chưa được thêm vào không gian làm việc nào. Vui lòng liên hệ Quản trị viên hoặc Quản lý để được mời vào Workspace.",
   "switchWorkspace": "Chuyển không gian làm việc",
   "tabs": {
     "summary": "Tổng quan",
-    "backlog": "Backlog",
     "board": "Bảng công việc",
+    "backlog": "Danh sách",
     "timeline": "Tiến độ (Gantt)",
+    "members": "Thành viên",
     "forms": "Biểu mẫu"
   },
   "summary": {
@@ -42,7 +45,9 @@
     "noActivityYet": "Chưa có hoạt động nào",
     "noActivityDesc": "Tạo công việc và mời thành viên vào không gian để xem hoạt động.",
     "priorityBreakdown": "Phân bổ độ ưu tiên",
-    "typesOfWork": "Phân loại công việc",
+    "typesOfWork": "Phân công công việc nhóm",
+    "assigneeWorkload": "Phân công công việc nhóm",
+    "assigneeWorkloadSubtitle": "Thống kê phân bổ công việc theo người thực hiện",
     "viewAllItems": "Xem tất cả công việc",
     "highPriority": "Ưu tiên cao",
     "mediumPriority": "Ưu tiên trung bình",

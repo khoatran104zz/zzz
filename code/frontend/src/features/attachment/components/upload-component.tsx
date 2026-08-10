@@ -21,7 +21,7 @@ export function UploadComponent({ taskId, maxSizeBytes = 10485760 }: UploadCompo
 
     if (file.size > maxSizeBytes) {
       const maxMb = (maxSizeBytes / (1024 * 1024)).toFixed(0);
-      setErrorMsg(`File exceeds max limit of ${maxMb}MB`);
+      setErrorMsg(`Dung lượng file vượt quá giới hạn ${maxMb}MB`);
       return;
     }
 
@@ -32,7 +32,7 @@ export function UploadComponent({ taskId, maxSizeBytes = 10485760 }: UploadCompo
         }
       },
       onError: (err: any) => {
-        setErrorMsg(err?.response?.data?.message || 'Failed to upload file');
+        setErrorMsg(err?.response?.data?.message || 'Không thể tải lên tập tin');
       },
     });
   };
@@ -49,19 +49,19 @@ export function UploadComponent({ taskId, maxSizeBytes = 10485760 }: UploadCompo
 
       <label
         htmlFor={`file-upload-${taskId}`}
-        className={`inline-flex items-center space-x-1.5 rounded-lg border border-white/10 bg-gray-900/60 px-3 py-1.5 text-xs font-medium text-gray-300 hover:border-indigo-500/50 hover:text-white transition cursor-pointer ${
+        className={`inline-flex items-center space-x-1.5 rounded-xl border border-surface-border bg-surface px-3 py-1.5 text-xs font-semibold text-text-primary hover:bg-surface-alt hover:border-primary/40 transition shadow-xs cursor-pointer ${
           uploadMutation.isPending ? 'opacity-50 pointer-events-none' : ''
         }`}
       >
         {uploadMutation.isPending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
         ) : (
-          <Paperclip className="h-3.5 w-3.5 text-indigo-400" />
+          <Paperclip className="h-3.5 w-3.5 text-primary" />
         )}
-        <span>{uploadMutation.isPending ? 'Uploading...' : 'Attach File'}</span>
+        <span>{uploadMutation.isPending ? 'Đang tải lên...' : 'Đính kèm tệp'}</span>
       </label>
 
-      {errorMsg && <p className="text-[10px] text-red-400 font-medium">{errorMsg}</p>}
+      {errorMsg && <p className="text-[10px] text-status-error font-medium">{errorMsg}</p>}
     </div>
   );
 }

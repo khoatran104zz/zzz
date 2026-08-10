@@ -16,12 +16,15 @@
   "addMember": "Add Member",
   "myWorkspaces": "My Workspaces",
   "noWorkspaces": "No workspaces found",
+  "noWorkspacesStaffTitle": "Not joined any workspace yet",
+  "noWorkspacesStaffDesc": "You haven't been added to any workspace yet. Please contact an Administrator or Manager to be invited.",
   "switchWorkspace": "Switch Workspace",
   "tabs": {
     "summary": "Summary",
-    "backlog": "Backlog",
     "board": "Board",
+    "backlog": "Task List",
     "timeline": "Timeline",
+    "members": "Members",
     "forms": "Forms"
   },
   "summary": {
@@ -42,7 +45,9 @@
     "noActivityYet": "No activity yet",
     "noActivityDesc": "Create a few work items and invite some teammates to your space to see your space activity.",
     "priorityBreakdown": "Priority breakdown",
-    "typesOfWork": "Types of work",
+    "typesOfWork": "Assignee Workload",
+    "assigneeWorkload": "Assignee Workload",
+    "assigneeWorkloadSubtitle": "Task distribution breakdown by assigned member",
     "viewAllItems": "View all work items",
     "highPriority": "High priority",
     "mediumPriority": "Medium priority",

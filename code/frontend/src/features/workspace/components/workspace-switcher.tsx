@@ -48,7 +48,7 @@ export function WorkspaceSwitcher() {
           <div className="flex items-center space-x-3 truncate">
             <Layers className="h-4 w-4 shrink-0 text-primary" />
             <span className="truncate">
-              {activeWorkspace?.name || t('title', { defaultValue: 'Workspace' })}
+              {t('title', { defaultValue: 'Workspace' })}
             </span>
           </div>
           <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />

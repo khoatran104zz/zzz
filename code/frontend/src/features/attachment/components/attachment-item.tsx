@@ -22,23 +22,23 @@ export function AttachmentItem({ attachment, onPreview, onDelete }: AttachmentIt
   const isImage = attachment.mimeType?.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(attachment.fileExtension?.toLowerCase() || '');
 
   const getFileIcon = () => {
-    if (isImage) return <ImageIcon className="h-4 w-4 text-emerald-400" />;
+    if (isImage) return <ImageIcon className="h-4 w-4 text-emerald-500" />;
     if (attachment.fileExtension === 'zip' || attachment.fileExtension === 'rar') {
-      return <FileArchive className="h-4 w-4 text-amber-400" />;
+      return <FileArchive className="h-4 w-4 text-amber-500" />;
     }
-    return <FileText className="h-4 w-4 text-indigo-400" />;
+    return <FileText className="h-4 w-4 text-primary" />;
   };
 
   return (
-    <div className="group flex items-center justify-between rounded-xl border border-white/5 bg-gray-900/40 p-2.5 text-xs transition hover:border-white/10 hover:bg-gray-900/70">
+    <div className="group flex items-center justify-between rounded-xl border border-surface-border bg-surface p-2.5 text-xs transition hover:bg-surface-alt shadow-xs">
       <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-alt border border-surface-border">
           {getFileIcon()}
         </div>
 
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="font-semibold text-white truncate text-xs">{attachment.fileName}</p>
-          <p className="text-[10px] text-gray-500">{formatBytes(attachment.fileSize)}</p>
+          <p className="font-bold text-text-primary truncate text-xs">{attachment.fileName}</p>
+          <p className="text-[10px] text-text-muted">{formatBytes(attachment.fileSize)}</p>
         </div>
       </div>
 
@@ -47,8 +47,8 @@ export function AttachmentItem({ attachment, onPreview, onDelete }: AttachmentIt
           <button
             type="button"
             onClick={() => onPreview(attachment)}
-            className="rounded p-1 text-gray-400 hover:bg-white/10 hover:text-indigo-400 transition"
-            title="Preview image"
+            className="rounded-md p-1.5 text-text-muted hover:bg-surface-alt hover:text-primary transition"
+            title="Xem trước hình ảnh"
           >
             <Eye className="h-3.5 w-3.5" />
           </button>
@@ -59,8 +59,8 @@ export function AttachmentItem({ attachment, onPreview, onDelete }: AttachmentIt
           download={attachment.fileName}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded p-1 text-gray-400 hover:bg-white/10 hover:text-white transition"
-          title="Download file"
+          className="rounded-md p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
+          title="Tải về tập tin"
         >
           <Download className="h-3.5 w-3.5" />
         </a>
@@ -68,8 +68,8 @@ export function AttachmentItem({ attachment, onPreview, onDelete }: AttachmentIt
         <button
           type="button"
           onClick={() => onDelete(attachment.id)}
-          className="rounded p-1 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition"
-          title="Delete attachment"
+          className="rounded-md p-1.5 text-text-muted hover:bg-status-error/10 hover:text-status-error transition"
+          title="Xóa đính kèm"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

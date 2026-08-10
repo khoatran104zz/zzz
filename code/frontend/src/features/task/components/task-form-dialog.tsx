@@ -8,6 +8,8 @@ import { CheckSquare, Loader2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TaskDto, TaskPriority, TaskStatus } from '../types';
 import { useCreateTask, useCreateWorkspaceTask, useUpdateTask } from '../hooks/use-task';
+import { useWorkspaceStore } from '@/store/workspace-store';
+import { useWorkspaceMembers } from '@/features/workspace/hooks/use-workspace';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Tên công việc không được để trống'),
@@ -15,6 +17,7 @@ const taskSchema = z.object({
   status: z.enum(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'DONE', 'CANCELLED']),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   dueDate: z.string().optional(),
+  assigneeId: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -32,8 +35,12 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
   const { t: tCommon } = useTranslation('common');
   const isEditing = !!task;
 
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
+  const targetWorkspaceId = workspaceId || activeWorkspace?.id || '';
+  const { data: members = [] } = useWorkspaceMembers(targetWorkspaceId || null);
+
   const createProjectTaskMutation = useCreateTask(projectId);
-  const createWorkspaceTaskMutation = useCreateWorkspaceTask(workspaceId);
+  const createWorkspaceTaskMutation = useCreateWorkspaceTask(targetWorkspaceId);
   const updateMutation = useUpdateTask(task?.id || '');
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -51,6 +58,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
       status: 'TODO',
       priority: 'MEDIUM',
       dueDate: '',
+      assigneeId: '',
     },
   });
 
@@ -62,6 +70,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
         status: task.status,
         priority: task.priority,
         dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+        assigneeId: task.assigneeId || '',
       });
     } else {
       reset({
@@ -70,6 +79,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
         status: 'TODO',
         priority: 'MEDIUM',
         dueDate: '',
+        assigneeId: '',
       });
     }
   }, [task, reset, isOpen]);
@@ -79,6 +89,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
   const onSubmit = (data: TaskFormData) => {
     setErrorMessage(null);
     const dueDateInstant = data.dueDate ? new Date(data.dueDate).toISOString() : undefined;
+    const assigneeIdVal = data.assigneeId || undefined;
 
     if (isEditing) {
       updateMutation.mutate(
@@ -88,6 +99,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
           status: data.status as TaskStatus,
           priority: data.priority as TaskPriority,
           dueDate: dueDateInstant,
+          assigneeId: assigneeIdVal,
         },
         {
           onSuccess: () => {
@@ -98,7 +110,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
           },
         }
       );
-    } else if (workspaceId) {
+    } else if (targetWorkspaceId) {
       createWorkspaceTaskMutation.mutate(
         {
           title: data.title,
@@ -106,6 +118,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
           status: data.status as TaskStatus,
           priority: data.priority as TaskPriority,
           dueDate: dueDateInstant,
+          assigneeId: assigneeIdVal,
         },
         {
           onSuccess: () => {
@@ -125,6 +138,7 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
           status: data.status as TaskStatus,
           priority: data.priority as TaskPriority,
           dueDate: dueDateInstant,
+          assigneeId: assigneeIdVal,
         },
         {
           onSuccess: () => {
@@ -183,10 +197,34 @@ export function TaskFormDialog({ projectId = '', workspaceId = '', task, isOpen,
             <label className="text-xs font-medium text-text-secondary">Mô tả</label>
             <textarea
               {...register('description')}
-              rows={4}
+              rows={3}
               placeholder="Chi tiết công việc và tiêu chuẩn hoàn thành..."
               className="w-full rounded-lg border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary placeholder:text-text-muted transition focus:border-primary focus:outline-none"
             />
+          </div>
+
+          {/* Assignee Selection Picker */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-text-secondary">
+              {tTask('fields.assignee', { defaultValue: 'Người thực hiện' })} (Chỉ định người làm)
+            </label>
+            <select
+              {...register('assigneeId')}
+              className="w-full rounded-lg border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary transition focus:border-primary focus:outline-none cursor-pointer"
+            >
+              <option value="" className="bg-surface text-text-muted">
+                {tTask('fields.unassigned', { defaultValue: '-- Chưa phân công --' })}
+              </option>
+              {members.map((m) => {
+                const name = m.fullName || m.email || 'Thành viên';
+                const roleBadge = m.role ? `[${m.role}]` : '';
+                return (
+                  <option key={m.userId} value={m.userId} className="bg-surface text-text-primary">
+                    👤 {name} {roleBadge} ({m.email || 'No email'})
+                  </option>
+                );
+              })}
+            </select>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

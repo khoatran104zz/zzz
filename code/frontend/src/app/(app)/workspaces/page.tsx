@@ -7,6 +7,7 @@ import { Layers, Plus, Settings, Users, Check, Edit3, ArrowRight } from 'lucide-
 import { useTranslation } from 'react-i18next';
 import { useWorkspaces } from '@/features/workspace/hooks/use-workspace';
 import { useWorkspaceStore } from '@/store/workspace-store';
+import { useAuthStore } from '@/store/auth-store';
 import { CreateWorkspaceDialog } from '@/features/workspace/components/create-workspace-dialog';
 import { EditWorkspaceDialog } from '@/features/workspace/components/edit-workspace-dialog';
 import type { WorkspaceDto } from '@/features/workspace/types';
@@ -17,10 +18,15 @@ export default function WorkspacesDirectoryPage() {
   const router = useRouter();
   const { t } = useTranslation('workspace');
   const { t: tNav } = useTranslation('navigation');
+  const user = useAuthStore((state) => state.user);
 
   const { data: workspaces = [], isLoading } = useWorkspaces();
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
+
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.email === 'admin@gmail.com';
+  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.email === 'manager@gmail.com';
+  const canCreateWorkspace = isAdmin || isManager;
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<WorkspaceDto | null>(null);
@@ -42,29 +48,40 @@ export default function WorkspacesDirectoryPage() {
             {t('directorySubtitle', { defaultValue: 'Xem, quản lý và chuyển đổi các không gian làm việc của bạn' })}
           </p>
         </div>
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="flex items-center space-x-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-hover active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          <span>{t('createWorkspace', { defaultValue: 'Tạo Workspace mới' })}</span>
-        </button>
+        {canCreateWorkspace && (
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="flex items-center space-x-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-hover active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{t('createWorkspace', { defaultValue: 'Tạo Workspace mới' })}</span>
+          </button>
+        )}
       </div>
 
       {isLoading ? (
         <ProjectCardSkeleton count={3} />
       ) : workspaces.length === 0 ? (
-        <EmptyState
-          icon={Layers}
-          title={t('noWorkspacesTitle', { defaultValue: 'Chưa có không gian làm việc nào' })}
-          description={t('noWorkspacesDesc', { defaultValue: 'Tạo không gian làm việc đầu tiên để bắt đầu quản lý dự án và cộng tác cùng nhóm.' })}
-          actionLabel={t('createWorkspace', { defaultValue: 'Tạo Workspace' })}
-          onAction={() => setIsCreateOpen(true)}
-        />
+        canCreateWorkspace ? (
+          <EmptyState
+            icon={Layers}
+            title={t('noWorkspacesTitle', { defaultValue: 'Chưa có không gian làm việc nào' })}
+            description={t('noWorkspacesDesc', { defaultValue: 'Tạo không gian làm việc đầu tiên để bắt đầu quản lý dự án và cộng tác cùng nhóm.' })}
+            actionLabel={t('createWorkspace', { defaultValue: 'Tạo Workspace' })}
+            onAction={() => setIsCreateOpen(true)}
+          />
+        ) : (
+          <EmptyState
+            icon={Layers}
+            title={t('noWorkspacesStaffTitle', { defaultValue: 'Chưa tham gia không gian làm việc nào' })}
+            description={t('noWorkspacesStaffDesc', { defaultValue: 'Bạn chưa được thêm vào không gian làm việc nào. Vui lòng liên hệ Quản trị viên hoặc Quản lý để được mời vào Workspace.' })}
+          />
+        )
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {workspaces.map((ws) => {
             const isActive = activeWorkspace?.id === ws.id;
+            const canEditWs = ws.userRole === 'OWNER' || ws.userRole === 'ADMIN' || ws.userRole === 'MANAGER' || isAdmin || isManager;
             return (
               <div
                 key={ws.id}
@@ -93,22 +110,24 @@ export default function WorkspacesDirectoryPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => setEditingWorkspace(ws)}
-                        className="rounded-lg p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
-                        title="Chỉnh sửa Workspace"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
-                      <Link
-                        href={`/workspaces/${ws.id}/settings` as any}
-                        className="rounded-lg p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
-                        title={tNav('menu.settings')}
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Link>
-                    </div>
+                    {canEditWs && (
+                      <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => setEditingWorkspace(ws)}
+                          className="rounded-lg p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
+                          title="Chỉnh sửa Workspace"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <Link
+                          href={`/workspaces/${ws.id}/settings` as any}
+                          className="rounded-lg p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
+                          title={tNav('menu.settings')}
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    )}
                   </div>
 
                   {/* Description */}

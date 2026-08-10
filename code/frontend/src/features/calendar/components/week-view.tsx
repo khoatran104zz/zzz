@@ -24,7 +24,7 @@ export function WeekView({ currentDate, events, onSelectEvent, onSelectDate }: W
   const todayStr = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gray-950/40 p-4">
+    <div className="rounded-2xl border border-surface-border bg-surface p-4 shadow-xs">
       <div className="grid grid-cols-7 gap-2">
         {days.map((day) => {
           const dateStr = day.toISOString().slice(0, 10);
@@ -39,20 +39,20 @@ export function WeekView({ currentDate, events, onSelectEvent, onSelectDate }: W
             <div
               key={dateStr}
               onClick={() => onSelectDate(dateStr)}
-              className={`min-h-[350px] rounded-xl border p-2 flex flex-col space-y-2 cursor-pointer transition ${
+              className={`min-h-[350px] rounded-2xl border p-2.5 flex flex-col space-y-2 cursor-pointer transition ${
                 isToday
-                  ? 'border-indigo-500/50 bg-indigo-950/20'
-                  : 'border-white/5 bg-gray-900/40 hover:border-white/10 hover:bg-gray-900/70'
+                  ? 'border-primary bg-primary/10 shadow-xs'
+                  : 'border-surface-border bg-surface-alt/40 hover:border-primary/40 hover:bg-surface-alt'
               }`}
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <span className="text-xs font-semibold text-gray-400">
-                  {day.toLocaleDateString(undefined, { weekday: 'short' })}
+              <div className="flex items-center justify-between border-b border-surface-border pb-2">
+                <span className="text-xs font-bold text-text-muted">
+                  {day.toLocaleDateString('vi-VN', { weekday: 'short' })}
                 </span>
                 <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-200'
+                  className={`text-xs font-extrabold px-2 py-0.5 rounded-full ${
+                    isToday ? 'bg-primary text-white shadow-xs' : 'text-text-primary'
                   }`}
                 >
                   {day.getDate()}
@@ -60,7 +60,7 @@ export function WeekView({ currentDate, events, onSelectEvent, onSelectDate }: W
               </div>
 
               {/* Event Column */}
-              <div className="space-y-1.5 flex-1 overflow-y-auto">
+              <div className="space-y-2 flex-1 overflow-y-auto scrollbar-none">
                 {dayEvents.map((event) => (
                   <div
                     key={event.id}
@@ -68,18 +68,18 @@ export function WeekView({ currentDate, events, onSelectEvent, onSelectDate }: W
                       e.stopPropagation();
                       onSelectEvent(event);
                     }}
-                    style={{ backgroundColor: event.color + '25', borderColor: event.color + '60' }}
-                    className="rounded-lg border p-2 text-xs space-y-1 transition hover:scale-102"
+                    style={{ backgroundColor: (event.color || '#4F46E5') + '20', borderColor: (event.color || '#4F46E5') + '60' }}
+                    className="rounded-xl border p-2 text-xs space-y-1 transition hover:scale-102 shadow-2xs"
                   >
-                    <div className="font-bold text-white truncate">{event.title}</div>
-                    <div className="text-[10px] text-gray-400">
-                      {new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div className="font-bold text-text-primary truncate">{event.title}</div>
+                    <div className="text-[10px] text-text-muted font-medium">
+                      {new Date(event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 ))}
 
                 {dayEvents.length === 0 && (
-                  <p className="text-[10px] text-gray-600 italic text-center pt-4">No events</p>
+                  <p className="text-[10px] text-text-muted italic text-center pt-6">Không có sự kiện</p>
                 )}
               </div>
             </div>

@@ -40,13 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (isAuthenticated && isWorkspacesLoaded) {
-      const hasWorkspaces = (workspaces?.length || 0) > 0;
-      if (!hasWorkspaces && pathname !== '/onboarding') {
-        router.push('/onboarding' as any);
-      } else if (hasWorkspaces && pathname === '/onboarding') {
-        router.push('/');
-      }
+    if (isAuthenticated && pathname === '/onboarding') {
+      router.push('/');
     }
   }, [isAuthenticated, isInitialized, isWorkspacesLoaded, pathname, router, workspaces]);
 

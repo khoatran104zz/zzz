@@ -3,34 +3,36 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User, Sliders, Shield, Bell } from 'lucide-react';
+import { Sliders, Shield, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { t } = useTranslation('settings');
 
+  // Sidebar Settings page tabs: Preferences, Security, Notifications
   const settingsTabs = [
-    { name: t('tabs.profile'), href: '/settings', icon: User },
-    { name: t('tabs.preferences'), href: '/settings/preferences', icon: Sliders },
-    { name: t('tabs.security'), href: '/settings/security', icon: Shield },
-    { name: t('tabs.notifications'), href: '/settings/notifications', icon: Bell },
+    { name: t('tabs.preferences', { defaultValue: 'Tùy chọn' }), href: '/settings', icon: Sliders },
+    { name: t('tabs.security', { defaultValue: 'Bảo mật' }), href: '/settings/security', icon: Shield },
+    { name: t('tabs.notifications', { defaultValue: 'Thông báo' }), href: '/settings/notifications', icon: Bell },
   ];
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="border-b border-surface-border pb-4">
         <h1 className="text-xl font-bold tracking-tight text-text-primary font-heading">
-          {t('title')}
+          {t('title', { defaultValue: 'Cài đặt & Tùy chọn' })}
         </h1>
-        <p className="text-xs text-text-secondary mt-1">{t('subtitle')}</p>
+        <p className="text-xs text-text-secondary mt-1">
+          {t('subtitle', { defaultValue: 'Quản lý tùy chọn ứng dụng, giao diện, bảo mật và thông báo' })}
+        </p>
       </div>
 
       {/* Settings Navigation Bar */}
       <div className="flex border-b border-surface-border overflow-x-auto space-x-1">
         {settingsTabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = pathname === tab.href;
+          const isActive = pathname === tab.href || (tab.href === '/settings' && pathname === '/settings/preferences');
 
           return (
             <Link

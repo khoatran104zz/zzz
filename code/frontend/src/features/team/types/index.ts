@@ -1,6 +1,6 @@
 import type { UserDto } from '@/features/auth/types';
 
-export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER';
 
 export interface WorkspaceMemberDto {
   id: string;
