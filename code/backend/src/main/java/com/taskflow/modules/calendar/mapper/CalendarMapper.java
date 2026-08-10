@@ -26,6 +26,9 @@ public class CalendarMapper {
                 entity.getTaskId(),
                 null,
                 null,
+                entity.getWorkspaceId(),
+                null,
+                entity.getMeetingLink(),
                 entity.getCreatedAt()
         );
     }
@@ -50,6 +53,9 @@ public class CalendarMapper {
                 task.getId(),
                 task.getStatus(),
                 task.getPriority(),
+                null,
+                null,
+                null,
                 task.getCreatedAt()
         );
     }

@@ -23,19 +23,26 @@ public class CreateCalendarEventRequest {
     private Instant endTime;
 
     private UUID taskId;
+    
+    @NotNull(message = "Workspace ID must not be null")
+    private UUID workspaceId;
+
+    private String meetingLink;
     private String color = "#4F46E5";
     private Boolean isAllDay = false;
 
     public CreateCalendarEventRequest() {
     }
 
-    public CreateCalendarEventRequest(String title, String description, String location, Instant startTime, Instant endTime, UUID taskId, String color, Boolean isAllDay) {
+    public CreateCalendarEventRequest(String title, String description, String location, Instant startTime, Instant endTime, UUID taskId, UUID workspaceId, String meetingLink, String color, Boolean isAllDay) {
         this.title = title;
         this.description = description;
         this.location = location;
         this.startTime = startTime;
         this.endTime = endTime;
         this.taskId = taskId;
+        this.workspaceId = workspaceId;
+        this.meetingLink = meetingLink;
         this.color = (color != null && !color.isBlank()) ? color : "#4F46E5";
         this.isAllDay = isAllDay != null ? isAllDay : false;
     }
@@ -86,6 +93,22 @@ public class CreateCalendarEventRequest {
 
     public void setTaskId(UUID taskId) {
         this.taskId = taskId;
+    }
+
+    public UUID getWorkspaceId() {
+        return workspaceId;
+    }
+
+    public void setWorkspaceId(UUID workspaceId) {
+        this.workspaceId = workspaceId;
+    }
+
+    public String getMeetingLink() {
+        return meetingLink;
+    }
+
+    public void setMeetingLink(String meetingLink) {
+        this.meetingLink = meetingLink;
     }
 
     public String getColor() {

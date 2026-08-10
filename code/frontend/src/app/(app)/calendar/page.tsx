@@ -12,8 +12,15 @@ import { EventModal } from '@/features/calendar/components/event-modal';
 import { TaskDetailModal } from '@/features/task/components/task-detail-modal';
 import type { TaskDto } from '@/features/task/types';
 
+import { useAuthStore } from '@/store/auth-store';
+
 export default function CalendarPage() {
   const { t: tNav } = useTranslation('navigation');
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ADMIN') || user?.email === 'admin@gmail.com';
+  const isManager = user?.roles?.includes('ROLE_MANAGER') || user?.roles?.includes('MANAGER') || user?.email === 'manager@gmail.com';
+  const canManageMeetings = isAdmin || isManager;
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventItemDto | null>(null);
@@ -59,6 +66,7 @@ export default function CalendarPage() {
   };
 
   const handleOpenCreateModal = (dateStr?: string) => {
+    if (!canManageMeetings) return;
     setSelectedEvent(null);
     setSelectedDateStr(dateStr);
     setIsModalOpen(true);
@@ -103,16 +111,16 @@ export default function CalendarPage() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-text-primary font-heading flex items-center space-x-2">
-              <span>{tNav('menu.calendar', { defaultValue: 'Lịch công việc' })}</span>
+              <span>{tNav('menu.calendar', { defaultValue: 'Lịch họp' })}</span>
               {todayEventsCount > 0 && (
                 <span className="flex items-center space-x-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary border border-primary/20">
                   <Sparkles className="h-3 w-3" />
-                  <span>{todayEventsCount} sự kiện hôm nay</span>
+                  <span>{todayEventsCount} cuộc họp hôm nay</span>
                 </span>
               )}
             </h1>
             <p className="text-xs text-text-secondary mt-0.5">
-              Theo dõi lịch làm việc, thời hạn công việc và sự kiện cá nhân trực quan
+              Theo dõi các cuộc họp và thời gian trao đổi công việc trong các workspace
             </p>
           </div>
         </div>
@@ -149,14 +157,16 @@ export default function CalendarPage() {
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleOpenCreateModal()}
-            className="flex items-center space-x-1.5 rounded-2xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover shadow-xs transition active:scale-95"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Thêm sự kiện mới</span>
-          </button>
+          {canManageMeetings && (
+            <button
+              type="button"
+              onClick={() => handleOpenCreateModal()}
+              className="flex items-center space-x-1.5 rounded-2xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover shadow-xs transition active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Thêm lịch họp mới</span>
+            </button>
+          )}
         </div>
       </div>
 

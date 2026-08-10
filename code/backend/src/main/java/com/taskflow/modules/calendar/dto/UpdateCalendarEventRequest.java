@@ -23,19 +23,23 @@ public class UpdateCalendarEventRequest {
     private Instant endTime;
 
     private UUID taskId;
+    private UUID workspaceId;
+    private String meetingLink;
     private String color;
     private Boolean isAllDay;
 
     public UpdateCalendarEventRequest() {
     }
 
-    public UpdateCalendarEventRequest(String title, String description, String location, Instant startTime, Instant endTime, UUID taskId, String color, Boolean isAllDay) {
+    public UpdateCalendarEventRequest(String title, String description, String location, Instant startTime, Instant endTime, UUID taskId, UUID workspaceId, String meetingLink, String color, Boolean isAllDay) {
         this.title = title;
         this.description = description;
         this.location = location;
         this.startTime = startTime;
         this.endTime = endTime;
         this.taskId = taskId;
+        this.workspaceId = workspaceId;
+        this.meetingLink = meetingLink;
         this.color = color;
         this.isAllDay = isAllDay;
     }
@@ -86,6 +90,22 @@ public class UpdateCalendarEventRequest {
 
     public void setTaskId(UUID taskId) {
         this.taskId = taskId;
+    }
+
+    public UUID getWorkspaceId() {
+        return workspaceId;
+    }
+
+    public void setWorkspaceId(UUID workspaceId) {
+        this.workspaceId = workspaceId;
+    }
+
+    public String getMeetingLink() {
+        return meetingLink;
+    }
+
+    public void setMeetingLink(String meetingLink) {
+        this.meetingLink = meetingLink;
     }
 
     public String getColor() {

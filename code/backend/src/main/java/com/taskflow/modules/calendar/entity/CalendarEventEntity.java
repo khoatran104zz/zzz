@@ -39,6 +39,15 @@ public class CalendarEventEntity extends BaseEntity {
     @Column(name = "is_all_day", nullable = false)
     private Boolean isAllDay = false;
 
+    @Column(name = "workspace_id")
+    private UUID workspaceId;
+
+    @Column(name = "meeting_link", length = 500)
+    private String meetingLink;
+
+    @Column(name = "reminder_sent", nullable = false)
+    private Boolean reminderSent = false;
+
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
@@ -48,7 +57,7 @@ public class CalendarEventEntity extends BaseEntity {
     public CalendarEventEntity() {
     }
 
-    public CalendarEventEntity(String title, String description, String location, Instant startTime, Instant endTime, UUID userId, UUID taskId, String color, Boolean isAllDay) {
+    public CalendarEventEntity(String title, String description, String location, Instant startTime, Instant endTime, UUID userId, UUID taskId, String color, Boolean isAllDay, UUID workspaceId, String meetingLink) {
         this.title = title;
         this.description = description;
         this.location = location;
@@ -58,6 +67,9 @@ public class CalendarEventEntity extends BaseEntity {
         this.taskId = taskId;
         this.color = (color != null && !color.isBlank()) ? color : "#4F46E5";
         this.isAllDay = isAllDay != null ? isAllDay : false;
+        this.workspaceId = workspaceId;
+        this.meetingLink = meetingLink;
+        this.reminderSent = false;
         this.isDeleted = false;
     }
 
@@ -131,6 +143,30 @@ public class CalendarEventEntity extends BaseEntity {
 
     public void setIsAllDay(Boolean isAllDay) {
         this.isAllDay = isAllDay;
+    }
+
+    public UUID getWorkspaceId() {
+        return workspaceId;
+    }
+
+    public void setWorkspaceId(UUID workspaceId) {
+        this.workspaceId = workspaceId;
+    }
+
+    public String getMeetingLink() {
+        return meetingLink;
+    }
+
+    public void setMeetingLink(String meetingLink) {
+        this.meetingLink = meetingLink;
+    }
+
+    public Boolean getReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(Boolean reminderSent) {
+        this.reminderSent = reminderSent;
     }
 
     public Boolean getIsDeleted() {

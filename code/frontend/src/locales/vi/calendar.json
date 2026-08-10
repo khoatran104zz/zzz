@@ -1,6 +1,6 @@
 {
-  "title": "Lịch công việc",
-  "subtitle": "Lịch theo dõi sự kiện và hạn chót công việc",
+  "title": "Lịch họp",
+  "subtitle": "Theo dõi các cuộc họp và thời gian trao đổi trong các workspace",
   "today": "Hôm nay",
   "views": {
     "month": "Tháng",

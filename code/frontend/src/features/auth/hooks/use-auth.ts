@@ -8,17 +8,24 @@ export const AUTH_QUERY_KEY = ['currentUser'];
 export function useCurrentUser() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setUser = useAuthStore((state) => state.setUser);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   return useQuery({
     queryKey: AUTH_QUERY_KEY,
     queryFn: async () => {
-      const user = await authService.getCurrentUser();
-      setUser(user);
-      return user;
+      try {
+        const user = await authService.getCurrentUser();
+        setUser(user);
+        return user;
+      } catch (err) {
+        clearAuth();
+        throw err;
+      }
     },
     enabled: isAuthenticated,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 }
 

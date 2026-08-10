@@ -17,12 +17,15 @@ public class CalendarEventItemDto {
     private UUID taskId;
     private String status;
     private String priority;
+    private UUID workspaceId;
+    private String workspaceName;
+    private String meetingLink;
     private Instant createdAt;
 
     public CalendarEventItemDto() {
     }
 
-    public CalendarEventItemDto(UUID id, String title, String description, String location, Instant startTime, Instant endTime, Boolean isAllDay, String color, String eventType, UUID taskId, String status, String priority, Instant createdAt) {
+    public CalendarEventItemDto(UUID id, String title, String description, String location, Instant startTime, Instant endTime, Boolean isAllDay, String color, String eventType, UUID taskId, String status, String priority, UUID workspaceId, String workspaceName, String meetingLink, Instant createdAt) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -35,6 +38,9 @@ public class CalendarEventItemDto {
         this.taskId = taskId;
         this.status = status;
         this.priority = priority;
+        this.workspaceId = workspaceId;
+        this.workspaceName = workspaceName;
+        this.meetingLink = meetingLink;
         this.createdAt = createdAt;
     }
 
@@ -132,6 +138,30 @@ public class CalendarEventItemDto {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public UUID getWorkspaceId() {
+        return workspaceId;
+    }
+
+    public void setWorkspaceId(UUID workspaceId) {
+        this.workspaceId = workspaceId;
+    }
+
+    public String getWorkspaceName() {
+        return workspaceName;
+    }
+
+    public void setWorkspaceName(String workspaceName) {
+        this.workspaceName = workspaceName;
+    }
+
+    public String getMeetingLink() {
+        return meetingLink;
+    }
+
+    public void setMeetingLink(String meetingLink) {
+        this.meetingLink = meetingLink;
     }
 
     public Instant getCreatedAt() {

@@ -44,7 +44,7 @@ export function WorkspaceSidebar() {
     : { label: tNav('roles.staff', { defaultValue: 'Nhân viên' }), icon: '🧑‍💻', style: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
 
   return (
-    <aside className="hidden md:flex h-screen w-[260px] flex-col border-r border-surface-border bg-surface-sidebar p-4 text-text-secondary transition-colors">
+    <aside className="sticky top-0 hidden md:flex h-screen w-[260px] shrink-0 flex-col border-r border-surface-border bg-surface-sidebar p-4 text-text-secondary transition-colors z-20">
       {/* Brand Header - Clicking logo redirects to Dashboard / */}
       <Link href="/" className="mb-6 flex items-center space-x-2.5 px-2 group cursor-pointer" title="Về trang Tổng quan">
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-white font-extrabold shadow-md transition group-hover:scale-105">
@@ -56,7 +56,7 @@ export function WorkspaceSidebar() {
       </Link>
 
       {/* Main Navigation Items */}
-      <nav className="space-y-1.5">
+      <nav className="space-y-1.5 flex-1 overflow-y-auto pr-1">
         {/* 1. Admin Portal Link for System Administrators */}
         {isAdminUser && (
           <Link
