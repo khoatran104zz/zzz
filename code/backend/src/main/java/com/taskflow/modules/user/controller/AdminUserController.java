@@ -3,6 +3,7 @@ package com.taskflow.modules.user.controller;
 import com.taskflow.common.ApiResponse;
 import com.taskflow.common.AppException;
 import com.taskflow.common.ResultCode;
+import com.taskflow.modules.user.dto.AdminCreateUserRequest;
 import com.taskflow.modules.user.dto.UserDto;
 import com.taskflow.modules.user.entity.RoleEntity;
 import com.taskflow.modules.user.entity.UserEntity;
@@ -12,8 +13,10 @@ import com.taskflow.modules.user.repository.UserRepository;
 import com.taskflow.modules.workspace.repository.WorkspaceRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -29,16 +32,19 @@ public class AdminUserController {
     private final RoleRepository roleRepository;
     private final WorkspaceRepository workspaceRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminUserController(
             UserRepository userRepository,
             RoleRepository roleRepository,
             WorkspaceRepository workspaceRepository,
-            UserMapper userMapper) {
+            UserMapper userMapper,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.workspaceRepository = workspaceRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/stats")
@@ -64,6 +70,37 @@ public class AdminUserController {
         List<UserEntity> users = userRepository.findAll();
         List<UserDto> dtos = users.stream().map(userMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success("All users retrieved successfully", dtos));
+    }
+
+    @PostMapping("/users")
+    @Operation(summary = "Create a new user account with assigned role (Admin only)")
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@Valid @RequestBody AdminCreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
+            throw new AppException(ResultCode.DATA_ALREADY_EXISTS, "Email này đã được sử dụng trên hệ thống");
+        }
+
+        UserEntity user = new UserEntity();
+        user.setEmail(request.getEmail().trim().toLowerCase());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFullName(request.getFullName().trim());
+        user.setIsEmailVerified(true);
+        user.setStatus("ACTIVE");
+
+        String targetRole = request.getRole() != null ? request.getRole().toUpperCase() : "ROLE_STAFF";
+        if (!targetRole.startsWith("ROLE_")) {
+            targetRole = "ROLE_" + targetRole;
+        }
+
+        String finalRoleName = targetRole;
+        RoleEntity role = roleRepository.findByName(finalRoleName)
+                .orElseGet(() -> roleRepository.save(new RoleEntity(finalRoleName, "System Role " + finalRoleName)));
+
+        Set<RoleEntity> roles = new HashSet<>();
+        roles.add(role);
+        user.setRoles(roles);
+
+        UserEntity saved = userRepository.save(user);
+        return ResponseEntity.ok(ApiResponse.success("Tạo tài khoản người dùng thành công", userMapper.toDto(saved)));
     }
 
     @PutMapping("/users/{userId}/status")

@@ -24,6 +24,13 @@ export interface AdminUserDto {
   createdAt: string;
 }
 
+export interface CreateUserPayload {
+  email: string;
+  password: string;
+  fullName: string;
+  role: string;
+}
+
 export const adminService = {
   getStats: async (): Promise<AdminStatsDto> => {
     const res = await apiClient.get<ApiResponse<AdminStatsDto>>('/admin/stats');
@@ -32,6 +39,11 @@ export const adminService = {
 
   getAllUsers: async (): Promise<AdminUserDto[]> => {
     const res = await apiClient.get<ApiResponse<AdminUserDto[]>>('/admin/users');
+    return res.data.data;
+  },
+
+  createUser: async (payload: CreateUserPayload): Promise<AdminUserDto> => {
+    const res = await apiClient.post<ApiResponse<AdminUserDto>>('/admin/users', payload);
     return res.data.data;
   },
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Plus, Settings, User, LogOut, Shield, ChevronDown } from 'lucide-react';
+import { Menu, Plus, Settings, User, LogOut, Shield, ChevronDown, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import { useUiStore } from '@/store/uiStore';
 import { NotificationDropdown } from '@/features/notification/components/notification-dropdown';
 import { SearchBar } from '@/features/search/components/search-bar';
 import { GlobalTaskModal } from '@/features/task/components/global-task-modal';
+import { CreateUserModal } from '@/features/admin/components/create-user-modal';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function Topbar() {
@@ -21,6 +22,7 @@ export default function Topbar() {
 
   const canCreateTask = !!user;
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -68,6 +70,19 @@ export default function Topbar() {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Admin Create Account Button */}
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setIsCreateUserModalOpen(true)}
+            className="flex items-center space-x-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-bold text-emerald-500 shadow-xs transition hover:bg-emerald-500 hover:text-white active:scale-95"
+            title="Tạo tài khoản người dùng mới và cấp quyền"
+          >
+            <UserPlus className="h-4 w-4" />
+            <span className="hidden sm:inline">Tạo tài khoản</span>
+          </button>
+        )}
+
         {/* Prominent Create / Request Button */}
         {canCreateTask && (
           <button
@@ -162,6 +177,7 @@ export default function Topbar() {
       </div>
 
       <GlobalTaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} />
+      <CreateUserModal isOpen={isCreateUserModalOpen} onClose={() => setIsCreateUserModalOpen(false)} />
     </header>
   );
 }
