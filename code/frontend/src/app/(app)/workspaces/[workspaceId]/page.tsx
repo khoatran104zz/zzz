@@ -84,8 +84,6 @@ export default function WorkspaceDetailPage() {
         />
       )}
 
-      {activeTab === 'forms' && <WorkspaceFormsTab workspaceId={workspaceId} />}
-
       {/* Task Detail Modal */}
       <TaskDetailModal
         task={selectedTask}

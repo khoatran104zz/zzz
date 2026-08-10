@@ -27,5 +27,18 @@
   "messages": {
     "inviteSuccess": "Đã gửi lời mời thành công!",
     "removeSuccess": "Đã xóa thành viên khỏi không gian làm việc."
+  },
+  "createUserModal": {
+    "title": "Tạo tài khoản mới",
+    "subtitle": "Cấp quyền hệ thống cho thành viên mới",
+    "fullNameLabel": "Họ và tên",
+    "fullNamePlaceholder": "Ví dụ: Nguyễn Văn A...",
+    "emailLabel": "Địa chỉ Email",
+    "emailPlaceholder": "user@example.com",
+    "passwordLabel": "Mật khẩu ban đầu",
+    "passwordPlaceholder": "Tối thiểu 6 ký tự...",
+    "roleLabel": "Vai trò & Phân quyền",
+    "submit": "Xác nhận tạo",
+    "success": "Đã tạo tài khoản thành công cho {{email}}"
   }
 }

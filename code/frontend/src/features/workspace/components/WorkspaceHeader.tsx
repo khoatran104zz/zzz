@@ -23,7 +23,7 @@ import {
 import type { WorkspaceDto } from '../types';
 import { useAuthStore } from '@/store/auth-store';
 
-export type WorkspaceTab = 'summary' | 'board' | 'timeline' | 'members' | 'forms';
+export type WorkspaceTab = 'summary' | 'board' | 'timeline' | 'members';
 
 interface WorkspaceHeaderProps {
   workspace: WorkspaceDto | null;
@@ -61,7 +61,6 @@ export function WorkspaceHeader({
     { id: 'board', labelKey: 'tabs.board', defaultLabel: 'Bảng công việc', icon: LayoutGrid },
     { id: 'timeline', labelKey: 'tabs.timeline', defaultLabel: 'Tiến độ (Gantt)', icon: GitCommitHorizontal },
     { id: 'members', labelKey: 'tabs.members', defaultLabel: 'Thành viên', icon: Users },
-    { id: 'forms', labelKey: 'tabs.forms', defaultLabel: 'Biểu mẫu', icon: FileSpreadsheet },
   ];
 
   const handleGoToEdit = () => {
