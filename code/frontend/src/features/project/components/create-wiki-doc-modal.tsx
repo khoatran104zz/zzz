@@ -20,6 +20,8 @@ export interface WikiDocItem {
   attachedFilesCount?: number;
 }
 
+import { SuccessModal } from '@/components/success-modal';
+
 interface CreateWikiDocModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -43,6 +45,7 @@ export function CreateWikiDocModal({
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const { data: workspaces = [] } = useWorkspaces();
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
@@ -68,7 +71,7 @@ export function CreateWikiDocModal({
   const workspaceId = selectedWorkspaceId || activeWorkspace?.id || workspaces[0]?.id || '';
   const { data: projects = [] } = useProjects(workspaceId || null);
 
-  if (!isOpen || !mounted) return null;
+  if ((!isOpen && !isSuccessModalOpen) || !mounted) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,10 +94,14 @@ export function CreateWikiDocModal({
 
       onCreated(newDoc);
       setIsLoading(false);
-      setTitle('');
-      setSummary('');
-      setAttachedFiles([]);
-      onClose();
+      setIsSuccessModalOpen(true);
+      setTimeout(() => {
+        setIsSuccessModalOpen(false);
+        setTitle('');
+        setSummary('');
+        setAttachedFiles([]);
+        onClose();
+      }, 1500);
     }, 300);
   };
 
@@ -260,6 +267,13 @@ export function CreateWikiDocModal({
           </div>
         </form>
       </div>
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="Tạo tài liệu Wiki thành công!"
+        description="Tài liệu tri thức mới đã được khởi tạo và lưu trữ cho dự án."
+      />
     </div>
   );
 

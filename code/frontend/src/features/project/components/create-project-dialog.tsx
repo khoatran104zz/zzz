@@ -30,6 +30,7 @@ export function CreateProjectDialog({ workspaceId, isOpen, onClose }: CreateProj
   const createMutation = useCreateProject(workspaceId);
   const [selectedColor, setSelectedColor] = useState('#6366f1');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const {
     register,
@@ -40,6 +41,11 @@ export function CreateProjectDialog({ workspaceId, isOpen, onClose }: CreateProj
     formState: { errors },
   } = useForm<CreateProjectFormData>({
     resolver: zodResolver(createProjectSchema),
+    defaultValues: {
+      name: '',
+      key: '',
+      description: '',
+    },
   });
 
   const projectName = watch('name');
@@ -48,21 +54,21 @@ export function CreateProjectDialog({ workspaceId, isOpen, onClose }: CreateProj
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setValue('name', val);
-    if (val && val.length >= 2) {
-      const suggestedKey = val
-        .split(' ')
-        .filter(Boolean)
-        .map((w) => w[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 3);
+    if (val.trim()) {
+      const words = val.trim().split(/\s+/);
+      let suggestedKey = '';
+      if (words.length === 1) {
+        suggestedKey = words[0].substring(0, 3).toUpperCase();
+      } else {
+        suggestedKey = words.slice(0, 3).map(w => w[0]).join('').toUpperCase();
+      }
       if (suggestedKey) {
         setValue('key', suggestedKey);
       }
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !isSuccessModalOpen) return null;
 
   const onSubmit = (data: CreateProjectFormData) => {
     setErrorMessage(null);
@@ -82,8 +88,12 @@ export function CreateProjectDialog({ workspaceId, isOpen, onClose }: CreateProj
       },
       {
         onSuccess: () => {
-          reset();
-          onClose();
+          setIsSuccessModalOpen(true);
+          setTimeout(() => {
+            reset();
+            setIsSuccessModalOpen(false);
+            onClose();
+          }, 1500);
         },
         onError: (err: any) => {
           setErrorMessage(err.response?.data?.message || tCommon('messages.genericError', { defaultValue: 'Tạo dự án thất bại.' }));
@@ -218,6 +228,13 @@ export function CreateProjectDialog({ workspaceId, isOpen, onClose }: CreateProj
           </div>
         </form>
       </div>
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="Tạo dự án mới thành công!"
+        description="Dự án mới đã được khởi tạo và sẵn sàng lập kế hoạch công việc."
+      />
     </div>
   );
 }

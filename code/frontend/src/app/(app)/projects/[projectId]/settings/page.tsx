@@ -15,6 +15,8 @@ import {
   useUpdateProject,
 } from '@/features/project/hooks/use-project';
 
+import { SuccessModal } from '@/components/success-modal';
+
 const COLOR_OPTIONS = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
 
 const updateProjectSchema = z.object({
@@ -43,6 +45,7 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ proj
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const {
     register,
@@ -92,6 +95,7 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ proj
       },
       {
         onSuccess: () => {
+          setIsSuccessModalOpen(true);
           setSuccessMsg(t('messages.updateSuccess', { defaultValue: 'Cập nhật dự án thành công!' }));
         },
         onError: (err: any) => {
@@ -308,6 +312,13 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ proj
           </div>
         </div>
       )}
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="Cập nhật Dự án thành công!"
+        description="Các thông số cài đặt của dự án đã được lưu và đồng bộ toàn hệ thống."
+      />
     </div>
   );
 }
