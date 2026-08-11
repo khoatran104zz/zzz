@@ -1,56 +1,60 @@
 # TaskFlow Engineering Standard: Database Guidelines (`database-style.md`)
 
-This document defines the database design standards, schema conventions, migration practices, and performance guidelines for **TaskFlow** using **PostgreSQL** and **Flyway**.
+Tài liệu này quy định các tiêu chuẩn thiết kế cơ sở dữ liệu (Database Design Standards), quy ước đặt tên schema, thực thi Flyway migrations và tối ưu hóa hiệu năng truy vấn cho **TaskFlow** sử dụng **PostgreSQL** và **Flyway**.
 
 ---
 
-## # Naming Conventions
+## 1. Naming Conventions (Quy Ước Đặt Tên)
 
-All database identifiers (tables, columns, indexes, constraints) MUST use **lowercase `snake_case`**.
+Tất cả các thành phần CSDL (bảng, cột, chỉ mục index, ràng buộc constraint) **BẮT BUỘC** dùng chuẩn **lowercase `snake_case`**.
 
-| Artifact | Convention | Example |
+| Thành Phần | Quy Ước | Ví Dụ |
 | :--- | :--- | :--- |
-| **Database Name** | `snake_case` | `taskflow_dev`, `taskflow_prod` |
-| **Table Name** | Plural `snake_case` | `workspaces`, `tasks`, `users` |
-| **Column Name** | Singular `snake_case` | `first_name`, `created_at`, `is_active` |
+| **Database Name** | `snake_case` | `taskflow_db`, `taskflow_dev` |
+| **Table Name** | Danh từ số nhiều `snake_case` | `workspaces`, `tasks`, `users`, `wiki_pages` |
+| **Column Name** | Danh từ số ít `snake_case` | `first_name`, `created_at`, `is_active` |
 | **Primary Key Constraint** | `pk_<table_name>` | `pk_workspaces`, `pk_tasks` |
-| **Foreign Key Constraint** | `fk_<source_table>_<target_table>` | `fk_projects_workspaces` |
-| **Unique Constraint** | `uk_<table_name>_<column_names>` | `uk_users_email` |
+| **Foreign Key Constraint** | `fk_<source_table>_<target_table>` | `fk_projects_workspaces`, `fk_tasks_projects` |
+| **Unique Constraint** | `uk_<table_name>_<column_names>` | `uk_users_email`, `uk_workspaces_slug` |
 | **Check Constraint** | `ck_<table_name>_<condition>` | `ck_tasks_priority` |
 | **Index Name** | `idx_<table_name>_<column_names>` | `idx_tasks_workspace_status` |
 
 ---
 
-## # Primary Key & UUID Strategy
+## 2. Primary Key & UUID Strategy (Chiến Lược Khóa Chính)
 
 1. **UUIDv4 Primary Keys**:
-   - All primary key identifiers MUST use PostgreSQL `UUID` types generated via `gen_random_uuid()` or Java `UUID.randomUUID()`.
-   - Never use auto-incrementing sequential integers (`BIGSERIAL`) for entity primary keys to prevent enumeration attacks and simplify distributed data merging.
+   - Tất cả các khóa chính của các thực thể nghiệp vụ MUST sử dụng kiểu `UUID` của PostgreSQL được tạo tự động qua `gen_random_uuid()` hoặc Java `UUID.randomUUID()`.
+   - **TUYỆT ĐỐI KHÔNG** dùng chuỗi số tăng tự động (`BIGSERIAL`) làm khóa chính công khai để tránh các cuộc tấn công quét số thứ tự (enumeration attacks) và hỗ trợ gộp dữ liệu phân tán.
 
 ```sql
 CREATE TABLE workspaces (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     slug VARCHAR(100) NOT NULL,
-    -- ...
+    owner_id UUID NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by UUID,
+    updated_by UUID
 );
 ```
 
 ---
 
-## # Audit Fields & BaseEntity
+## 3. Audit Fields & BaseEntity (Trường Ghi Vết Kiểm Toán)
 
-Every business domain table MUST incorporate standard audit columns:
+Mọi bảng nghiệp vụ trong hệ thống BẮT BUỘC phải kế thừa các trường kiểm toán tiêu chuẩn từ `BaseEntity`:
 
-| Column | Data Type | Nullable | Description |
+| Cột | Kiểu Dữ Liệu | Nullable | Mô Tả |
 | :--- | :--- | :--- | :--- |
-| `created_at` | `TIMESTAMPTZ` | `NOT NULL` | Timestamp of record creation in UTC |
-| `updated_at` | `TIMESTAMPTZ` | `NOT NULL` | Timestamp of last record update in UTC |
-| `created_by` | `UUID` | `NULLABLE` | User ID who created the record |
-| `updated_by` | `UUID` | `NULLABLE` | User ID who last updated the record |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL` | Thời điểm bản ghi được tạo (Chuẩn UTC) |
+| `updated_at` | `TIMESTAMPTZ` | `NOT NULL` | Thời điểm bản ghi cập nhật gần nhất (UTC) |
+| `created_by` | `UUID` | `NULLABLE` | ID người dùng tạo bản ghi |
+| `updated_by` | `UUID` | `NULLABLE` | ID người dùng cập nhật bản ghi gần nhất |
 
 ```java
-// Standard BaseEntity in Java
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -82,88 +86,65 @@ public abstract class BaseEntity {
 
 ---
 
-## # Timestamp & Soft Delete Strategy
+## 4. Soft Delete Policy (Chính Sách Xóa Mềm)
 
-1. **UTC Timestamp (`TIMESTAMPTZ`)**:
-   - All temporal columns MUST use `TIMESTAMPTZ` (`TIMESTAMP WITH TIME ZONE`).
-   - Timestamps stored in PostgreSQL must strictly be in **UTC**. Conversion to user local time occurs exclusively on client frontend presentation layers.
-2. **Soft Delete Policy**:
-   - Entities marked for soft delete MUST include `is_deleted BOOLEAN DEFAULT FALSE NOT NULL` and `deleted_at TIMESTAMPTZ NULL`.
-   - Spring Data JPA repositories handling soft-deletable entities must use `@SQLDelete` and `@Where(clause = "is_deleted = false")` or explicit Specification filters.
+1. **Soft Delete**:
+   - Tất cả các thực thể quan trọng (Workspace, Project, Task, Wiki Page, Comment) không bao giờ bị xóa cứng khỏi DB ngay lập tức.
+   - Thêm các cột: `is_deleted BOOLEAN DEFAULT FALSE NOT NULL` và `deleted_at TIMESTAMPTZ NULL`.
+   - Spring Data JPA Repository quản lý thực thể này sẽ dùng bộ lọc tự động hoặc `@Where(clause = "is_deleted = false")`.
 
 ---
 
-## # Flyway Migration Rules
+## 5. Flyway Migration Rules & Scripts (34 Migration Versioned Scripts)
 
-1. **Location**: All migration scripts MUST reside in `code/backend/src/main/resources/db/migration/`.
-2. **Naming Pattern**: `V<Version>__<Description>.sql` (Note: two underscores `__`).
-   - Example: `V1__init_schema.sql`
-   - Example: `V2__create_workspaces_table.sql`
-   - Example: `V3__add_task_priority_index.sql`
-3. **Strict Immutability**:
-   - Once a migration script is committed or executed in any environment, it MUST NEVER be edited.
-   - Any schema modification or index addition MUST be added as a brand-new incremental versioned migration script (`V4__...sql`).
-4. **Idempotent DDL Rules**:
-   - Always include explicit constraints, NOT NULL specifications, and default values.
+1. **Vị trí**: Tất cả các script migration được lưu trữ tại `code/backend/src/main/resources/db/migration/`.
+2. **Quy tắc đặt tên**: `V<Version>__<Description>.sql` (Dùng 2 dấu gạch dưới `__`).
+3. **Danh sách 34 Flyway Migrations đã triển khai**:
+   - `V1__create_users_table.sql`
+   - `V2__create_workspace_table.sql`
+   - `V3__create_project_table.sql`
+   - `V4__create_task_table.sql`
+   - `V5__create_user_settings_table.sql`
+   - `V6__create_checklist_table.sql`
+   - `V7__create_comment_table.sql`
+   - `V8__create_attachment_table.sql`
+   - `V9__create_reminder_table.sql`
+   - `V10__create_calendar_event_table.sql`
+   - `V11__create_notification_table.sql`
+   - `V12__create_activity_log_table.sql`
+   - `V13__create_role_permission_table.sql`
+   - `V14__create_ai_prompt_log_table.sql`
+   - `V15__create_auth_tokens_table.sql`
+   - `V16__add_checklist_position_and_fk.sql`
+   - `V17__create_tags_table.sql`
+   - `V18__add_comment_mentions_soft_delete_and_fk.sql`
+   - `V19__enhance_reminders_table.sql`
+   - `V20__enhance_notifications_table.sql`
+   - `V21__enhance_calendar_events_table.sql`
+   - `V22__enhance_activity_log_table.sql`
+   - `V23__enhance_attachment_table.sql`
+   - `V24__create_board_and_column_tables.sql`
+   - `V25__create_timeline_and_dependencies_tables.sql`
+   - `V26__create_team_collaboration_tables.sql`
+   - `V27__seed_rbac_roles_and_permissions.sql`
+   - `V28__create_wiki_tables.sql`
+   - `V29__create_whiteboard_tables.sql`
+   - `V30__create_search_tables.sql`
+   - `V31__create_automation_tables.sql`
+   - `V32__add_audit_columns_to_search_filters.sql`
+   - `V33__seed_admin_account.sql`
+   - `V34__add_workspace_and_reminder_to_calendar_events.sql`
 
-```sql
--- Migration Example: V2__create_workspaces_table.sql
-CREATE TABLE workspaces (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    slug VARCHAR(120) NOT NULL,
-    description TEXT,
-    owner_id UUID NOT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
-    deleted_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    updated_by UUID,
-    CONSTRAINT uk_workspaces_slug UNIQUE (slug),
-    CONSTRAINT fk_workspaces_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE RESTRICT
-);
-
-CREATE INDEX idx_workspaces_owner_id ON workspaces(owner_id);
-```
-
----
-
-## # Entity Relationships & JPA Guidelines
-
-1. **Mandatory Lazy Fetching (`FetchType.LAZY`)**:
-   - ALL JPA relationships (`@ManyToOne`, `@OneToMany`, `@OneToOne`, `@ManyToMany`) MUST explicitly configure `fetch = FetchType.LAZY`.
-   - ❌ `FetchType.EAGER` is **STRICTLY FORBIDDEN** to prevent unexpected N+1 query cascades.
-2. **Many-to-Many Relationships**:
-   - Many-to-many relationships must be mapped via explicit intermediate join entities (e.g., `WorkspaceMemberEntity` representing the `workspace_members` join table).
-3. **JSONB Columns**:
-   - Use PostgreSQL `JSONB` columns strictly for dynamic attributes, user preference flags, or audit snapshot payloads. Do not use JSONB to bypass relational normalization.
-
-```java
-// Good JPA Entity Relationship
-@Entity
-@Table(name = "projects")
-@Getter
-@Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProjectEntity extends BaseEntity {
-
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "workspace_id", nullable = false, foreignKey = @ForeignKey(name = "fk_projects_workspaces"))
-    private WorkspaceEntity workspace;
-}
-```
+4. **Bất Biến (Immutability)**:
+   - Các file migration đã từng được commit/chạy trên bất kỳ môi trường nào **TUYỆT ĐỐI KHÔNG ĐƯỢC CHỈNH SỬA**.
+   - Mọi thay đổi schema hay thêm index bắt buộc phải tạo file version mới (ví dụ: `V35__...sql`).
 
 ---
 
-## # Performance & Indexing Guidelines
+## 6. JPA Performance & Indexing Guidelines
 
-1. **Foreign Key Indexing**: Every Foreign Key column MUST have a corresponding index to optimize join query performance.
-2. **Composite Indexes**: Query paths filtering by multi-column combinations (e.g., `workspace_id` + `status` + `due_date`) must be supported by composite indexes matching column filter order.
-3. **Preventing N+1 Queries**:
-   - Use `FETCH JOIN` in JPQL or Spring Data JPA `@EntityGraph` when loading parent entities alongside child relationships for display.
-4. **Query Performance Verification**:
-   - Execute `EXPLAIN ANALYZE` on complex queries to ensure index scans are utilized rather than full table scans.
+1. **Bắt Buộc Lazy Fetching (`FetchType.LAZY`)**:
+   - Tất cả các quan hệ JPA (`@ManyToOne`, `@OneToMany`, `@OneToOne`, `@ManyToMany`) MUST cấu hình `fetch = FetchType.LAZY`.
+   - ❌ **CẤM** dùng `FetchType.EAGER` để tránh tràn N+1 query không kiểm soát.
+2. **Foreign Key Indexing**: Tất cả các cột khóa ngoại (Foreign Key) đều phải được tạo Index trong SQL để tối ưu hóa phép JOIN.
+3. **Chống N+1 Query**: Sử dụng `JOIN FETCH` trong JPQL hoặc `@EntityGraph` khi load thực thể cha kèm danh sách thực thể con.

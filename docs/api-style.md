@@ -1,65 +1,64 @@
 # TaskFlow Engineering Standard: REST API Guidelines (`api-style.md`)
 
-This document specifies the REST API design standards, contract specifications, status code usage, authentication mechanisms, and response formatting for **TaskFlow**.
+Tài liệu này quy định các tiêu chuẩn thiết kế REST API, cấu trúc Endpoint, cơ chế xác thực JWT, định dạng phản hồi chuẩn hóa và tài liệu hóa qua Swagger OpenAPI cho **TaskFlow**.
 
 ---
 
-## # REST Principles & URL Structure
+## 1. REST Principles & URL Structure (Nguyên Tắc URL)
 
-### 1. Architectural Style
-TaskFlow REST APIs adhere to HTTP/1.1 and HTTP/2 standards, producing and consuming `application/json` content types exclusively.
+### 1.1 Architectural Style
+Tất cả các Endpoint API trong TaskFlow tuân thủ chuẩn HTTP/1.1 và HTTP/2, chỉ sản xuất và tiêu thụ định dạng dữ liệu `application/json`.
 
-### 2. URL Versioning Strategy
-All endpoints must include explicit API versioning within the URI path prefix:
+### 1.2 URL Versioning Strategy
+Tất cả các Endpoint BẮT BUỘC phải có tiền tố phiên bản API rõ ràng:
 ```http
 /api/v1/{resource-name}
 ```
 
-### 3. Resource Naming Rules
-- **Plural Nouns**: Resource endpoints MUST use plural nouns (e.g., `/api/v1/workspaces`, `/api/v1/tasks`, `/api/v1/projects`).
-- **Kebab-Case**: Multi-word endpoints must use lowercase kebab-case (e.g., `/api/v1/task-categories`, `/api/v1/user-profiles`).
-- **Hierarchical Nesting**: Nest resources to represent ownership, capped at a maximum depth of two levels:
+### 1.3 Resource Naming Rules
+- **Danh từ số nhiều**: Tài nguyên URL BẮT BUỘC dùng danh từ số nhiều (ví dụ: `/api/v1/workspaces`, `/api/v1/tasks`, `/api/v1/projects`).
+- **Kebab-Case**: URL nhiều từ phải dùng ký tự gạch nối chữ thường (ví dụ: `/api/v1/task-categories`, `/api/v1/user-profiles`).
+- **Độ sâu phân cấp tối đa 2 cấp**:
   - ✅ `/api/v1/workspaces/{workspaceId}/projects`
   - ✅ `/api/v1/projects/{projectId}/tasks`
-  - ❌ `/api/v1/workspaces/{wId}/projects/{pId}/tasks/{tId}/comments` (Too deep! Use top-level endpoint `/api/v1/tasks/{taskId}/comments` instead).
+  - ❌ `/api/v1/workspaces/{wId}/projects/{pId}/tasks/{tId}/comments` (Quá sâu! Hãy dùng URL cấp 1: `/api/v1/tasks/{taskId}/comments`).
 
 ---
 
-## # HTTP Methods & Status Codes
+## 2. HTTP Methods & Standard Status Codes
 
-### HTTP Method Usage
+### Sử Dụng Phương Thức HTTP
 
-| Method | Purpose | Idempotent | Safe |
-| :--- | :--- | :--- | :--- |
-| **GET** | Retrieve a single resource or collection | Yes | Yes |
-| **POST** | Create a new resource or trigger an action | No | No |
-| **PUT** | Replace a resource completely | Yes | No |
-| **PATCH** | Partially update an existing resource | No | No |
-| **DELETE** | Remove a resource | Yes | No |
+| Method | Mục Đích | Khả Đổi (Idempotent) | An Toàn (Safe) |
+| :--- | :--- | :---: | :---: |
+| **GET** | Truy vấn một bản ghi hoặc danh sách tài nguyên | Có | Có |
+| **POST** | Tạo mới một tài nguyên hoặc kích hoạt một hành động | Không | Không |
+| **PUT** | Thay thế toàn bộ nội dung một tài nguyên | Có | Không |
+| **PATCH** | Cập nhật một phần thuộc tính tài nguyên | Không | Không |
+| **DELETE** | Xóa một tài nguyên (Soft delete) | Có | Không |
 
-### Standard HTTP Status Codes
+### Mã Trạng Thái HTTP Tiêu Chuẩn (Status Codes)
 
-| Code | Status | Usage Scenario |
+| Mã | Trạng Thái | Kịch Bản Sử Dụng |
 | :--- | :--- | :--- |
-| **200** | `OK` | Successful read, update, or general non-creation action. |
-| **201** | `Created` | Resource successfully created. Returns `Location` header & payload. |
-| **204** | `No Content` | Action completed successfully with no body (e.g., DELETE). |
-| **400** | `Bad Request` | Malformed request body, syntax error, or field validation failure. |
-| **401** | `Unauthorized` | Missing, expired, or invalid JWT authentication token. |
-| **403** | `Forbidden` | Authenticated user lacks RBAC permissions for the target resource. |
-| **404** | `Not Found` | The requested resource or endpoint URI does not exist. |
-| **409** | `Conflict` | Business rule constraint violation (e.g., duplicate unique title). |
-| **422** | `Unprocessable Entity` | Business logic validation failure despite valid JSON syntax. |
-| **429** | `Too Many Requests` | Rate limit quota exceeded. |
-| **500** | `Internal Server Error` | Unhandled server exception. Logged automatically for monitoring. |
+| **200** | `OK` | Truy vấn, cập nhật hoặc thực hiện hành động thành công. |
+| **201** | `Created` | Tạo mới tài nguyên thành công. |
+| **204** | `No Content` | Xóa tài nguyên thành công, không trả về payload body. |
+| **400** | `Bad Request` | Payload request sai cú pháp hoặc vi phạm validation. |
+| **401** | `Unauthorized` | Token JWT bị thiếu, hết hạn hoặc không hợp lệ. |
+| **403** | `Forbidden` | Người dùng không đủ quyền truy cập (RBAC Matrix violation). |
+| **404** | `Not Found` | Tài nguyên yêu cầu không tồn tại trong hệ thống. |
+| **409** | `Conflict` | Vi phạm ràng buộc duy nhất (ví dụ: trùng email, trùng slug). |
+| **422** | `Unprocessable Entity` | Vi phạm quy tắc logic nghiệp vụ. |
+| **500** | `Internal Server Error` | Lỗi ngoại lệ hệ thống chưa được xử lý. |
 
 ---
 
-## # Standard Response Envelope (`ApiResponse<T>`)
+## 3. Standard Response Envelope (`ApiResponse<T>`)
 
-Every endpoint response MUST be wrapped inside the universal `ApiResponse<T>` envelope.
+Mọi phản hồi từ REST Controller BẮT BUỘC được đóng gói trong vỏ bọc `ApiResponse<T>`.
 
-### Successful Response Format
+### Định Dạng Phản Hồi Thành Công
 ```json
 {
   "code": 200,
@@ -68,13 +67,13 @@ Every endpoint response MUST be wrapped inside the universal `ApiResponse<T>` en
     "id": "123e4567-e89b-12d3-a456-426614174000",
     "name": "Engineering Workspace",
     "slug": "engineering-workspace",
-    "createdAt": "2026-07-30T10:00:00Z"
+    "createdAt": "2026-08-11T10:00:00Z"
   },
   "timestamp": 1770000000000
 }
 ```
 
-### Standard Error Response Format
+### Định Dạng Phản Hồi Lỗi Standard Error
 ```json
 {
   "code": 400,
@@ -84,10 +83,6 @@ Every endpoint response MUST be wrapped inside the universal `ApiResponse<T>` en
     {
       "field": "name",
       "message": "Workspace name must not be blank"
-    },
-    {
-      "field": "maxMembers",
-      "message": "Max members must be at least 1"
     }
   ],
   "timestamp": 1770000000000
@@ -96,20 +91,10 @@ Every endpoint response MUST be wrapped inside the universal `ApiResponse<T>` en
 
 ---
 
-## # Pagination, Filtering, Sorting & Searching
+## 4. Pagination & Search Format (`PageResponse<T>`)
 
-### Request Query Parameters
-Collection endpoints (`GET /api/v1/tasks`) MUST support standardized pagination, sorting, and filtering parameters:
+Truy vấn danh sách (`GET /api/v1/tasks`) hỗ trợ phân trang và tìm kiếm tiêu chuẩn:
 
-| Parameter | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `page` | `Integer` | `0` | Zero-indexed page number |
-| `size` | `Integer` | `20` | Page size limit (maximum `100`) |
-| `sort` | `String` | `createdAt,desc` | Sort parameter in format `field,direction` |
-| `q` | `String` | `null` | Full-text query string search term |
-| `status` | `String` | `null` | Exact filter parameter (e.g., `status=IN_PROGRESS`) |
-
-### Paginated Response Payload (`PageResponse<T>`)
 ```json
 {
   "code": 200,
@@ -135,41 +120,21 @@ Collection endpoints (`GET /api/v1/tasks`) MUST support standardized pagination,
 
 ---
 
-## # Authentication & Authorization
+## 5. Authentication & JWT Bearer Flow
 
-### JWT Bearer Token Flow
-1. **Login Request**: Client POSTs credentials to `/api/v1/auth/login`.
-2. **Token Returns**: Server returns short-lived Access Token (JWT, 15 min expiration) in body and long-lived Refresh Token (HttpOnly Cookie, 7 days expiration).
-3. **Authorized Requests**: Client attaches Access Token to all protected endpoint requests:
+1. **Đăng nhập**: Client gửi credentials tới `POST /api/v1/auth/login`.
+2. **Cấp Token**: Backend trả về Access Token (JWT 15 phút) trong Response Body và Refresh Token (7 ngày) qua Cookie HttpOnly.
+3. **Ủy quyền Request**: Client gắn Header:
    ```http
    Authorization: Bearer <access_token>
    ```
-4. **Automatic Token Refresh**: Frontend Axios interceptor intercepts `401 Unauthorized` responses and automatically invokes `POST /api/v1/auth/refresh` to obtain a new Access Token.
+4. **Tự động Refresh Token**: Axios Interceptor phía Frontend phát hiện lỗi `401 Unauthorized` và tự động gọi `POST /api/v1/auth/refresh` để xin Access Token mới mà không làm gián đoạn trải nghiệm người dùng.
 
 ---
 
-## # Rate Limiting & Idempotency Key
+## 6. Swagger OpenAPI 3.0 Documentation
 
-### Rate Limiting Headers
-Protected APIs enforce rate limits per IP / User ID. All responses include rate limit headers:
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 98
-X-RateLimit-Reset: 1770003600
-```
-
-### Idempotency Key
-For critical non-idempotent operations (such as payment processing or workspace creation under poor network conditions), clients MAY supply a unique UUID in the header:
-```http
-X-Idempotency-Key: 7b9e4567-e89b-12d3-a456-426614174999
-```
-If a request with an identical `X-Idempotency-Key` is retried within 24 hours, the server returns the cached initial response without executing the business operation again.
-
----
-
-## # OpenAPI / Swagger Annotations
-
-Every REST Controller and method MUST include Swagger OpenAPI annotations:
+Mọi Controller và Endpoint phương thức BẮT BUỘC phải khai báo OpenAPI annotations để tự động sinh tài liệu Swagger tại `/swagger-ui.html`:
 
 ```java
 @RestController

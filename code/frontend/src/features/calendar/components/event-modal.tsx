@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, AlignLeft, Palette, Loader2, Building2, Video } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, AlignLeft, Palette, Loader2, Building2, Video, Folder, Bell } from 'lucide-react';
 import type { CalendarEventItemDto } from '../types';
 import { useCreateCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent } from '../hooks/use-calendar';
 import { useWorkspaces } from '@/features/workspace/hooks/use-workspace';
+import { useProjects } from '@/features/project/hooks/use-project';
 import { useWorkspaceStore } from '@/store/workspace-store';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -23,6 +24,7 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
   const [location, setLocation] = useState('');
   const [meetingLink, setMeetingLink] = useState('');
   const [workspaceId, setWorkspaceId] = useState('');
+  const [projectId, setProjectId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [color, setColor] = useState('#4F46E5');
@@ -30,6 +32,7 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
 
   const { data: workspaces = [] } = useWorkspaces();
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const { data: projects = [] } = useProjects(workspaceId || null);
 
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ADMIN') || user?.email === 'admin@gmail.com';
@@ -47,6 +50,7 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
       setLocation(event.location || '');
       setMeetingLink(event.meetingLink || '');
       setWorkspaceId(event.workspaceId || activeWorkspaceId || (workspaces[0]?.id ?? ''));
+      setProjectId((event as any).projectId || '');
       setStartDate(event.startTime ? new Date(event.startTime).toISOString().slice(0, 16) : '');
       setEndDate(event.endTime ? new Date(event.endTime).toISOString().slice(0, 16) : '');
       setColor(event.color || '#4F46E5');
@@ -59,6 +63,7 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
       setLocation('');
       setMeetingLink('');
       setWorkspaceId(activeWorkspaceId || (workspaces[0]?.id ?? ''));
+      setProjectId('');
       setStartDate(initDate.toISOString().slice(0, 16));
       setEndDate(nextHour.toISOString().slice(0, 16));
       setColor('#4F46E5');
@@ -140,26 +145,57 @@ export function EventModal({ event, isOpen, onClose, defaultDate }: EventModalPr
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
-          {/* Workspace Selection */}
-          <div>
-            <label className="block text-text-secondary font-semibold mb-1 flex items-center">
-              <Building2 className="mr-1 h-3.5 w-3.5 text-primary" /> Workspace *
-            </label>
-            <select
-              required
-              disabled={isReadOnly}
-              value={workspaceId}
-              onChange={(e) => setWorkspaceId(e.target.value)}
-              className="w-full rounded-xl border border-surface-border bg-surface-alt px-3 py-2 text-text-primary focus:border-primary focus:outline-none disabled:opacity-70 font-medium"
-            >
-              {workspaces.length === 0 && <option value="">Chưa có workspace nào</option>}
-              {workspaces.map((ws) => (
-                <option key={ws.id} value={ws.id}>
-                  {ws.name}
-                </option>
-              ))}
-            </select>
+          {/* Workspace & Project Pickers */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-text-secondary font-semibold mb-1 flex items-center">
+                <Building2 className="mr-1 h-3.5 w-3.5 text-primary" /> Workspace *
+              </label>
+              <select
+                required
+                disabled={isReadOnly}
+                value={workspaceId}
+                onChange={(e) => {
+                  setWorkspaceId(e.target.value);
+                  setProjectId('');
+                }}
+                className="w-full rounded-xl border border-surface-border bg-surface-alt px-3 py-2 text-text-primary focus:border-primary focus:outline-none disabled:opacity-70 font-medium"
+              >
+                <option value="">-- Chọn Workspace --</option>
+                {workspaces.map((ws) => (
+                  <option key={ws.id} value={ws.id}>
+                    {ws.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-text-secondary font-semibold mb-1 flex items-center">
+                <Folder className="mr-1 h-3.5 w-3.5 text-primary" /> Dự án *
+              </label>
+              <select
+                disabled={isReadOnly}
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full rounded-xl border border-surface-border bg-surface-alt px-3 py-2 text-primary font-bold focus:border-primary focus:outline-none disabled:opacity-70 cursor-pointer"
+              >
+                <option value="">-- Chọn dự án --</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} {p.key ? `#${p.key}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          {projectId && (
+            <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5 text-[11px] text-primary flex items-center space-x-1.5">
+              <Bell className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <span>Thông báo lịch họp sẽ tự động được gửi đến các thành viên thuộc Dự án đã chọn.</span>
+            </div>
+          )}
 
           <div>
             <label className="block text-text-secondary font-semibold mb-1">Tên cuộc họp *</label>

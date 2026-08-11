@@ -1,10 +1,27 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, Edit3, Save, History, Trash2, FileText, Loader2, Paperclip, Download, ExternalLink, X } from 'lucide-react';
+import { 
+  Eye, 
+  Edit3, 
+  Save, 
+  History, 
+  Trash2, 
+  FileText, 
+  Loader2, 
+  Building2, 
+  Folder, 
+  User, 
+  Clock, 
+  ShieldCheck,
+  BookOpen
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { WikiPageDto, UpdateWikiPagePayload } from '../types';
 import { ConfirmDeleteModal } from '@/components/confirm-delete-modal';
+import { useWorkspaceStore } from '@/store/workspace-store';
+import { useAuthStore } from '@/store/auth-store';
+import { useProjects } from '@/features/project/hooks/use-project';
 
 interface WikiEditorProps {
   page: WikiPageDto;
@@ -12,14 +29,6 @@ interface WikiEditorProps {
   onDelete: (pageId: string) => void;
   onOpenVersions: () => void;
   isSaving?: boolean;
-}
-
-// Simple local attachment type for wiki docs
-interface WikiAttachment {
-  id: string;
-  name: string;
-  url: string;
-  size?: string;
 }
 
 export function WikiEditor({
@@ -31,17 +40,30 @@ export function WikiEditor({
 }: WikiEditorProps) {
   const { t } = useTranslation('wiki');
   const { t: tCommon } = useTranslation('common');
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
+  const currentUser = useAuthStore((state) => state.user);
+
+  const formatCreatorName = (createdBy?: string) => {
+    if (!createdBy) return currentUser?.fullName || currentUser?.username || 'Bạn (Quản lý hệ thống)';
+    // Check if UUID pattern or mock UUID
+    const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(createdBy) || createdBy.includes('-0000-');
+    if (isUuid) {
+      if (currentUser && (currentUser.id === createdBy || createdBy.startsWith('a1000000'))) {
+        return currentUser.fullName || currentUser.username || 'Bạn (Quản lý hệ thống)';
+      }
+      return 'Quản trị viên hệ thống';
+    }
+    return createdBy;
+  };
+
   const [title, setTitle] = useState(page.title);
   const [content, setContent] = useState(page.content || '');
   const [changeSummary, setChangeSummary] = useState('');
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
-
-  // Attachment state
-  const [attachments, setAttachments] = useState<WikiAttachment[]>([]);
-  const [isDraggingFile, setIsDraggingFile] = useState(false);
-
-  // Delete confirm modal
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const { data: projects = [] } = useProjects(page.workspaceId || activeWorkspace?.id || null);
+  const matchedProject = projects.find((p) => p.id === page.projectId);
 
   React.useEffect(() => {
     setTitle(page.title);
@@ -58,50 +80,16 @@ export function WikiEditor({
     setChangeSummary('');
   };
 
-  const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingFile(false);
-    const files = Array.from(e.dataTransfer.files);
-    const newAttachments: WikiAttachment[] = files.map((file) => ({
-      id: `local-${Date.now()}-${file.name}`,
-      name: file.name,
-      url: URL.createObjectURL(file),
-      size: formatFileSize(file.size),
-    }));
-    setAttachments((prev) => [...prev, ...newAttachments]);
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newAttachments: WikiAttachment[] = files.map((file) => ({
-      id: `local-${Date.now()}-${file.name}`,
-      name: file.name,
-      url: URL.createObjectURL(file),
-      size: formatFileSize(file.size),
-    }));
-    setAttachments((prev) => [...prev, ...newAttachments]);
-    e.target.value = '';
-  };
-
-  const handleRemoveAttachment = (id: string) => {
-    setAttachments((prev) => prev.filter((a) => a.id !== id));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
   const charCount = content.length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
     <div className="flex-1 space-y-4 rounded-2xl border border-surface-border bg-surface p-6 shadow-xs">
       {/* Editor Header Bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-between border-b border-surface-border pb-4">
         <div className="flex items-center space-x-2 min-w-0 flex-1">
-          <FileText className="h-5 w-5 shrink-0 text-primary" />
+          <BookOpen className="h-5 w-5 shrink-0 text-primary" />
           <input
             type="text"
             value={title}
@@ -157,15 +145,88 @@ export function WikiEditor({
           <button
             onClick={handleSave}
             disabled={isSaving || !title.trim()}
-            className="flex items-center space-x-1.5 rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover disabled:opacity-50 transition active:scale-95"
+            className="flex items-center space-x-1.5 rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover disabled:opacity-50 transition active:scale-95 cursor-pointer"
           >
             {isSaving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Save className="h-4 w-4" />
             )}
-            <span>Lưu</span>
+            <span>Lưu tài liệu</span>
           </button>
+        </div>
+      </div>
+
+      {/* Document Detailed Metadata & Scope Panel */}
+      <div className="rounded-xl border border-surface-border bg-surface-alt/60 p-4 text-xs text-text-secondary space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Workspace Info */}
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+              <Building2 className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-text-muted font-medium">Workspace (Không gian)</p>
+              <p className="font-bold text-text-primary truncate">
+                {activeWorkspace?.name || 'Workspace làm việc'}
+              </p>
+            </div>
+          </div>
+
+          {/* Project Info */}
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+              <Folder className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-text-muted font-medium">Dự án áp dụng</p>
+              <p className="font-bold text-primary truncate">
+                {matchedProject ? `${matchedProject.name} #${matchedProject.key || 'PRJ'}` : 'Tài liệu dùng chung'}
+              </p>
+            </div>
+          </div>
+
+          {/* Creator Info */}
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+              <User className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-text-muted font-medium">Người khởi tạo</p>
+              <p className="font-bold text-text-primary truncate">
+                {formatCreatorName(page.createdBy)}
+              </p>
+            </div>
+          </div>
+
+          {/* Reading Time & Word Count */}
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+              <Clock className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-text-muted font-medium">Độ dài & Thời gian đọc</p>
+              <p className="font-bold text-text-primary truncate">
+                ~{readingTime} phút đọc ({wordCount} từ)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Meta Row */}
+        <div className="flex items-center justify-between border-t border-surface-border/60 pt-2.5 text-[11px] text-text-muted font-medium">
+          <div className="flex items-center space-x-3">
+            <span className="flex items-center space-x-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Quyền xem: Thành viên thuộc Dự án</span>
+            </span>
+            <span>•</span>
+            <span>Phiên bản phát hành: <strong className="text-primary font-bold">v{page.version}.0</strong></span>
+          </div>
+
+          <div>
+            Cập nhật lần cuối: {page.updatedAt ? new Date(page.updatedAt).toLocaleString('vi-VN') : 'Vừa cập nhật'}
+          </div>
         </div>
       </div>
 
@@ -175,7 +236,7 @@ export function WikiEditor({
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Viết nội dung tài liệu bằng Markdown tại đây..."
+            placeholder="Viết nội dung tài liệu tri thức bằng Markdown tại đây..."
             className="min-h-[400px] w-full resize-y rounded-xl border border-surface-border bg-surface-alt p-4 text-xs font-mono text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none transition"
           />
 
@@ -185,7 +246,7 @@ export function WikiEditor({
               type="text"
               value={changeSummary}
               onChange={(e) => setChangeSummary(e.target.value)}
-              placeholder="Tóm tắt thay đổi (tùy chọn)..."
+              placeholder="Ghi chú tóm tắt lý do cập nhật phiên bản..."
               className="flex-1 mr-4 rounded-xl border border-surface-border bg-surface-alt px-3.5 py-2 text-xs text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none transition"
             />
             <div className="text-[11px] text-text-muted font-medium shrink-0">
@@ -196,87 +257,10 @@ export function WikiEditor({
       ) : (
         <div className="min-h-[400px] rounded-xl border border-surface-border bg-surface-alt p-6 text-sm text-text-primary whitespace-pre-wrap font-sans leading-relaxed">
           {content || (
-            <span className="text-text-muted italic">Không có nội dung để xem trước. Hãy viết tài liệu ở chế độ Chỉnh sửa.</span>
+            <span className="text-text-muted italic">Không có nội dung để xem trước. Hãy nhập tài liệu ở chế độ Chỉnh sửa.</span>
           )}
         </div>
       )}
-
-      {/* Attachments Section */}
-      <div className="space-y-3 rounded-xl border border-surface-border bg-surface-alt/30 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Paperclip className="h-4 w-4 text-primary" />
-            <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">
-              Tài liệu đính kèm ({attachments.length})
-            </h4>
-          </div>
-          <label className="flex items-center space-x-1.5 rounded-xl border border-surface-border bg-surface px-3 py-1.5 text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt hover:text-text-primary transition">
-            <Paperclip className="h-3.5 w-3.5" />
-            <span>Đính kèm tài liệu</span>
-            <input
-              type="file"
-              multiple
-              className="hidden"
-              onChange={handleFileInput}
-            />
-          </label>
-        </div>
-
-        {/* Drag & Drop Zone */}
-        <div
-          onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDrop={handleFileDrop}
-          className={`rounded-xl border-2 border-dashed p-4 text-center transition ${
-            isDraggingFile
-              ? 'border-primary bg-primary/5 text-primary'
-              : 'border-surface-border text-text-muted'
-          }`}
-        >
-          <p className="text-xs font-medium">
-            {isDraggingFile ? 'Thả tệp vào đây để đính kèm' : 'Kéo và thả tệp vào đây hoặc nhấn "Đính kèm tài liệu"'}
-          </p>
-        </div>
-
-        {/* Attachment List */}
-        {attachments.length > 0 && (
-          <div className="space-y-2">
-            {attachments.map((att) => (
-              <div
-                key={att.id}
-                className="flex items-center justify-between rounded-xl border border-surface-border bg-surface px-3 py-2 text-xs shadow-xs hover:border-primary/30 transition"
-              >
-                <div className="flex items-center space-x-2 min-w-0 flex-1">
-                  <FileText className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="font-semibold text-text-primary truncate">{att.name}</span>
-                  {att.size && (
-                    <span className="text-text-muted font-medium shrink-0">{att.size}</span>
-                  )}
-                </div>
-                <div className="flex items-center space-x-1.5 shrink-0 ml-2">
-                  <a
-                    href={att.url}
-                    download={att.name}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-lg p-1 text-text-muted hover:text-primary hover:bg-primary/10 transition"
-                    title="Tải xuống"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                  </a>
-                  <button
-                    onClick={() => handleRemoveAttachment(att.id)}
-                    className="rounded-lg p-1 text-text-muted hover:text-status-error hover:bg-status-error/10 transition"
-                    title="Xóa đính kèm"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Confirm Delete Modal */}
       <ConfirmDeleteModal
@@ -287,9 +271,9 @@ export function WikiEditor({
           onDelete(page.id);
         }}
         itemName={page.title}
-        title="Xóa trang tài liệu"
-        description="Trang tài liệu và toàn bộ nội dung sẽ bị xóa vĩnh viễn, bao gồm lịch sử phiên bản."
-        confirmLabel="Xóa trang"
+        title="Xóa tài liệu"
+        description="Tài liệu và toàn bộ nội dung lịch sử phiên bản sẽ bị xóa vĩnh viễn khỏi dự án."
+        confirmLabel="Xóa tài liệu"
       />
     </div>
   );

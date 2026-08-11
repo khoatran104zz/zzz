@@ -1,122 +1,67 @@
 # TaskFlow Engineering Standard: UI/UX Guidelines (`ui-style.md`)
 
-This document defines the design system tokens, responsive layout rules, visual aesthetics, component guidelines, and accessibility standards for **TaskFlow**.
+Tài liệu này định nghĩa hệ thống thiết kế (Design System Tokens), quy tắc bố cục responsive, phong cách thẩm mỹ và tiêu chuẩn giao diện người dùng cho **TaskFlow**.
 
 ---
 
-## # Design Principles
+## 1. Design Principles (Triết Lý Thiết Kế)
 
-1. **Dark Glassmorphic Aesthetics**: Sleek, modern dark-mode experience featuring translucent glass surfaces (`backdrop-filter: blur(12px)`), vibrant neon accent glows, and subtle borders.
-2. **Visual Hierarchy & Contrast**: High-contrast typography and clear spatial separation ensure effortless visual scanning during complex productivity workflows.
-3. **Responsive & Fluid**: Interfaces dynamically adapt across mobile devices, tablets, and desktop workstations.
-4. **Interactive Feedback**: Micro-animations and instant visual states provide feedback for user interactions.
+1. **Dark Glassmorphic Aesthetics**: Phong cách thiết kế hiện đại trên nền tối (Dark mode), kết hợp các bề mặt kính mờ bán trong suốt (`backdrop-filter: blur(12px)`), viền kính mảnh và hiệu ứng phát sáng nhẹ (Indigo/Purple glow).
+2. **Visual Hierarchy & Contrast**: Độ tương phản cao giữa nội dung chữ và nền, đảm bảo người dùng dễ dàng quét mắt (scan) nội dung trong các thao tác quản lý công việc phức tạp.
+3. **Fluid Responsive Grid**: Giao diện thích ứng mượt mà trên nhiều thiết bị từ Mobile, Tablet đến Màn hình máy tính siêu rộng (Ultra-wide).
+4. **i18n Multi-language Ready**: Hỗ trợ đầy đủ hiển thị đa ngôn ngữ (Tiếng Việt và Tiếng Anh) chuẩn xác mà không bị vỡ giao diện.
 
 ---
 
-## # Color Palette & Tokens
+## 2. Color Palette & Design Tokens (Bảng Màu)
 
-TaskFlow uses HSL and Tailwind CSS color tokens anchored around a dark theme.
+TaskFlow sử dụng bảng màu HSL và Tailwind CSS tokens chuẩn:
 
-| Token | Hex / Value | Purpose |
+| Token | Giá Trị Hex / Alpha | Mục Đích |
 | :--- | :--- | :--- |
-| **Background Deep** | `#090d16` | Main application backdrop |
-| **Surface Dark** | `#111827` | Cards, sidebars, modal containers |
-| **Surface Glass** | `rgba(17, 24, 39, 0.7)` | Translucent containers with `backdrop-blur-md` |
-| **Border Glass** | `rgba(255, 255, 255, 0.08)`| Subtle structural borders |
-| **Accent Primary** | `#6366f1` (Indigo 500) | Primary actions, focused states, main buttons |
-| **Accent Secondary** | `#8b5cf6` (Purple 500) | Secondary highlights, badges, active tabs |
-| **Text Main** | `#f9fafb` | Primary headings and body copy |
-| **Text Muted** | `#9ca3af` | Subtitles, metadata, placeholder text |
-| **Destructive** | `#ef4444` (Red 500) | Delete actions, error alerts |
-| **Success** | `#10b981` (Emerald 500)| Task completions, positive status tags |
+| **Background Deep** | `#090d16` | Nền chính toàn bộ ứng dụng web |
+| **Surface Dark** | `#111827` | Thẻ Card, Sidebar, container chính |
+| **Surface Glass** | `rgba(17, 24, 39, 0.7)` | Khối kính mờ với `backdrop-blur-md` |
+| **Border Glass** | `rgba(255, 255, 255, 0.08)`| Đường viền mỏng phân chia khung |
+| **Accent Primary** | `#6366f1` (Indigo 500) | Nút bấm chính, trạng thái active, con trỏ focus |
+| **Accent Secondary** | `#8b5cf6` (Purple 500) | Điểm nhấn phụ, tag badge, tab active |
+| **Text Main** | `#f9fafb` | Tiêu đề chính và nội dung văn bản |
+| **Text Muted** | `#9ca3af` | Văn bản phụ, chú thích, placeholder |
+| **Destructive** | `#ef4444` (Red 500) | Nút xóa, cảnh báo lỗi nguy hiểm |
+| **Success** | `#10b981` (Emerald 500)| Trạng thái công việc hoàn thành |
 
 ---
 
-## # Typography & Spacing System
+## 3. Typography & Spacing Grid
 
-### Fonts
-- **Primary Body Font**: `Inter`, sans-serif
-- **Heading Font**: `Outfit`, sans-serif
-- **Monospace Font**: `JetBrains Mono`, monospace (for code snippets & identifiers)
+### Fonts System
+- **Body Font**: `Inter`, sans-serif (Nội dung văn bản chính, bảng biểu).
+- **Heading Font**: `Outfit`, sans-serif (Tiêu đề trang, widget chính).
+- **Monospace Font**: `JetBrains Mono`, monospace (Cho mã code, mã định danh UUID).
 
-### Spacing Grid
-Built on a strict **4px base grid system**:
-
-| Token | Pixels | Usage |
-| :--- | :--- | :--- |
-| `space-1` | 4px | Micro padding, icon gaps |
-| `space-2` | 8px | Button inline padding, tight list item gap |
-| `space-3` | 12px | Input padding, badge margins |
-| `space-4` | 16px | Standard card inner padding, grid gap |
-| `space-6` | 24px | Section margins, container padding |
-| `space-8` | 32px | Header margins, modal padding |
-| `space-12`| 48px | Major layout block separation |
+### Base Grid 4px
+Xây dựng trên hệ lưới cơ sở 4px: `4px`, `8px`, `12px`, `16px` (`space-4`), `24px`, `32px`, `48px`.
 
 ---
 
-## # Responsive Strategy & Breakpoints
-
-TaskFlow adheres to a mobile-first responsive layout grid built with Tailwind breakpoints:
+## 4. Responsive Breakpoints
 
 ```
-sm: 640px    (Mobile Landscape)
-md: 768px    (Tablets)
-lg: 1024px   (Laptops / Small Desktops)
-xl: 1280px   (Standard Workstations)
-2xl: 1536px  (Ultra-wide Displays)
+sm: 640px    (Màn hình điện thoại ngang)
+md: 768px    (Máy tính bảng Tablet)
+lg: 1024px   (Laptop / Màn hình máy tính phổ thông)
+xl: 1280px   (Màn hình Desktop làm việc)
+2xl: 1536px  (Màn hình Siêu Rộng Ultra-wide)
 ```
 
 ---
 
-## # Component Design Rules
-
-### 1. Icons (`Lucide Icons`)
-- Use Lucide Icons (`lucide-react`) exclusively.
-- Standard sizes: `16px` (small/inline), `20px` (default buttons/lists), `24px` (headers).
-- Always include `aria-hidden="true"` or an accompanying `sr-only` span for screen readers.
-
-### 2. Buttons
-- Primary buttons use `bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg`.
-- Loading buttons MUST render a spinner (`Loader2`) and disable pointer events.
-- Destructive actions MUST require a secondary confirmation modal or popover trigger.
-
-### 3. Form Rules
-- All input fields must be wrapped with Zod + React Hook Form.
-- Error messages render directly beneath the input in `text-red-400 text-sm font-medium`.
-- Focused inputs display a subtle Indigo ring (`focus:ring-2 focus:ring-indigo-500/50`).
-
-### 4. Modals & Drawers
-- Backdrop blur: `backdrop-blur-md bg-black/60`.
-- Trap focus automatically using `shadcn/ui Dialog` or `Drawer` primitives.
-- Must support `Escape` key dismissal and clicking outside backdrop to close.
-
-### 5. Toasts (`Sonner` / `shadcn/ui Toast`)
-- Render toasts in the top-right corner.
-- Status variants: `success` (green indicator), `error` (red indicator), `info` (indigo indicator).
-
----
-
-## # Application States (Loading, Empty, Error)
+## 5. UI Application States (Loading, Empty, Error)
 
 1. **Loading State**:
-   - Use Skeleton loaders (`@/components/ui/skeleton`) matching the content layout.
-   - Never display blank white or empty black screens during data queries.
+   - Sử dụng Skeleton Loader (`@/components/ui/skeleton`) có kích thước tương đồng với dữ liệu sắp hiển thị.
+   - Tuyệt đối không để màn hình trắng hoặc màn hình đen trống trong lúc đợi API response.
 2. **Empty State**:
-   - Render a centered container featuring a relevant Lucide icon, heading, descriptive text, and a primary Action CTA button (e.g., "Create First Project").
+   - Hiển thị khối trung tâm gồm Lucide Icon trực quan, tiêu đề hướng dẫn, nội dung giải thích và nút bấm hành động tạo mới (Action CTA Button).
 3. **Error State**:
-   - Render an alert container with a retry button (`Query.refetch()`) to recover from network or API glitches gracefully.
-
----
-
-## # Accessibility (a11y) & Animations
-
-1. **WCAG 2.1 AA Compliance**:
-   - Minimum text contrast ratio of **4.5:1** for standard text.
-   - Interactive controls must have a target size of at least **44x44px** on touch devices.
-2. **Keyboard Navigation**:
-   - Visible focus rings (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`).
-   - Modal and menu navigation must respond to standard `Tab`, `Shift+Tab`, `Arrow Keys`, and `Enter`/`Space`.
-3. **Animation Guidelines**:
-   - Keep transitions fast and responsive (`transition-all duration-200 ease-in-out`).
-   - Use Framer Motion (`framer-motion`) for layout list reordering and modal scale animations.
-   - Respect `prefers-reduced-motion` media queries.
+   - Hiển thị hộp thông báo lỗi kèm nút bấm "Thử lại" (`Query.refetch()`) để khôi phục giao diện khi gặp sự cố mạng.

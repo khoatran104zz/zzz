@@ -8,6 +8,7 @@ import { useWorkspaceStore } from '@/store/workspace-store';
 import { useInviteMember } from '@/features/team/hooks/use-team';
 import { WorkspaceHeader, type WorkspaceTab } from '@/features/workspace/components/WorkspaceHeader';
 import { WorkspaceSummaryTab } from '@/features/workspace/components/tabs/WorkspaceSummaryTab';
+import { WorkspaceProjectsTab } from '@/features/workspace/components/tabs/WorkspaceProjectsTab';
 import { WorkspaceBoardTab } from '@/features/workspace/components/tabs/WorkspaceBoardTab';
 import { WorkspaceTimelineTab } from '@/features/workspace/components/tabs/WorkspaceTimelineTab';
 import { WorkspaceFormsTab } from '@/features/workspace/components/tabs/WorkspaceFormsTab';
@@ -59,22 +60,8 @@ export default function WorkspaceDetailPage() {
         />
       )}
 
-      {activeTab === 'board' && (
-        <WorkspaceBoardTab
-          tasks={tasks}
-          isLoading={isTasksLoading}
-          onOpenCreateTask={() => setIsTaskModalOpen(true)}
-          onSelectTask={(task) => setSelectedTask(task)}
-        />
-      )}
-
-      {activeTab === 'timeline' && (
-        <WorkspaceTimelineTab
-          tasks={tasks}
-          isLoading={isTasksLoading}
-          onOpenCreateTask={() => setIsTaskModalOpen(true)}
-          onSelectTask={(task) => setSelectedTask(task)}
-        />
+      {activeTab === 'projects' && (
+        <WorkspaceProjectsTab workspaceId={workspaceId} />
       )}
 
       {activeTab === 'members' && (
@@ -103,6 +90,7 @@ export default function WorkspaceDetailPage() {
 
       {/* Add Member Invite Dialog */}
       <InviteDialog
+        workspaceId={workspaceId}
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
         onSubmit={(payload, callbacks) => {

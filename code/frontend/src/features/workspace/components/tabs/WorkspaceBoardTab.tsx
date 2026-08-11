@@ -12,12 +12,16 @@ import {
   Clock,
   PlayCircle,
   AlertCircle,
-  Calendar
+  Calendar,
+  Layers,
+  Paperclip,
+  ListChecks
 } from 'lucide-react';
 import type { TaskDto, TaskStatus } from '@/features/task/types';
 import { useUpdateTaskStatus } from '@/features/task/hooks/use-task';
 import { useAuthStore } from '@/store/auth-store';
 import { TaskDetailModal } from '@/features/task/components/task-detail-modal';
+import { ConfirmStatusChangeModal } from '@/features/task/components/confirm-status-change-modal';
 
 interface WorkspaceBoardTabProps {
   tasks: TaskDto[];
@@ -36,8 +40,15 @@ export function WorkspaceBoardTab({
   const { t: tTask } = useTranslation('task');
   const user = useAuthStore((state) => state.user);
   const updateStatusMutation = useUpdateTaskStatus();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTask, setSelectedTask] = useState<TaskDto | null>(null);
+
+  // Status Change Confirmation Modal State
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    task: TaskDto;
+    newStatus: TaskStatus;
+  } | null>(null);
 
   const canCreateTask = !!user;
 
@@ -96,16 +107,16 @@ export function WorkspaceBoardTab({
   const formatDueDate = (dateStr?: string) => {
     if (!dateStr) return null;
     const date = new Date(dateStr);
-    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short' });
   };
 
   const getPriorityBadge = (priority?: string) => {
     const p = priority?.toUpperCase() || 'MEDIUM';
     switch (p) {
       case 'URGENT':
-        return <span className="rounded-md border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-500">Khẩn cấp 🚨</span>;
+        return <span className="rounded-md border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-500">Khẩn cấp</span>;
       case 'HIGH':
-        return <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-500">Cao 🔥</span>;
+        return <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-500">Cao</span>;
       case 'LOW':
         return <span className="rounded-md border border-slate-500/30 bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">Thấp</span>;
       default:
@@ -113,9 +124,45 @@ export function WorkspaceBoardTab({
     }
   };
 
+  const getSprintBadge = (task: TaskDto) => {
+    if (task.status === 'IN_PROGRESS' || task.status === 'IN_REVIEW') {
+      return (
+        <span className="inline-flex items-center space-x-1 rounded-md border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-bold text-blue-500">
+          <Layers className="h-2.5 w-2.5" />
+          <span>Sprint 1</span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center space-x-1 rounded-md border border-surface-border bg-surface-alt px-1.5 py-0.5 text-[9px] font-semibold text-text-muted">
+        <span>Backlog</span>
+      </span>
+    );
+  };
+
   const filteredTasks = tasks.filter((t) =>
     t.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleRequestStatusChange = (task: TaskDto, newStatus: TaskStatus) => {
+    if (task.status === newStatus) return;
+    setPendingStatusChange({ task, newStatus });
+  };
+
+  const handleConfirmStatusChange = () => {
+    if (!pendingStatusChange) return;
+    updateStatusMutation.mutate(
+      {
+        taskId: pendingStatusChange.task.id,
+        status: pendingStatusChange.newStatus,
+      },
+      {
+        onSuccess: () => {
+          setPendingStatusChange(null);
+        },
+      }
+    );
+  };
 
   return (
     <div className="space-y-5 text-text-primary pb-12">
@@ -157,7 +204,7 @@ export function WorkspaceBoardTab({
           return (
             <div
               key={col.id}
-              className={`flex flex-col justify-between rounded-2xl border border-surface-border bg-surface-alt/40 p-3.5 min-h-[460px] shadow-xs border-t-4 ${col.topBorder}`}
+              className={`flex flex-col justify-between rounded-2xl border border-surface-border bg-surface-alt/40 p-3.5 min-h-[480px] shadow-xs border-t-4 ${col.topBorder}`}
             >
               <div>
                 {/* Column Header */}
@@ -183,8 +230,8 @@ export function WorkspaceBoardTab({
 
                 {/* Column Cards Stream */}
                 <div className="space-y-3">
-                  {colTasks.map((task, idx) => {
-                    const key = `TASK-${idx + 1}`;
+                  {colTasks.map((task) => {
+                    const key = task.id.substring(0, 6).toUpperCase();
                     const dueDateStr = formatDueDate(task.dueDate);
                     const isCompleted = col.id === 'DONE' || task.status === 'DONE' || task.status === 'COMPLETED';
 
@@ -201,20 +248,16 @@ export function WorkspaceBoardTab({
                             : 'border-surface-border bg-surface hover:border-primary/40 hover:shadow-md'
                         }`}
                       >
-                        {/* Task Priority & Status Indicators */}
+                        {/* Task Header: Sprint Badge, Priority Badge & Task Key */}
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-1.5">
+                            {getSprintBadge(task)}
                             {getPriorityBadge(task.priority)}
-                            {isCompleted && (
-                              <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
-                                Đã xong ✓
-                              </span>
-                            )}
                           </div>
-                          <span className="text-[10px] font-bold text-text-muted">#{key}</span>
+                          <span className="text-[10px] font-mono font-bold text-text-muted">#{key}</span>
                         </div>
 
-                        {/* Task Title (Strikethrough if completed!) */}
+                        {/* Task Title */}
                         <h4
                           className={`text-xs font-bold font-heading leading-snug line-clamp-2 ${
                             isCompleted
@@ -226,34 +269,51 @@ export function WorkspaceBoardTab({
                           {task.title}
                         </h4>
 
-                        {/* Due Date Display */}
-                        {dueDateStr && (
-                          <div className="mt-2.5 flex items-center space-x-1 text-[10px] font-bold">
-                            <span className="text-text-muted">{tTask('dueDate', { defaultValue: 'Hạn chót' })}:</span>
-                            <span className={`flex items-center space-x-1 rounded-md px-1.5 py-0.5 ${
-                              isCompleted
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-                            }`}>
-                              <Calendar className="h-3 w-3" />
-                              <span>{dueDateStr}</span>
+                        {/* Due Date & Subtasks Metrics */}
+                        <div className="mt-2.5 flex items-center justify-between text-[10px] font-semibold text-text-muted">
+                          {dueDateStr ? (
+                            <div className="flex items-center space-x-1">
+                              <span>{tTask('dueDate', { defaultValue: 'Hạn chót' })}:</span>
+                              <span className={`flex items-center space-x-1 rounded-md px-1.5 py-0.5 ${
+                                isCompleted
+                                  ? 'bg-emerald-500/10 text-emerald-500'
+                                  : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                              }`}>
+                                <Calendar className="h-3 w-3" />
+                                <span>{dueDateStr}</span>
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="italic">Không có hạn chót</span>
+                          )}
+
+                          <div className="flex items-center space-x-2 text-text-muted">
+                            <span className="flex items-center space-x-0.5" title="Checklist phụ">
+                              <ListChecks className="h-3 w-3 text-primary" />
+                              <span>2</span>
                             </span>
                           </div>
-                        )}
+                        </div>
 
-                        {/* Card Footer: Task ID Key & Assignee Info */}
-                        <div className="mt-3 flex items-center justify-between border-t border-surface-border/60 pt-2.5 text-xs">
-                          {/* Task Identifier Key */}
-                          <div className="flex items-center space-x-1.5 text-[11px] font-semibold text-text-muted">
-                            <CheckSquare className={`h-3.5 w-3.5 ${isCompleted ? 'text-emerald-500' : 'text-primary'}`} />
-                            <span>{key}</span>
-                          </div>
+                        {/* Card Footer: Status Change Selector & Assignee Info */}
+                        <div className="mt-3 flex items-center justify-between border-t border-surface-border/60 pt-2.5 text-xs" onClick={(e) => e.stopPropagation()}>
+                          {/* Change Status Dropdown (Triggers Confirmation Modal!) */}
+                          <select
+                            value={task.status || 'TODO'}
+                            onChange={(e) => handleRequestStatusChange(task, e.target.value as TaskStatus)}
+                            className="rounded-lg border border-surface-border bg-surface px-2 py-0.5 text-[10px] font-bold text-text-secondary focus:border-primary focus:outline-none"
+                          >
+                            <option value="TODO">Cần làm</option>
+                            <option value="IN_PROGRESS">Đang làm</option>
+                            <option value="IN_REVIEW">Đang xem xét</option>
+                            <option value="DONE">Hoàn thành</option>
+                          </select>
 
                           {/* Assignee Information */}
                           <div className="flex items-center space-x-1.5 text-[11px]">
                             {task.assignee ? (
                               <div className="flex items-center space-x-1 rounded-lg bg-surface-alt px-2 py-0.5 border border-surface-border/80" title={task.assignee.fullName || task.assignee.email}>
-                                <span className="font-semibold text-text-secondary truncate max-w-[140px]">
+                                <span className="font-semibold text-text-secondary truncate max-w-[120px]">
                                   {task.assignee.fullName || task.assignee.email}
                                 </span>
                               </div>
@@ -283,6 +343,17 @@ export function WorkspaceBoardTab({
         task={selectedTask}
         isOpen={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+      />
+
+      {/* Confirmation Modal for Task Status Change */}
+      <ConfirmStatusChangeModal
+        isOpen={!!pendingStatusChange}
+        onClose={() => setPendingStatusChange(null)}
+        onConfirm={handleConfirmStatusChange}
+        taskTitle={pendingStatusChange?.task.title || ''}
+        currentStatus={pendingStatusChange?.task.status || 'TODO'}
+        newStatus={pendingStatusChange?.newStatus || 'DONE'}
+        isLoading={updateStatusMutation.isPending}
       />
     </div>
   );

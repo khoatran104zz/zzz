@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, X, FolderKanban, CheckSquare, CornerDownLeft, Building2, CheckCircle2, Clock, Sparkles } from 'lucide-react';
+import { Search, X, Folder, CheckSquare, CornerDownLeft, Building2, CheckCircle2, Clock, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useWorkspaceStore } from '@/store/workspace-store';
 import { useWorkspaces } from '@/features/workspace/hooks/use-workspace';
+import { useProjects } from '@/features/project/hooks/use-project';
 import { useWorkspaceTasks } from '@/features/task/hooks/use-task';
 import { TaskDetailModal } from '@/features/task/components/task-detail-modal';
 import type { TaskDto } from '@/features/task/types';
@@ -18,6 +19,7 @@ export function SearchBar() {
 
   // Real DB Data
   const { data: workspaces = [] } = useWorkspaces();
+  const { data: projects = [] } = useProjects(activeWorkspace?.id || null);
   const { data: tasks = [], isLoading: isTasksLoading } = useWorkspaceTasks(activeWorkspace?.id || null);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +27,7 @@ export function SearchBar() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'TASK' | 'WORKSPACE'>('ALL');
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'TASK' | 'PROJECT' | 'WORKSPACE'>('ALL');
   const [selectedTask, setSelectedTask] = useState<TaskDto | null>(null);
 
   // Close popover when clicking outside
@@ -62,15 +64,23 @@ export function SearchBar() {
       (t.description && t.description.toLowerCase().includes(query.toLowerCase()))
   );
 
+  const matchingProjects = projects.filter(
+    (p) =>
+      p.name.toLowerCase().includes(query.toLowerCase()) ||
+      (p.key && p.key.toLowerCase().includes(query.toLowerCase())) ||
+      (p.description && p.description.toLowerCase().includes(query.toLowerCase()))
+  );
+
   const matchingWorkspaces = workspaces.filter(
     (w) =>
       w.name.toLowerCase().includes(query.toLowerCase()) ||
       (w.description && w.description.toLowerCase().includes(query.toLowerCase()))
   );
 
-  const displayTasks = categoryFilter === 'WORKSPACE' ? [] : matchingTasks.slice(0, 5);
-  const displayWorkspaces = categoryFilter === 'TASK' ? [] : matchingWorkspaces.slice(0, 3);
-  const totalResultsCount = displayTasks.length + displayWorkspaces.length;
+  const displayTasks = categoryFilter === 'WORKSPACE' || categoryFilter === 'PROJECT' ? [] : matchingTasks.slice(0, 5);
+  const displayProjects = categoryFilter === 'WORKSPACE' || categoryFilter === 'TASK' ? [] : matchingProjects.slice(0, 4);
+  const displayWorkspaces = categoryFilter === 'TASK' || categoryFilter === 'PROJECT' ? [] : matchingWorkspaces.slice(0, 3);
+  const totalResultsCount = displayTasks.length + displayProjects.length + displayWorkspaces.length;
 
   return (
     <div ref={containerRef} className="relative text-text-primary">
@@ -93,7 +103,7 @@ export function SearchBar() {
               setQuery(e.target.value);
               if (!isOpen) setIsOpen(true);
             }}
-            placeholder={t('placeholder', { defaultValue: 'Tìm kiếm công việc, dự án hoặc workspace... (Ctrl + K)' })}
+            placeholder={t('placeholder', { defaultValue: 'Tìm kiếm công việc, dự án, workspace... (Ctrl + K)' })}
             className="w-full bg-transparent text-xs text-text-primary placeholder:text-text-muted outline-none"
           />
         </div>
@@ -114,12 +124,13 @@ export function SearchBar() {
 
       {/* Realtime Search Results Popover Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-[600px] max-w-[92vw] z-50 rounded-2xl border border-surface-border bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-text-primary animate-in fade-in duration-150">
+        <div className="absolute left-0 top-full mt-2 w-[620px] max-w-[92vw] z-50 rounded-2xl border border-surface-border bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-text-primary animate-in fade-in duration-150">
           
-          {/* Category Filter Pills */}
+          {/* Category Filter Pills (Ordered strictly by hierarchy: Workspace -> Project -> Task) */}
           <div className="flex items-center justify-between border-b border-surface-border px-4 py-2.5 bg-surface-alt/40">
-            <div className="flex items-center space-x-1.5 text-xs">
+            <div className="flex items-center space-x-1.5 text-xs flex-wrap gap-y-1">
               <button
+                type="button"
                 onClick={() => setCategoryFilter('ALL')}
                 className={`rounded-xl px-3 py-1 font-bold transition ${
                   categoryFilter === 'ALL'
@@ -127,19 +138,10 @@ export function SearchBar() {
                     : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
                 }`}
               >
-                Tất cả ({matchingTasks.length + matchingWorkspaces.length})
+                Tất cả ({matchingWorkspaces.length + matchingProjects.length + matchingTasks.length})
               </button>
               <button
-                onClick={() => setCategoryFilter('TASK')}
-                className={`rounded-xl px-3 py-1 font-bold transition ${
-                  categoryFilter === 'TASK'
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
-                }`}
-              >
-                Công việc ({matchingTasks.length})
-              </button>
-              <button
+                type="button"
                 onClick={() => setCategoryFilter('WORKSPACE')}
                 className={`rounded-xl px-3 py-1 font-bold transition ${
                   categoryFilter === 'WORKSPACE'
@@ -149,12 +151,32 @@ export function SearchBar() {
               >
                 Workspace ({matchingWorkspaces.length})
               </button>
+              <button
+                type="button"
+                onClick={() => setCategoryFilter('PROJECT')}
+                className={`rounded-xl px-3 py-1 font-bold transition ${
+                  categoryFilter === 'PROJECT'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
+                }`}
+              >
+                Dự án ({matchingProjects.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategoryFilter('TASK')}
+                className={`rounded-xl px-3 py-1 font-bold transition ${
+                  categoryFilter === 'TASK'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary'
+                }`}
+              >
+                Công việc ({matchingTasks.length})
+              </button>
             </div>
-
-            <span className="text-[11px] font-semibold text-text-muted">Dữ liệu thực tế CSDL</span>
           </div>
 
-          {/* Results Scroll Area */}
+          {/* Results Scroll Area (Hierarchy: 1. Workspace -> 2. Project -> 3. Task) */}
           <div className="flex-1 overflow-y-auto p-3 space-y-4 max-h-[420px] scrollbar-none">
             {isTasksLoading ? (
               <div className="p-4 space-y-2">
@@ -168,11 +190,11 @@ export function SearchBar() {
               </div>
             ) : (
               <>
-                {/* Workspaces Section */}
+                {/* 1. Workspaces Section */}
                 {displayWorkspaces.length > 0 && (
                   <div className="space-y-1.5">
                     <h4 className="text-[10px] font-extrabold text-text-muted uppercase tracking-wider px-2">
-                      Không gian làm việc (Workspace)
+                      Không gian làm việc
                     </h4>
                     {displayWorkspaces.map((ws) => (
                       <div
@@ -205,11 +227,51 @@ export function SearchBar() {
                   </div>
                 )}
 
-                {/* Tasks Section */}
+                {/* 2. Projects Section */}
+                {displayProjects.length > 0 && (
+                  <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-extrabold text-text-muted uppercase tracking-wider px-2">
+                      Dự án
+                    </h4>
+                    {displayProjects.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          setIsOpen(false);
+                          router.push(`/projects/${p.id}`);
+                        }}
+                        className="flex items-center justify-between rounded-xl px-3 py-2 text-xs cursor-pointer transition hover:bg-surface-alt/80 border border-transparent hover:border-primary/20 group"
+                      >
+                        <div className="flex items-center space-x-3 truncate min-w-0">
+                          <div
+                            className="flex h-8 w-8 items-center justify-center rounded-xl font-bold text-white shrink-0 shadow-xs"
+                            style={{ backgroundColor: p.color || '#6366f1' }}
+                          >
+                            <Folder className="h-4 w-4" />
+                          </div>
+                          <div className="truncate min-w-0">
+                            <p className="font-bold text-text-primary font-heading group-hover:text-primary transition truncate flex items-center space-x-1.5">
+                              <span>{p.name}</span>
+                              {p.key && <span className="font-mono text-[10px] text-primary">#{p.key}</span>}
+                            </p>
+                            <p className="text-[10px] text-text-secondary truncate">
+                              {p.description || 'Dự án tác nghiệp quản lý công việc'}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                          Mở Dự án ➔
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 3. Tasks Section */}
                 {displayTasks.length > 0 && (
                   <div className="space-y-1.5">
                     <h4 className="text-[10px] font-extrabold text-text-muted uppercase tracking-wider px-2">
-                      Công việc (Tasks)
+                      Công việc
                     </h4>
                     {displayTasks.map((task) => {
                       const isCompleted = task.status === 'COMPLETED' || task.status === 'DONE';

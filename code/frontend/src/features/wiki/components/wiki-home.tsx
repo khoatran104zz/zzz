@@ -16,6 +16,7 @@ import { WikiBreadcrumb } from './wiki-breadcrumb';
 import { WikiEditor } from './wiki-editor';
 import { VersionHistoryDialog } from './version-history-dialog';
 import { useWorkspaceStore } from '@/store/workspace-store';
+import { CreateWikiDocModal, WikiDocItem } from '@/features/project/components/create-wiki-doc-modal';
 
 interface WikiHomeProps {
   workspaceId: string;
@@ -58,6 +59,7 @@ export function WikiHome({ workspaceId }: WikiHomeProps) {
   const { data: tree = [], isLoading: isLoadingTree } = useWorkspaceWikiTree(workspaceId);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [isVersionsOpen, setIsVersionsOpen] = useState(false);
+  const [isCreateDocOpen, setIsCreateDocOpen] = useState(false);
 
   const { data: selectedPage, isLoading: isLoadingPage } = useWikiPage(selectedPageId);
   const { data: versions = [] } = useWikiVersions(selectedPageId);
@@ -128,7 +130,7 @@ export function WikiHome({ workspaceId }: WikiHomeProps) {
         </div>
 
         <button
-          onClick={() => handleCreatePage()}
+          onClick={() => setIsCreateDocOpen(true)}
           disabled={createMutation.isPending}
           className="flex items-center space-x-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition"
         >
@@ -137,7 +139,7 @@ export function WikiHome({ workspaceId }: WikiHomeProps) {
           ) : (
             <Plus className="h-4 w-4" />
           )}
-          <span>Tạo trang mới</span>
+          <span>Tạo tài liệu mới</span>
         </button>
       </div>
 
@@ -207,6 +209,13 @@ export function WikiHome({ workspaceId }: WikiHomeProps) {
         versions={versions}
         isOpen={isVersionsOpen}
         onClose={() => setIsVersionsOpen(false)}
+      />
+
+      <CreateWikiDocModal
+        isOpen={isCreateDocOpen}
+        onClose={() => setIsCreateDocOpen(false)}
+        defaultWorkspaceId={workspaceId}
+        onCreated={(doc) => handleCreatePage(undefined, doc.title, doc.summary)}
       />
     </div>
   );

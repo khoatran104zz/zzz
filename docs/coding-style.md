@@ -1,134 +1,93 @@
 # TaskFlow Engineering Standard: Coding Guidelines (`coding-style.md`)
 
-This document defines the strict, production-ready coding standards for **TaskFlow** across both Frontend (TypeScript / Next.js) and Backend (Java 21 / Spring Boot) codebases.
+Tài liệu này quy định tiêu chuẩn lập trình sản xuất (Production-Ready Coding Standards) cho **TaskFlow** trên cả Frontend (TypeScript / Next.js 15) và Backend (Java 21 / Spring Boot 3.4).
 
 ---
 
-## # General Principles
+## 1. General Principles (Nguyên Tắc Lập Trình)
 
-### 1. SOLID Principles
-- **Single Responsibility Principle (SRP)**: Every class, module, function, or React component must have one, and only one, reason to change.
-- **Open/Closed Principle (OCP)**: Code entities should be open for extension, but closed for modification. Use interfaces, abstract wrappers, and strategies.
-- **Liskov Substitution Principle (LSP)**: Derived classes or implementations must be completely substitutable for their base types without altering program correctness.
-- **Interface Segregation Principle (ISP)**: Clients must not be forced to depend on interfaces they do not use. Prefer small, focused interfaces.
-- **Dependency Inversion Principle (DIP)**: High-level modules must not depend on low-level modules. Both must depend on abstractions.
+### 1.1 SOLID Principles
+- **Single Responsibility Principle (SRP)**: Mỗi class, module, function hoặc React component chỉ gánh vác duy nhất một trách nhiệm nghiệp vụ.
+- **Open/Closed Principle (OCP)**: Mở rộng tính năng bằng cách thêm mới (interface, strategy), hạn chế chỉnh sửa mã nguồn cốt lõi đã chạy ổn định.
+- **Liskov Substitution Principle (LSP)**: Lớp con phải thay thế hoàn hảo cho lớp cha mà không làm thay đổi tính đúng đắn của chương trình.
+- **Interface Segregation Principle (ISP)**: Chia nhỏ interface thành các hợp đồng chuyên biệt.
+- **Dependency Inversion Principle (DIP)**: Phụ thuộc vào abstraction (Interface), không phụ thuộc vào lớp triển khai cụ thể.
 
-### 2. DRY (Don't Repeat Yourself)
-- Every piece of knowledge or logic must have a single, unambiguous representation within the system.
-- Extract common logic into custom hooks, utility functions, or domain services. Never copy-paste business logic.
+### 1.2 DRY (Don't Repeat Yourself) & KISS (Keep It Simple, Stupid)
+- Không lặp lại logic nghiệp vụ. Trích xuất các hàm tiện ích dùng chung vào custom hooks hoặc domain services.
+- Viết mã nguồn rõ ràng, dễ đọc cho người đến sau. Tránh việc "độ" code phức tạp không cần thiết.
 
-### 3. KISS (Keep It Simple, Stupid)
-- Write code for human readability first. Avoid obscure language tricks, nested ternary operators, or over-engineered abstractions.
-- Simple, explicit logic is easier to audit, test, and maintain.
-
-### 4. YAGNI (You Aren't Gonna Need It)
-- Implement features and abstractions strictly required by current specifications.
-- Do not add speculative parameters, unused abstract classes, or premature customization hooks.
-
-### 5. Clean Code
-- Self-documenting identifier names that explain intent.
-- Keep methods and functions short (< 20 lines target, maximum 50 lines).
-- Single level of abstraction per method.
-- Functions must have zero side-effects unless explicitly designated (e.g., state mutations or DB writes).
-
-### 6. Clean Architecture
-- Decouple domain core business logic from frameworks, UI libraries, database drivers, and third-party tools.
-- Dependencies point inward toward the core domain.
+### 1.3 YAGNI (You Aren't Gonna Need It) & Clean Code
+- Chỉ triển khai đúng các tính năng theo yêu cầu hiện tại.
+- Tên biến tự mô tả ý nghĩa (Self-documenting), phương thức ngắn gọn (< 20 dòng target, tối đa 50 dòng).
 
 ---
 
-## # Naming Conventions
+## 2. Naming Conventions (Quy Ước Đặt Tên)
 
-| Artifact | Language / Ecosystem | Convention | Example |
+| Đối Tượng | Ngôn Ngữ | Quy Ước | Ví Dụ |
 | :--- | :--- | :--- | :--- |
 | **Variables** | TS / Java | camelCase | `userStatus`, `activeWorkspaceId` |
-| **Functions / Methods** | TS / Java | camelCase (verb prefix) | `findUserById()`, `calculateProgress()` |
+| **Functions / Methods** | TS / Java | camelCase (Tiền tố động từ) | `findUserById()`, `calculateProgress()` |
 | **Classes** | TS / Java | PascalCase | `WorkspaceService`, `TaskController` |
 | **Interfaces (Backend)** | Java | PascalCase | `TaskService` (Impl: `TaskServiceImpl`) |
-| **Interfaces (Frontend)**| TS | PascalCase | `UserProfileProps`, `TaskItem` |
+| **Interfaces (Frontend)**| TS | PascalCase | `WorkspaceProps`, `TaskItem` |
 | **Enums** | TS / Java | PascalCase (Type), UPPER_SNAKE (Value) | `TaskStatus.IN_PROGRESS` |
 | **DTOs** | Java | `[Domain][Action]Request` / `Response` | `CreateTaskRequest`, `UserDto` |
 | **Entities** | Java | `[Domain]Entity` | `WorkspaceEntity`, `TaskEntity` |
 | **Repositories** | Java | `[Domain]Repository` | `ProjectRepository` |
 | **Controllers** | Java | `[Domain]Controller` | `WorkspaceController` |
 | **Services** | Java | `[Domain]Service` / `[Domain]ServiceImpl` | `TaskService`, `TaskServiceImpl` |
-| **Mappers** | Java | `[Domain]Mapper` | `UserMapper` |
-| **Validators** | Java | `[Domain]Validator` | `WorkspaceValidator` |
-| **React Components** | TSX | PascalCase | `TaskKanbanBoard.tsx` |
-| **React Hooks** | TS | camelCase starting with `use` | `useWorkspaceList.ts` |
-| **Constants** | TS / Java | UPPER_SNAKE_CASE | `MAX_RETRY_ATTEMPTS`, `JWT_SECRET_KEY` |
-| **Environment Vars** | All | UPPER_SNAKE_CASE | `DATABASE_URL`, `NEXT_PUBLIC_API_URL` |
-| **Java Packages** | Java | lowercase (dot-separated) | `com.taskflow.modules.workspace` |
-| **Folders (Frontend)** | TS / React | kebab-case | `features/task-management` |
-| **Files (Frontend)** | TS / TSX | kebab-case (PascalCase for components)| `workspace-card.tsx`, `use-task.ts` |
-| **Files (Backend)** | Java | PascalCase matching class | `WorkspaceEntity.java` |
+| **React Components** | TSX | PascalCase | `WorkspaceBoardTab.tsx` |
+| **React Hooks** | TS | camelCase bắt đầu bằng `use` | `useWorkspace.ts` |
+| **Constants** | TS / Java | UPPER_SNAKE_CASE | `MAX_RETRY_ATTEMPTS`, `JWT_SECRET` |
 
 ---
 
-## # TypeScript Rules
+## 3. TypeScript & React 19 Rules
 
-1. **Strict Typing Enabled**: `tsconfig.json` must enforce `"strict": true`, `"noImplicitAny": true`, and `"strictNullChecks": true`.
-2. **Forbidden `any`**: `any` is strictly prohibited. Use explicit types, generics, or `unknown` paired with type guards.
-3. **Readonly Properties**: Mark props and state interfaces as `readonly` where values should not be mutated inline.
-4. **Interfaces vs Types**:
-   - Use `interface` for object structures, component props, and contract definitions (better performance & extension).
-   - Use `type` for union types, intersection types, primitive aliases, or tuples.
-5. **Runtime Validation with Zod**: All client-side inputs, form payloads, and API response schemas must be parsed and validated using Zod.
-6. **No Duplicate Types**: Export shared types from `src/features/<feature>/types` or `@/types`. Do not redefine identical props in multiple components.
+1. **Strict Mode**: `tsconfig.json` phải bật `"strict": true`, `"noImplicitAny": true`, `"strictNullChecks": true`.
+2. **Cấm `any`**: Tuyệt đối KHÔNG dùng `any`. Hãy dùng type rõ ràng, Generics hoặc `unknown` kèm type guards.
+3. **Zod Validation**: Mọi dữ liệu form đầu vào hoặc payload request API phải được kiểm tra qua Zod schema.
+4. **React Server Components (RSC) First**:
+   - Mặc định tất cả các trang và layout trong App Router là Server Components.
+   - Chỉ thêm `'use client'` ở đầu file khi component cần dùng state hooks (`useState`, `useEffect`), event handlers hoặc browser APIs.
+5. **Component Lines Limit (< 200 Lines)**: Mỗi file React component MUST giữ dưới 200 dòng code. Nếu vượt quá, phải tách nhỏ thành sub-components hoặc custom hooks.
 
 ```typescript
-// Good TypeScript Interface & Zod Schema Definition
+// Zod Schema & TypeScript Interface Example
 import { z } from "zod";
 
 export const CreateTaskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
   description: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  dueDate: z.string().datetime().optional(),
 });
 
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
-
-export interface TaskItemProps {
-  readonly task: {
-    readonly id: string;
-    readonly title: string;
-    readonly priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  };
-  readonly onStatusChange: (taskId: string, status: string) => void;
-}
 ```
 
 ---
 
-## # Java Rules
+## 4. Java 21 & Spring Boot 3.4 Rules
 
-1. **Constructor Injection Only**:
-   - Dependencies MUST be injected via constructor injection using Lombok `@RequiredArgsConstructor`.
-   - ❌ `@Autowired` on private fields is **STRICTLY FORBIDDEN**.
-2. **Proper Lombok Usage**:
-   - Use `@Getter`, `@Setter` (only when necessary), `@Builder`, `@RequiredArgsConstructor`, and `@NoArgsConstructor(access = AccessLevel.PROTECTED)` for JPA entities.
-   - Avoid `@Data` on JPA Entities to prevent infinite recursion in `equals`/`hashCode`/`toString` circular references.
-3. **Never Expose JPA Entities**:
-   - JPA Entities (`*Entity.java`) must **NEVER** be returned by REST Controllers or passed across public module boundaries.
-   - Always map entities to DTOs using explicit mappers (e.g., MapStruct or dedicated mapper components).
-4. **Request & Response DTOs**:
-   - Use Java 21 `record` types or immutable classes with `@Value` / `@Builder` for DTOs.
-5. **Input Validation**:
-   - Use `jakarta.validation` annotations (`@NotBlank`, `@NotNull`, `@Size`, `@Email`, `@Min`, `@Max`) on all Request DTOs.
-   - Controllers must annotate parameters with `@Valid`.
-6. **Standard Response Wrapper**:
-   - Every Controller endpoint must return `ApiResponse<T>`.
-7. **Exception Handling**:
-   - Throw specific domain exceptions (e.g., `ResourceNotFoundException`, `AccessDeniedException`, `BusinessRuleException`).
-   - Exceptions are automatically caught and transformed by the `@RestControllerAdvice` (`GlobalExceptionHandler`).
+1. **Constructor Injection Only (Cấm `@Autowired` trên field)**:
+   - Các phụ thuộc MUST được tiêm qua Constructor Injection sử dụng Lombok `@RequiredArgsConstructor`.
+   - ❌ **CẤM** dùng `@Autowired` trực tiếp trên private field.
+2. **Sử Dụng Lombok Đóng Gói**:
+   - Sử dụng `@Getter`, `@Setter` (khi cần), `@Builder`, `@RequiredArgsConstructor`, `@NoArgsConstructor(access = AccessLevel.PROTECTED)` cho JPA Entities.
+   - ❌ **CẤM** dùng `@Data` trên JPA Entity để tránh lặp vô hạn `hashCode`/`toString`.
+3. **Không Rò Rỉ JPA Entity Ra REST API**:
+   - Database Entity (`*Entity.java`) **KHÔNG BAO GIỜ** được trả về trực tiếp ở REST Controller hoặc truyền qua public API contracts.
+   - Luôn map Entity sang DTO (`*Dto.java`).
+4. **Validation**: Annotate Request DTO với Jakarta validation (`@NotBlank`, `@NotNull`, `@Size`, `@Email`) và dùng `@Valid` ở Controller parameter.
 
 ```java
-// Good Java Spring Boot Controller & Service Pattern
+// Standard Spring Boot Controller Pattern
 @RestController
 @RequestMapping("/api/v1/workspaces")
 @RequiredArgsConstructor
-@Tag(name = "Workspace Management", description = "Endpoints for managing user workspaces")
+@Tag(name = "Workspace Management")
 public class WorkspaceController {
 
     private final WorkspaceService workspaceService;
@@ -145,49 +104,21 @@ public class WorkspaceController {
 
 ---
 
-## # React Rules
+## 5. Import Order Guidelines (TypeScript)
 
-1. **Functional Components Only**: Class components are prohibited.
-2. **Server Components First (RSC)**:
-   - Pages and container components in Next.js App Router must be Server Components by default.
-   - Server Components handle server-side data fetching directly without client-side JS overhead.
-3. **Client Components Only When Needed**:
-   - Add `'use client'` strictly at the top of files requiring state hooks (`useState`, `useEffect`, `useReducer`), custom browser listeners, or interactivity.
-4. **Single Responsibility**:
-   - A single component file must render one atomic UI element or feature view.
-5. **Strict Component File Limits**:
-   - **Maximum File Length**: 200 lines of code. If a component exceeds 200 lines, extract logical sub-components or custom hooks.
-   - **Maximum Function/Hook Length**: 50 lines of code.
-
----
-
-## # Formatting & Tooling Rules
-
-### Prettier & Code Style
-- **Indent**: 2 spaces for TS/JSON/CSS; 4 spaces for Java.
-- **Print Width**: 100 characters max line length.
-- **Quotes**: Single quotes for TS/JS (`'string'`); double quotes for Java & HTML/JSX attributes (`"string"`).
-- **Semicolons**: Mandatory in TypeScript and Java.
-
-### Import Order Guidelines (TypeScript)
-Imports must be grouped in the following order with blank lines between groups:
-1. React / Next.js core packages (`react`, `next/*`)
-2. Third-party external libraries (`lucide-react`, `@tanstack/react-query`, `zod`)
-3. Internal alias path components (`@/components/ui`, `@/features/...`)
-4. Relative imports (`./sub-component`, `../types`)
-5. Styles / Assets (`import './styles.css'`)
+Import phải được sắp xếp theo các nhóm chuẩn:
+1. Core packages (`react`, `next/*`)
+2. External libraries (`lucide-react`, `@tanstack/react-query`, `zod`)
+3. Alias paths (`@/components/ui`, `@/features/...`)
+4. Relative paths (`./workspace-card`, `../types`)
 
 ```typescript
-// Standard Import Order Example
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/features/workspace/hooks/use-workspace';
-import type { WorkspaceDto } from '@/features/workspace/types';
-
-import { WorkspaceHeader } from './workspace-header';
 ```

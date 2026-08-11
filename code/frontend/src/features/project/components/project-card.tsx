@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Star, Folder, Archive, Settings, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ProjectDto } from '../types';
 import { useToggleFavoriteProject } from '../hooks/use-project';
 
@@ -11,10 +12,12 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const { t } = useTranslation('project');
+  const { t: tCommon } = useTranslation('common');
   const toggleFavorite = useToggleFavoriteProject();
 
   return (
-    <div className="relative flex flex-col justify-between rounded-2xl border border-white/10 bg-[#111827]/70 p-6 backdrop-blur-md transition hover:border-white/20 hover:shadow-xl">
+    <div className="relative flex flex-col justify-between rounded-2xl border border-surface-border bg-surface p-5 shadow-xs transition hover:border-primary/40 hover:shadow-md text-text-primary">
       <div>
         {/* Color Bar Accent */}
         <div
@@ -33,54 +36,55 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <div>
               <Link
                 href={`/projects/${project.id}` as any}
-                className="text-sm font-semibold text-white font-heading hover:text-indigo-400 transition"
+                className="text-sm font-bold text-text-primary font-heading hover:text-primary transition"
               >
                 {project.name}
               </Link>
               {project.isArchived && (
-                <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400 border border-amber-500/20">
-                  <Archive className="mr-1 h-3 w-3" /> Archived
+                <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500 border border-amber-500/20">
+                  <Archive className="mr-1 h-3 w-3" /> {t('archived', { defaultValue: 'Lưu trữ' })}
                 </span>
               )}
             </div>
           </div>
 
           <button
+            type="button"
             onClick={() => toggleFavorite.mutate(project.id)}
-            title={project.isFavorite ? 'Unfavorite' : 'Favorite'}
+            title={project.isFavorite ? 'Yêu thích' : 'Bỏ yêu thích'}
             className={`rounded-lg p-1.5 transition ${
               project.isFavorite
                 ? 'text-amber-400 hover:bg-amber-500/10'
-                : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+                : 'text-text-muted hover:bg-surface-alt hover:text-text-primary'
             }`}
           >
             <Star className={`h-4 w-4 ${project.isFavorite ? 'fill-amber-400' : ''}`} />
           </button>
         </div>
 
-        <p className="mt-3 line-clamp-2 text-xs text-gray-400">
-          {project.description || 'No description provided.'}
+        <p className="mt-3 line-clamp-2 text-xs text-text-muted">
+          {project.description || t('noDescription', { defaultValue: 'Chưa có mô tả chi tiết cho dự án.' })}
         </p>
       </div>
 
-      <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
-        <span className="text-[10px] text-gray-500 font-mono">
-          {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : ''}
+      <div className="mt-5 flex items-center justify-between border-t border-surface-border/60 pt-3 text-xs">
+        <span className="text-[10px] text-text-muted font-mono">
+          {project.key ? `#${project.key}` : ''}
         </span>
 
         <div className="flex items-center space-x-2">
           <Link
             href={`/projects/${project.id}/settings` as any}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-white/5 hover:text-white"
-            title="Settings"
+            className="rounded-lg p-1.5 text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
+            title={tCommon('actions.edit', { defaultValue: 'Cài đặt' })}
           >
             <Settings className="h-4 w-4" />
           </Link>
           <Link
             href={`/projects/${project.id}` as any}
-            className="flex items-center space-x-1 rounded-lg bg-indigo-600/20 px-3 py-1.5 text-xs font-semibold text-indigo-400 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white transition"
+            className="flex items-center space-x-1 rounded-xl bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary border border-primary/20 hover:bg-primary hover:text-white transition active:scale-95"
           >
-            <span>Open</span>
+            <span>{tCommon('actions.open', { defaultValue: 'Mở dự án' })}</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>

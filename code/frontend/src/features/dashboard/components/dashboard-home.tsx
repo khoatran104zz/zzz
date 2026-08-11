@@ -99,27 +99,22 @@ export function DashboardHome() {
       <div className="relative overflow-hidden rounded-2xl border border-surface-border bg-surface p-6 shadow-xs">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center space-x-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{tNav('menu.dashboard', { defaultValue: 'Tổng quan' })}</span>
-            </div>
-
             {/* Role Badge Indicator */}
             {isAdminUser && (
               <span className="inline-flex items-center space-x-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-extrabold text-red-500">
-                <span>🛡️</span>
+                <ShieldCheck className="h-3.5 w-3.5" />
                 <span>{tNav('roles.admin', { defaultValue: 'Quản trị viên Hệ thống' })}</span>
               </span>
             )}
             {isManagerUser && (
               <span className="inline-flex items-center space-x-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-extrabold text-amber-500">
-                <span>👔</span>
+                <UserCheck className="h-3.5 w-3.5" />
                 <span>{tNav('roles.manager', { defaultValue: 'Quản lý Workspace' })}</span>
               </span>
             )}
             {isStaffUser && (
               <span className="inline-flex items-center space-x-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-extrabold text-emerald-500">
-                <span>🧑‍💻</span>
+                <UserCheck className="h-3.5 w-3.5" />
                 <span>{tNav('roles.staff', { defaultValue: 'Nhân viên / Thực hiện' })}</span>
               </span>
             )}

@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, UserPlus, Mail, Shield, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, UserPlus, Mail, Shield, Folder, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useProjects } from '@/features/project/hooks/use-project';
+import { useWorkspaceStore } from '@/store/workspace-store';
 import type { InviteMemberPayload, WorkspaceRole } from '../types';
 
 interface InviteDialogProps {
@@ -13,13 +15,20 @@ interface InviteDialogProps {
     callbacks?: { onSuccess?: () => void; onError?: (err: any) => void }
   ) => void;
   isLoading?: boolean;
+  workspaceId?: string;
 }
 
-export function InviteDialog({ isOpen, onClose, onSubmit, isLoading }: InviteDialogProps) {
+export function InviteDialog({ isOpen, onClose, onSubmit, isLoading, workspaceId }: InviteDialogProps) {
   const { t } = useTranslation('team');
   const { t: tCommon } = useTranslation('common');
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
+  const targetWorkspaceId = workspaceId || activeWorkspace?.id || '';
+
+  const { data: projects = [] } = useProjects(targetWorkspaceId || null);
+
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<WorkspaceRole>('MEMBER');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
 
   // Feedback State: 'IDLE' | 'SUCCESS' | 'ERROR'
   const [status, setStatus] = useState<'IDLE' | 'SUCCESS' | 'ERROR'>('IDLE');
@@ -33,6 +42,7 @@ export function InviteDialog({ isOpen, onClose, onSubmit, isLoading }: InviteDia
     setStatus('IDLE');
     setErrorMessage('');
     setEmail('');
+    setSelectedProjectId('');
     onClose();
   };
 
@@ -170,26 +180,51 @@ export function InviteDialog({ isOpen, onClose, onSubmit, isLoading }: InviteDia
 
             <div>
               <label className="block text-xs font-semibold text-text-secondary">
-                {t('roleLabel', { defaultValue: 'Vai trò trong dự án' })}
+                {t('roleLabel', { defaultValue: 'Vai trò trong Workspace *' })}
               </label>
               <div className="relative mt-1.5">
                 <Shield className="absolute left-3.5 top-2.5 h-4 w-4 text-text-muted" />
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as WorkspaceRole)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-alt pl-10 pr-3.5 py-2 text-xs text-text-primary focus:border-primary focus:outline-none transition"
+                  className="w-full rounded-xl border border-surface-border bg-surface-alt pl-10 pr-3.5 py-2 text-xs text-text-primary focus:border-primary focus:outline-none transition cursor-pointer"
                 >
                   <option value="MEMBER" className="bg-surface text-text-primary">
-                    {t('roles.MEMBER', { defaultValue: 'Nhân viên (MEMBER)' })}
+                    Nhân viên
                   </option>
                   <option value="MANAGER" className="bg-surface text-text-primary">
-                    {t('roles.MANAGER', { defaultValue: 'Quản lý (MANAGER)' })}
+                    Quản lý
                   </option>
                   <option value="ADMIN" className="bg-surface text-text-primary">
-                    {t('roles.ADMIN', { defaultValue: 'Quản trị viên (ADMIN)' })}
+                    Quản trị viên
                   </option>
                 </select>
               </div>
+            </div>
+
+            {/* Project Selector Assignment */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary">
+                Phân công vào Dự án cụ thể (Không bắt buộc)
+              </label>
+              <div className="relative mt-1.5">
+                <Folder className="absolute left-3.5 top-2.5 h-4 w-4 text-text-muted" />
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full rounded-xl border border-surface-border bg-surface-alt pl-10 pr-3.5 py-2 text-xs font-bold text-primary focus:border-primary focus:outline-none transition cursor-pointer"
+                >
+                  <option value="" className="bg-surface text-text-muted">-- Chưa phân vào dự án cụ thể --</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id} className="bg-surface text-text-primary">
+                      {p.name} {p.key ? `#${p.key}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-[11px] text-text-secondary mt-1">
+                💡 Thành viên được thêm sẽ được phân công trực tiếp vào Dự án đã chọn.
+              </p>
             </div>
 
             <div className="mt-6 flex items-center justify-end space-x-3 border-t border-surface-border pt-4">

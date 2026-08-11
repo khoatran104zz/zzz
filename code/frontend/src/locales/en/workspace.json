@@ -20,11 +20,12 @@
   "noWorkspacesStaffDesc": "You haven't been added to any workspace yet. Please contact an Administrator or Manager to be invited.",
   "switchWorkspace": "Switch Workspace",
   "tabs": {
-    "summary": "Summary",
-    "board": "Board",
-    "backlog": "Task List",
-    "timeline": "Timeline",
-    "members": "Members",
+    "summary": "Workspace Summary",
+    "projects": "Projects Directory",
+    "board": "Task Board",
+    "backlog": "Backlog List",
+    "timeline": "Timeline (Gantt)",
+    "members": "Members & Roles",
     "forms": "Forms"
   },
   "summary": {

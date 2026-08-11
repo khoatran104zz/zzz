@@ -88,13 +88,28 @@ export function WhiteboardCanvas({ initialElements, onSave, isSaving }: Whiteboa
     setElements((prev) => prev.map((e) => (e.id === id ? { ...e, content } : e)));
   };
 
+  const handleSaveCanvas = () => {
+    const sanitized = elements.map((el) => ({
+      type: el.type,
+      x: el.x,
+      y: el.y,
+      width: el.width,
+      height: el.height,
+      rotation: el.rotation || 0,
+      content: el.content || '',
+      styleJson: el.styleJson || null,
+      zIndex: el.zIndex || 1,
+    }));
+    onSave(sanitized as any);
+  };
+
   return (
     <div className="relative h-[calc(100vh-160px)] w-full overflow-hidden rounded-2xl border border-surface-border bg-surface-alt shadow-xl">
       <WhiteboardToolbar
         activeTool={activeTool}
         onSelectTool={setActiveTool}
         onDeleteSelected={selectedId ? handleDeleteSelected : undefined}
-        onSaveCanvas={() => onSave(elements)}
+        onSaveCanvas={handleSaveCanvas}
         isSaving={isSaving}
       />
 

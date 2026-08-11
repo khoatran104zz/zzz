@@ -10,6 +10,14 @@ interface WeekViewProps {
   onSelectDate: (dateStr: string) => void;
 }
 
+// Format Date object to local YYYY-MM-DD string without UTC timezone shift
+const formatLocalYYYYMMDD = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 export function WeekView({ currentDate, events, onSelectEvent, onSelectDate }: WeekViewProps) {
   // Start of week (Sunday)
   const startOfWeek = new Date(currentDate);
@@ -21,17 +29,17 @@ export function WeekView({ currentDate, events, onSelectEvent, onSelectDate }: W
     return d;
   });
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = formatLocalYYYYMMDD(new Date());
 
   return (
     <div className="rounded-2xl border border-surface-border bg-surface p-4 shadow-xs">
       <div className="grid grid-cols-7 gap-2">
         {days.map((day) => {
-          const dateStr = day.toISOString().slice(0, 10);
+          const dateStr = formatLocalYYYYMMDD(day);
           const isToday = dateStr === todayStr;
 
           const dayEvents = events.filter((e) => {
-            const eDateStr = new Date(e.startTime).toISOString().slice(0, 10);
+            const eDateStr = formatLocalYYYYMMDD(new Date(e.startTime));
             return eDateStr === dateStr;
           });
 
@@ -41,7 +49,7 @@ export function WeekView({ currentDate, events, onSelectEvent, onSelectDate }: W
               onClick={() => onSelectDate(dateStr)}
               className={`min-h-[350px] rounded-2xl border p-2.5 flex flex-col space-y-2 cursor-pointer transition ${
                 isToday
-                  ? 'border-primary bg-primary/10 shadow-xs'
+                  ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40'
                   : 'border-surface-border bg-surface-alt/40 hover:border-primary/40 hover:bg-surface-alt'
               }`}
             >

@@ -23,7 +23,7 @@ import {
 import type { WorkspaceDto } from '../types';
 import { useAuthStore } from '@/store/auth-store';
 
-export type WorkspaceTab = 'summary' | 'board' | 'timeline' | 'members';
+export type WorkspaceTab = 'summary' | 'projects' | 'members';
 
 interface WorkspaceHeaderProps {
   workspace: WorkspaceDto | null;
@@ -57,10 +57,9 @@ export function WorkspaceHeader({
   const canEditWorkspace = isAdmin;
 
   const tabs: { id: WorkspaceTab; labelKey: string; defaultLabel: string; icon: React.ElementType }[] = [
-    { id: 'summary', labelKey: 'tabs.summary', defaultLabel: 'Tổng quan', icon: Globe },
-    { id: 'board', labelKey: 'tabs.board', defaultLabel: 'Bảng công việc', icon: LayoutGrid },
-    { id: 'timeline', labelKey: 'tabs.timeline', defaultLabel: 'Tiến độ (Gantt)', icon: GitCommitHorizontal },
-    { id: 'members', labelKey: 'tabs.members', defaultLabel: 'Thành viên', icon: Users },
+    { id: 'summary', labelKey: 'tabs.summary', defaultLabel: 'Tổng quan Workspace', icon: Globe },
+    { id: 'projects', labelKey: 'tabs.projects', defaultLabel: 'Danh sách Dự án (Projects)', icon: ListTodo },
+    { id: 'members', labelKey: 'tabs.members', defaultLabel: 'Thành viên & Phân quyền', icon: Users },
   ];
 
   const handleGoToEdit = () => {

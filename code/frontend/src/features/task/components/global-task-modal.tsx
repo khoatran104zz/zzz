@@ -5,11 +5,12 @@ import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckSquare, Loader2, X, Plus } from 'lucide-react';
+import { CheckSquare, Loader2, X, Plus, Folder } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth-store';
 import { useWorkspaceStore } from '@/store/workspace-store';
 import { useWorkspaces, useWorkspaceMembers } from '@/features/workspace/hooks/use-workspace';
+import { useProjects } from '@/features/project/hooks/use-project';
 import { useCreateWorkspaceTask } from '../hooks/use-task';
 import type { TaskPriority, TaskStatus } from '../types';
 
@@ -30,7 +31,7 @@ interface GlobalTaskModalProps {
   defaultProjectId?: string;
 }
 
-export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
+export function GlobalTaskModal({ isOpen, onClose, defaultProjectId }: GlobalTaskModalProps) {
   const [mounted, setMounted] = useState(false);
   const { t: tTask } = useTranslation('task');
   const { t: tCommon } = useTranslation('common');
@@ -44,6 +45,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
 
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
 
   useEffect(() => {
     if (activeWorkspace?.id) {
@@ -55,6 +57,13 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
 
   const workspaceId = selectedWorkspaceId || activeWorkspace?.id || workspaces[0]?.id || '';
   const { data: members = [] } = useWorkspaceMembers(workspaceId || null);
+  const { data: projects = [] } = useProjects(workspaceId || null);
+
+  useEffect(() => {
+    if (defaultProjectId) {
+      setSelectedProjectId(defaultProjectId);
+    }
+  }, [defaultProjectId]);
 
   const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN') || currentUser?.email === 'admin@gmail.com';
   const isManager = currentUser?.roles?.includes('ROLE_MANAGER') || currentUser?.email === 'manager@gmail.com';
@@ -101,6 +110,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
         priority: data.priority as TaskPriority,
         dueDate: dueDateInstant,
         assigneeId: data.assigneeId || undefined,
+        projectId: selectedProjectId || defaultProjectId || undefined,
       },
       {
         onSuccess: () => {
@@ -134,7 +144,7 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
                 {isStaff ? 'Yêu cầu tạo công việc mới' : tTask('createTask', { defaultValue: 'Tạo công việc mới' })}
               </h2>
               <p className="text-[11px] text-text-secondary">
-                {isStaff ? 'Gửi đề xuất công việc tới Quản lý (Manager) để phê duyệt' : 'Tạo công việc và chỉ định thành viên thực hiện'}
+                {isStaff ? 'Gửi đề xuất công việc tới Quản lý để phê duyệt' : 'Tạo công việc và chỉ định thuộc dự án nào'}
               </p>
             </div>
           </div>
@@ -153,35 +163,48 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
           </div>
         )}
 
-        {isStaff && (
-          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3.5 text-xs text-primary space-y-1">
-            <div className="font-bold flex items-center space-x-1.5 text-xs">
-              <span>💡</span>
-              <span>Đề xuất tạo công việc dành cho Nhân viên</span>
-            </div>
-            <p className="text-[11px] leading-relaxed text-text-secondary">
-              Sau khi bạn gửi yêu cầu, Quản lý (Manager) của Workspace sẽ nhận được thông báo để xem xét, duyệt và phân công công việc.
-            </p>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Workspace Picker Dropdown */}
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-text-secondary">Chọn Workspace / Dự án *</label>
-            <select
-              value={selectedWorkspaceId}
-              onChange={(e) => setSelectedWorkspaceId(e.target.value)}
-              required
-              className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs font-bold text-text-primary focus:border-primary focus:outline-none cursor-pointer"
-            >
-              {workspaces.map((w) => (
-                <option key={w.id} value={w.id} className="bg-surface text-text-primary font-medium">
-                  📂 {w.name}
-                </option>
-              ))}
-            </select>
+          {/* Workspace & Project Pickers Grid */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {/* Workspace Picker */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-text-secondary">Chọn Workspace *</label>
+              <select
+                value={selectedWorkspaceId}
+                onChange={(e) => {
+                  setSelectedWorkspaceId(e.target.value);
+                  setSelectedProjectId('');
+                }}
+                required
+                className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs font-bold text-text-primary focus:border-primary focus:outline-none cursor-pointer"
+              >
+                <option value="">-- Chọn Workspace --</option>
+                {workspaces.map((w) => (
+                  <option key={w.id} value={w.id} className="bg-surface text-text-primary font-medium">
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Project Picker (Scrum Project Assignment) */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-text-secondary">Chọn Dự án *</label>
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs font-bold text-primary focus:border-primary focus:outline-none cursor-pointer"
+              >
+                <option value="">-- Chọn dự án trong Workspace --</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-surface text-text-primary font-medium">
+                    {p.name} {p.key ? `#${p.key}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
           {/* Task Title */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-text-secondary">
@@ -209,89 +232,83 @@ export function GlobalTaskModal({ isOpen, onClose }: GlobalTaskModalProps) {
             />
           </div>
 
-          {/* Assignee Dropdown Picker (Optional) */}
+          {/* Assignee Dropdown Picker */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-text-secondary">
-              {tTask('fields.assignee', { defaultValue: 'Người thực hiện' })} (Không bắt buộc)
+              {tTask('fields.assignee', { defaultValue: 'Người thực hiện' })}
             </label>
             <select
               {...register('assigneeId')}
               className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary focus:border-primary focus:outline-none cursor-pointer"
             >
-              <option value="" className="bg-surface text-text-muted">
-                {tTask('fields.unassigned', { defaultValue: '-- Chưa phân công --' })}
-              </option>
-              {members.map((m) => {
-                const name = m.fullName || m.email || 'Thành viên';
-                const roleBadge = m.role ? `[${m.role}]` : '';
-                return (
-                  <option key={m.userId} value={m.userId} className="bg-surface text-text-primary">
-                    👤 {name} {roleBadge} ({m.email || 'No email'})
-                  </option>
-                );
-              })}
+              <option value="" className="bg-surface text-text-muted">-- Chưa phân công --</option>
+              {members.map((m) => (
+                <option key={m.userId} value={m.userId} className="bg-surface text-text-primary">
+                  {m.fullName || m.email}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Status, Priority, Due Date */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-text-secondary">Trạng thái</label>
-              <select
-                {...register('status')}
-                className="w-full rounded-xl border border-surface-border bg-surface-alt p-2 text-xs text-text-primary transition focus:border-primary focus:outline-none cursor-pointer"
-              >
-                <option value="TODO" className="bg-surface text-text-primary">{tTask('statuses.TODO', { defaultValue: 'Cần làm' })}</option>
-                <option value="IN_PROGRESS" className="bg-surface text-text-primary">{tTask('statuses.IN_PROGRESS', { defaultValue: 'Đang làm' })}</option>
-                <option value="IN_REVIEW" className="bg-surface text-text-primary">{tTask('statuses.IN_REVIEW', { defaultValue: 'Đang xem xét' })}</option>
-                <option value="COMPLETED" className="bg-surface text-text-primary">{tTask('statuses.DONE', { defaultValue: 'Hoàn thành' })}</option>
-                <option value="CANCELLED" className="bg-surface text-text-primary">{tTask('statuses.CANCELLED', { defaultValue: 'Đã hủy' })}</option>
-              </select>
-            </div>
-
+          {/* Priority & Status Row */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-medium text-text-secondary">Độ ưu tiên</label>
               <select
                 {...register('priority')}
-                className="w-full rounded-xl border border-surface-border bg-surface-alt p-2 text-xs text-text-primary transition focus:border-primary focus:outline-none cursor-pointer"
+                className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary focus:border-primary focus:outline-none cursor-pointer"
               >
-                <option value="LOW" className="bg-surface text-text-primary">{tTask('priorities.LOW', { defaultValue: 'Thấp' })}</option>
-                <option value="MEDIUM" className="bg-surface text-text-primary">{tTask('priorities.MEDIUM', { defaultValue: 'Trung bình' })}</option>
-                <option value="HIGH" className="bg-surface text-text-primary">{tTask('priorities.HIGH', { defaultValue: 'Cao' })}</option>
-                <option value="URGENT" className="bg-surface text-text-primary">{tTask('priorities.URGENT', { defaultValue: 'Khẩn cấp' })}</option>
+                <option value="LOW">Thấp</option>
+                <option value="MEDIUM">Trung bình</option>
+                <option value="HIGH">Cao</option>
+                <option value="URGENT">Khẩn cấp</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-text-secondary">Hạn chót</label>
-              <input
-                {...register('dueDate')}
-                type="date"
-                className="w-full rounded-xl border border-surface-border bg-surface-alt p-2 text-xs text-text-primary transition focus:border-primary focus:outline-none cursor-pointer"
-              />
+              <label className="text-xs font-medium text-text-secondary">Trạng thái</label>
+              <select
+                {...register('status')}
+                className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary focus:border-primary focus:outline-none cursor-pointer"
+              >
+                <option value="TODO">Cần làm</option>
+                <option value="IN_PROGRESS">Đang làm</option>
+                <option value="IN_REVIEW">Đang xem xét</option>
+                <option value="COMPLETED">Hoàn thành</option>
+              </select>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-2 border-t border-surface-border pt-4">
+          {/* Due Date */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-text-secondary">Hạn chót</label>
+            <input
+              {...register('dueDate')}
+              type="date"
+              className="w-full rounded-xl border border-surface-border bg-surface-alt p-2.5 text-xs text-text-primary transition focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          {/* Modal Action Buttons */}
+          <div className="flex items-center justify-end space-x-2 pt-3 border-t border-surface-border">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-surface-border px-4 py-2 text-xs font-medium text-text-secondary hover:bg-surface-alt transition"
+              className="rounded-xl border border-surface-border px-4 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition"
             >
-              {tCommon('actions.cancel')}
+              {tCommon('actions.cancel', { defaultValue: 'Hủy' })}
             </button>
             <button
               type="submit"
               disabled={createWorkspaceTaskMutation.isPending}
-              className="flex items-center space-x-1.5 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-hover active:scale-95 disabled:opacity-50"
+              className="flex items-center space-x-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-primary-hover transition active:scale-95 disabled:opacity-50"
             >
               {createWorkspaceTaskMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  <span>{isStaff ? 'Gửi yêu cầu tạo công việc' : tTask('createTask', { defaultValue: 'Tạo công việc' })}</span>
+                  <span>{isStaff ? 'Gửi đề xuất công việc' : 'Tạo công việc'}</span>
                 </>
               )}
             </button>

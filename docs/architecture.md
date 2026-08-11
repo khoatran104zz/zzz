@@ -1,61 +1,93 @@
 # TaskFlow Architectural Design Document (`architecture.md`)
 
-This document presents the high-level system architecture, modular design patterns, dependency boundaries, data flows, and scalability strategies for **TaskFlow**.
+Tài liệu này trình bày chi tiết kiến trúc tổng thể, mô hình phân rã Domain-Driven Design (DDD) Feature-First, ranh giới các module, quy tắc giao tiếp inter-module, sơ đồ luồng dữ liệu và định hướng mở rộng của hệ thống **TaskFlow**.
 
 ---
 
-## # Architectural Vision & Core Choices
+## 1. Architectural Vision & Core Choices (Tầm Nhìn Kiến Trúc)
 
-### 1. Why Domain-Driven Design (DDD)?
-Domain-Driven Design ensures that TaskFlow's technical implementation reflects its core business domain. Each functional capability (Auth, Workspace, Project, Task, Calendar, Reminder, Notification) is modeled as a distinct **Bounded Context**. This prevents domain logic leakage, reduces cognitive load, and enables independent domain evolution.
+### 1.1 Why Domain-Driven Design (DDD)?
+Domain-Driven Design đảm bảo cấu trúc kỹ thuật của TaskFlow phản ánh đúng nghiệp vụ cốt lõi. Mỗi vùng nghiệp vụ (Auth, Workspace, Project, Task, Wiki, Whiteboard, Calendar, Reminder, Notification, Automation, AI) được đóng gói thành một **Bounded Context** độc lập. Điều này ngăn chặn việc rò rỉ logic nghiệp vụ giữa các khối, giảm nợ kỹ thuật (technical debt) và giúp từng module dễ dàng tiến hóa độc lập.
 
-### 2. Why Feature-First Organization?
-Traditional Layer-First architectures (grouping code into global `controllers/`, `services/`, `repositories/` folders) create high coupling and scatter related domain code across the codebase. Feature-First organization co-locates all assets (Entities, Repositories, Services, Controllers, Components, Hooks) inside a single feature directory, maximizing cohesion and ease of navigation.
+### 1.2 Why Feature-First Monorepo?
+Kiến trúc Layer-First truyền thống (chia thư mục theo dạng `controllers/`, `services/`, `repositories/` ở gốc) gây ra độ phụ thuộc chéo (coupling) rất cao và khó điều hướng. Cấu trúc **Feature-First** gom tất cả các thành phần liên quan (Entities, Repositories, Services, Controllers, Components, Hooks) vào cùng một thư mục tính năng, tối đa hóa tính đóng gói (cohesion). 
 
-### 3. Why Monorepo?
-TaskFlow uses a unified Monorepo structure (`code/frontend`, `code/backend`, `docs/`) to maintain a single source of truth. Monorepo development enables atomic commits across client and server, shared type definitions, and streamlined CI/CD execution without managing multi-repo deployment synchronization.
+Sử dụng Monorepo (`code/frontend`, `code/backend`, `docs/`, `scripts/`) giúp duy trì "Single Source of Truth" duy nhất cho toàn bộ hệ thống, đồng bộ hóa mã nguồn atomic commits giữa Client và Server.
 
 ---
 
-## # System High-Level Architecture
+## 2. System High-Level Architecture (Kiến Trúc Tổng Thể)
 
 ```mermaid
 graph TD
-    Client[Next.js 16 Web Dashboard] -->|HTTP REST / JSON| Gateway[Spring Security / API Gateway]
-    Gateway -->|JWT Validation| AuthModule[Auth Module]
-    Gateway -->|Dispatch| CoreModules[Bounded Context Modules]
+    Client[Next.js 15 App Router Web Client] -->|HTTP REST / JSON / JWT| Gateway[Spring Security Gateway Filter]
+    Gateway -->|JWT Authentication| AuthModule[Auth Module]
+    Gateway -->|Dispatch Requests| CoreModules[DDD Bounded Context Modules]
     
     subgraph CoreModules
-        UserModule[User Module]
-        WorkspaceModule[Workspace Module]
-        ProjectModule[Project Module]
-        TaskModule[Task Module]
-        CalendarModule[Calendar Module]
-        ReminderModule[Reminder Module]
-        NotificationModule[Notification Module]
+        UserModule[User & Profile Module]
+        WorkspaceModule[Workspace & Member Module]
+        ProjectModule[Project & Backlog Module]
+        TaskModule[Task & Checklist Module]
+        BoardModule[Kanban Board Module]
+        TimelineModule[Gantt Timeline Module]
+        WikiModule[Wiki / Docs Module]
+        WhiteboardModule[Whiteboard Canvas Module]
+        CalendarModule[Calendar Event Module]
+        ReminderModule[Reminder Alert Module]
+        NotificationModule[Notification Center Module]
+        AutomationModule[Automation Engine Module]
+        AnalyticsModule[Analytics & Report Module]
+        DashboardModule[Dashboard Overview Module]
+        AiModule[AI Assistant Module]
+        ActivityModule[System Audit Log Module]
     end
     
-    CoreModules -->|Spring Data JPA| DB[(PostgreSQL Database)]
-    CoreModules -->|Shared Infrastructure| CommonPkg[Common Package]
+    CoreModules -->|Spring Data JPA / HikariCP| DB[(PostgreSQL / Neon Cloud DB)]
+    CoreModules -->|Shared Infrastructure| CommonPkg[Common Infrastructure Package]
 ```
 
 ---
 
-## # Package & Directory Boundaries
+## 3. Package & Domain Boundaries (Ranh Giới Thư Mục & Module)
 
-### 1. Common Package (`com.taskflow.common`)
-Cross-cutting framework infrastructure shared across all modules:
-- `BaseEntity`: Standardized JPA entity auditing (`id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`).
-- `ApiResponse<T>`: Universal REST API response envelope.
-- `GlobalExceptionHandler`: Application-wide `@RestControllerAdvice` error transformer.
-- `SecurityUtils`: Thread-local JWT authentication context extraction utilities.
+### 3.1 Common Package (`com.taskflow.common`)
+Chứa hạ tầng kỹ thuật dùng chung cho toàn bộ backend:
+- `BaseEntity`: Lớp thực thể cha tiêu chuẩn hỗ trợ tự động ghi nhận vết kiểm toán (`id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`).
+- `ApiResponse<T>`: Vỏ bọc chuẩn hóa cho tất cả phản hồi REST API.
+- `GlobalExceptionHandler`: Xử lý ngoại lệ tập trung (`@RestControllerAdvice`).
+- `SecurityUtils`: Tiện ích trích xuất thông tin người dùng đang đăng nhập từ Security Context.
 
-### 2. Shared Package (`com.taskflow.shared`)
-Cross-domain utilities, pure helper functions, string transformers, date/time calculation utilities, and shared system constants.
+### 3.2 List of 22 Domain Bounded Context Modules (`com.taskflow.modules.*`)
+Mỗi module vận hành như một gói tự chủ với cấu trúc chuẩn hóa nội bộ:
 
-### 3. Module Encapsulation (`com.taskflow.modules.*`)
-Every domain module operates as an autonomous package with standardized internal structure:
+```
+com.taskflow.modules/
+├── activity/          # System Audit Trail & User Activity Logs
+├── ai/                # AI Agent Prompt Execution & History
+├── analytics/         # Deep Performance Metrics & Productivity Charts
+├── attachment/        # File Asset Metadata & Upload Storage
+├── auth/              # JWT Token Generation, Refresh & Blacklist
+├── automation/        # Trigger-Action Automation Rules & Log Executions
+├── board/             # Custom Kanban Boards & Dynamic Columns
+├── calendar/          # Temporal Calendar Events & Synchronizations
+├── checklist/         # Subtask Item Checklists & Progress
+├── comment/           # Task Discussion Threads & Mentions
+├── dashboard/         # Role-based Summary Dashboard Aggregations
+├── notification/      # Real-time In-App & Multi-Channel Alerts
+├── project/           # Project Containers & Backlog Management
+├── realtime/          # WebSocket Realtime Data Event Dispatching
+├── reminder/          # Scheduled Time Reminders & Triggers
+├── search/            # Saved Search Filters & Indexing
+├── tag/               # Multi-domain Tagging Taxonomy
+├── task/              # Core Task Lifecycle, Priorities & Dependencies
+├── user/              # User Account Identity & RBAC Roles/Permissions
+├── whiteboard/        # Canvas Diagram Elements & Coordinates
+├── wiki/              # Knowledge Base Articles & Revision Control
+└── workspace/         # Multi-tenant Workspace Boundaries & Invitations
+```
 
+Cấu trúc thư mục chuẩn bên trong từng module:
 ```
 com.taskflow.modules.<module-name>/
 ├── controller/        # REST Controllers (@RestController)
@@ -64,34 +96,34 @@ com.taskflow.modules.<module-name>/
 ├── repository/        # Spring Data JPA Repositories
 ├── entity/            # JPA Entities (@Entity)
 ├── dto/               # Request & Response DTOs
-├── mapper/            # Entity <-> DTO Mappers
-├── validator/         # Business Validation Logic
-└── specification/     # Dynamic Search Criteria
+├── mapper/            # Entity <-> DTO Mappers (MapStruct / Manual Mappers)
+├── validator/         # Business Rule Validation Logic
+└── specification/     # Dynamic Search JPA Specifications
 ```
 
 ---
 
-## # Module Communication & Dependency Rules
+## 4. Inter-Module Dependency Rules (Quy Tắc Giao Tiếp Module)
 
-### 1. Inter-Module Dependency Rules
-- **Rule 1 (Service Isolation)**: A module MUST NOT inject or call a `Repository` belonging to another module.
-- **Rule 2 (Service-to-Service Communication)**: Inter-module communication MUST occur exclusively through the target module's public `Service` interface.
-- **Rule 3 (No Direct Entity Passing)**: Data passed between modules MUST be encapsulated in DTOs or primitive values, never raw JPA Entities.
+### 4.1 Quy tắc độc lập Repository (Service Isolation)
+- **Quy tắc 1**: Một module KHÔNG ĐƯỢC PHÉP tiêm (inject) hoặc truy vấn trực tiếp `Repository` của một module khác.
+- **Quy tắc 2 (Giao tiếp qua Service)**: Giao tiếp trực tiếp giữa hai module BẮT BUỘC phải thông qua interface `Service` công khai của module đích.
+- **Quy tắc 3 (Truyền DTO)**: Dữ liệu trao đổi giữa các module phải được đóng gói trong DTO hoặc kiểu dữ liệu nguyên thủy, tuyệt đối không truyền raw JPA Entity.
 
 ```
-✅ Allowed: WorkspaceServiceImpl -> TaskService (Interface)
-❌ Forbidden: WorkspaceServiceImpl -> TaskRepository
-❌ Forbidden: TaskController -> WorkspaceRepository
+✅ Cho phép: WorkspaceServiceImpl -> TaskService (Interface)
+❌ Cấm: WorkspaceServiceImpl -> TaskRepository
+❌ Cấm: TaskController -> WorkspaceRepository
 ```
 
-### 2. Event-Driven Asynchronous Communication
-For non-blocking cross-module side effects (e.g., triggering a Notification when a Task is assigned), modules publish application events via Spring's `ApplicationEventPublisher`:
+### 4.2 Giao tiếp bất đồng bộ qua Sự kiện (Event-Driven Architecture)
+Để giảm bớt sự phụ thuộc trực tiếp (loose coupling), các tác vụ phụ (như gửi thông báo khi công việc được giao) sử dụng cơ chế `ApplicationEventPublisher` của Spring Framework:
 
 ```java
-// Publishing an event in TaskServiceImpl
+// Trong TaskServiceImpl: Phát sự kiện
 eventPublisher.publishEvent(new TaskAssignedEvent(taskId, assigneeId, assignedBy));
 
-// Listening in NotificationServiceImpl
+// Trong NotificationServiceImpl: Lắng nghe sự kiện
 @EventListener
 public void handleTaskAssigned(TaskAssignedEvent event) {
     notificationService.sendNotification(...);
@@ -100,59 +132,39 @@ public void handleTaskAssigned(TaskAssignedEvent event) {
 
 ---
 
-## # Data & Authentication Flow
-
-### 1. Authentication & API Flow
+## 5. Sequence Diagram: Task Creation & Execution Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User
-    participant Frontend as Next.js Client
+    actor User as User / Manager
+    participant Frontend as Next.js 15 Client
     participant Controller as TaskController
     participant Service as TaskServiceImpl
     participant Repo as TaskRepository
-    participant DB as PostgreSQL
+    participant Event as EventPublisher
+    participant DB as PostgreSQL DB
     
     User->>Frontend: Click "Create Task"
     Frontend->>Controller: POST /api/v1/tasks (Bearer JWT)
-    Controller->>Controller: Validate JWT & @Valid Request
+    Controller->>Controller: Validate JWT & Request Payload (@Valid)
     Controller->>Service: createTask(CreateTaskRequest)
-    Service->>Service: Execute Domain Rules
+    Service->>Service: Enforce Business Rules (Status, Priority, Assignee)
     Service->>Repo: save(TaskEntity)
     Repo->>DB: INSERT INTO tasks ...
-    DB-->>Repo: TaskEntity
-    Repo-->>Service: TaskEntity
+    DB-->>Repo: Saved TaskEntity
+    Service->>Event: publishEvent(TaskCreatedEvent)
     Service->>Service: Map Entity to TaskDto
     Service-->>Controller: TaskDto
     Controller-->>Frontend: 201 Created (ApiResponse<TaskDto>)
-    Frontend-->>User: Update Kanban Board UI
+    Frontend-->>User: Update Kanban Board UI (Optimistic UI)
 ```
 
 ---
 
-## # How to Add a New Domain Module
+## 6. Scalability & Microservice Readiness (Định Hướng Mở Rộng Microservices)
 
-To add a new domain module (e.g., `note` module for Phase 3):
-
-1. **Create Backend Package**:
-   - Create `com.taskflow.modules.note` with sub-packages `controller`, `service`, `impl`, `repository`, `entity`, `dto`, `mapper`.
-2. **Define Database Migration**:
-   - Add `src/main/resources/db/migration/V<N>__create_notes_table.sql`.
-3. **Implement Domain Entities & DTOs**:
-   - Create `NoteEntity extends BaseEntity` and corresponding DTOs (`NoteDto`, `CreateNoteRequest`).
-4. **Build Service & Controller**:
-   - Create `NoteService` interface, `NoteServiceImpl`, and `NoteController` annotated with `@RestController` and `@Tag(name = "Note Management")`.
-5. **Create Frontend Feature Module**:
-   - Create `code/frontend/src/features/note` with sub-directories `components`, `hooks`, `services`, `types`.
-6. **Register Query Hooks & Pages**:
-   - Create TanStack Query custom hooks (`useNotes`, `useCreateNote`) and Next.js App Router page route (`app/(dashboard)/notes/page.tsx`).
-
----
-
-## # Scalability & Future Microservice Migration
-
-TaskFlow's DDD Feature-First structure guarantees seamless future migration to standalone microservices:
-1. **Low Coupling**: Because modules interact exclusively via public service interfaces or events, each module can be extracted into an independent Spring Boot microservice runtime.
-2. **Database Sharding Readiness**: Tables are isolated by bounded contexts using foreign key indexes rather than cross-database triggers, allowing database schema separation when needed.
-3. **Stateless API Gateway**: Stateless JWT authentication allows instant scaling of backend container instances behind an AWS ALB or NGINX load balancer.
+Nhờ kiến trúc DDD Feature-First với sự đóng gói nghiêm ngặt:
+1. **Low Coupling**: Do các module chỉ giao tiếp qua Service Interfaces hoặc Events, bất kỳ module nào (như `wiki`, `notification`, `ai`) cũng có thể tách thành một Spring Boot Microservice độc lập.
+2. **Database Isolation**: Các bảng CSDL được phân vùng rõ ràng theo Bounded Context, giúp việc tách Database per Service trong tương lai diễn ra thuận lợi.
+3. **Stateless Scale**: Backend hoàn toàn Stateless nhờ xác thực JWT, cho phép mở rộng chiều ngang (Horizontal Scaling) phía sau Load Balancer (NGINX / AWS ALB).

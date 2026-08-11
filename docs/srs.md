@@ -1,142 +1,159 @@
-# Software Requirements Specification (SRS) - TaskFlow
+# Software Requirements Specification (SRS) - TaskFlow Platform
 
-## 1. Introduction
+## 1. Introduction (Giới Thiệu Tổng Quan)
 
-### 1.1 Purpose
-This document specifies the software requirements for **TaskFlow**, an enterprise-grade personal productivity and workspace platform designed to streamline task management, project execution, calendar scheduling, team collaboration, and AI-assisted workflows.
+### 1.1 Purpose (Mục Đích)
+Tài liệu này xác định các yêu cầu phần mềm chi tiết cho **TaskFlow**, hệ thống quản lý công việc, lập kế hoạch dự án và không gian làm việc nhóm (Enterprise Productivity & Workspace Collaboration Platform). Tài liệu là cơ sở chuẩn mực để thiết kế kiến trúc, phát triển mã nguồn, kiểm thử phần mềm và làm tài liệu phục vụ báo cáo đồ án tốt nghiệp.
 
-### 1.2 Scope
-TaskFlow provides a multi-phase system architecture supporting single-user personal task organization up to multi-tenant workspace administration.
+### 1.2 Scope (Phạm Vi Hệ Thống)
+TaskFlow giải quyết bài toán quản trị công việc cá nhân và tổ chức theo chuẩn Agile/Scrum (Jira & Confluence alternative). Hệ thống mở rộng từ quản lý tác vụ đơn lẻ đến phân quyền đa cấp trong Workspace doanh nghiệp, hỗ trợ quản lý tiến độ (Kanban, Gantt Timeline, Sprint Backlog), kho tri thức (Wiki), bảng phác thảo (Whiteboard), tự động hóa (Automation) và hỗ trợ thông minh từ AI Assistant.
+
+### 1.3 Core Business Functional Scope (17 Chức Năng Nghiệp Vụ Cốt Lõi)
+Đề tài tập trung xây dựng 17 chức năng nghiệp vụ chính phục vụ quá trình quản lý công việc và cộng tác nhóm:
+
+1. **Quản lý tài khoản & Xác thực người dùng (Auth & User Profile)**: Đăng ký, đăng nhập (JWT + Refresh Token), quản lý thông tin cá nhân và kiểm soát phiên đăng nhập.
+2. **Workspace (Không gian quản lý & cộng tác chung)**: Cho phép tạo Workspace, quản lý thành viên, mời thành viên (Email/Token link) và kiểm soát quyền truy cập RBAC.
+3. **Quản lý Project**: Cho phép tổ chức các dự án trong Workspace và quản lý các công việc thuộc từng dự án.
+4. **Quy trình quản lý công việc theo cấu trúc `Project` → `Sprint/Backlog` → `Issue/Task` → `Checklist`**: Hỗ trợ tạo, cập nhật, phân công và theo dõi vòng đời của công việc.
+5. **Hệ thống Status & Priority**: 
+   - Vòng đời công việc theo trạng thái: `To Do` → `In Progress` → `In Review` → `Done`.
+   - Mức độ ưu tiên: `Low` → `Medium` → `High` → `Urgent`.
+6. **Sprint và Backlog**: Hỗ trợ lập kế hoạch Sprint, quản lý danh sách công việc tồn đọng (Backlog) và theo dõi tiến độ thực hiện trong từng Sprint.
+7. **Kanban Board**: Trực quan hóa các Task theo từng Status và hỗ trợ thao tác kéo-thả (Drag & Drop) để cập nhật trạng thái công việc.
+8. **Timeline / Gantt**: Theo dõi công việc theo thời gian và thể hiện mối quan hệ phụ thuộc giữa các Task như `BLOCKS`, `BLOCKED_BY`, `DUPLICATES` và `RELATES_TO`.
+9. **Checklist, Comment và Attachment**: Chia nhỏ công việc thành các nhiệm vụ phụ (Checklist), trao đổi thông tin giữa các thành viên (Comment & Mention) và đính kèm tài liệu liên quan (Attachment).
+10. **Calendar và Reminder**: Quản lý thời hạn (Due dates), lịch làm việc (Calendar events) và nhắc nhở tự động các công việc cần thực hiện (Reminders).
+11. **Dashboard và Analytics**: Cung cấp các chỉ số và biểu đồ trực quan (Donut chart, Line chart) về số lượng công việc, trạng thái, mức độ ưu tiên, tiến độ và danh sách công việc quá hạn (Overdue Alert List).
+12. **Docs / Wiki**: Cho phép lưu trữ và tổ chức tài liệu, tri thức của Workspace theo cấu trúc phân cấp (Page Tree) và hỗ trợ lưu lịch sử chỉnh sửa thông qua `Page Revisions`.
+13. **Whiteboard**: Cung cấp không gian trực quan (Canvas) để thành viên phác thảo ý tưởng, vẽ tư duy và cộng tác trực tiếp.
+14. **Forms**: Hỗ trợ thu thập yêu cầu hoặc thông tin từ người dùng và tự động tạo Task từ dữ liệu biểu mẫu.
+15. **Automation Rules**: Cho phép thiết lập các quy tắc tự động hóa theo mô hình `Trigger` → `Action`, nhằm giảm các thao tác thủ công trong quá trình quản lý công việc.
+16. **Notification và Activity Log**: Giúp người dùng nhận biết các thay đổi liên quan đến công việc thời gian thực (Notification), đồng thời hỗ trợ theo dõi nhật ký lịch sử hoạt động trong hệ thống (Activity Log).
+17. **Search và Tag**: Hỗ trợ tìm kiếm toàn cục (Global Search, Saved Filters) và phân loại các đối tượng bằng Thẻ Tag nhằm nâng cao khả năng quản lý và truy xuất thông tin.
 
 ---
 
-## 2. Overall Description
+## 2. Overall Description (Mô Tả Tổng Quan)
 
-### 2.1 Product Phases
+### 2.1 Product Evolution Roadmap (Lộ Trình Phát Triển 5 Phase)
 
-- **Phase 1: Personal Task Management**
-  - Core Task, Project, Workspace, Tag, and Reminders modeling.
-  - Subtask checklists, status tracking, and priority management.
+- **Phase 1: Personal Task Management (Quản Lý Công Việc Cá Nhân)**
+  - Quản lý công việc (Task), dự án (Project), không gian (Workspace), thẻ (Tag) và nhắc nhở (Reminder).
+  - Quản lý danh sách việc phụ (Checklists), mức độ ưu tiên (`LOW`, `MEDIUM`, `HIGH`, `URGENT`) và trạng thái công việc (`TO_DO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`).
 
-- **Phase 2: Team Workspaces & Enterprise 3-Role Model**
-  - Multi-tenant workspace partitioning.
-  - Fine-grained Role-Based Access Control (RBAC) supporting 3 enterprise account roles:
-    - **Quản trị viên (Admin - `ROLE_ADMIN` / `ADMIN`)**: Quản trị toàn bộ hệ thống & workspace, quản lý user, xem nhật ký hệ thống (Audit Logs), thống kê toàn thể.
-    - **Quản lý (Manager - `ROLE_MANAGER` / `MANAGER`)**: Điều phối dự án, lập kế hoạch Sprint, giao việc cho nhân viên, quản lý Backlog & xem báo cáo hiệu suất team.
-    - **Nhân viên (Staff - `ROLE_USER` / `MEMBER`)**: Thực thi công việc cá nhân được giao, cập nhật tiến độ task (To Do -> Done), thêm checklist, thảo luận và làm việc cá nhân.
+- **Phase 2: Team Workspaces & Enterprise 3-Role Model (Phân Quyền Doanh Nghiệp 3 Vai Trò)**
+  - Phân vùng dữ liệu đa người dùng (Multi-tenant Workspace Partitioning).
+  - Phân quyền theo vai trò (Role-Based Access Control - RBAC) với 3 cấp độ tài khoản:
+    1. **Quản trị viên (Admin - `ROLE_ADMIN` / `ADMIN`)**: Quản trị toàn bộ người dùng hệ thống, theo dõi nhật ký hoạt động (Audit Logs), xem biểu đồ báo cáo toàn thể, quản lý phân quyền và cấu hình hệ thống.
+    2. **Quản lý (Manager - `ROLE_MANAGER` / `MANAGER`)**: Quản lý Workspace/Project, lập kế hoạch Sprint, điều phối danh sách tồn đọng (Backlog), phân công công việc cho nhân viên, quản lý biểu mẫu (Forms) và xem báo cáo hiệu suất team.
+    3. **Nhân viên (Staff - `ROLE_USER` / `MEMBER`)**: Thực thi công việc cá nhân được giao, cập nhật tiến độ (To Do -> In Progress -> Done), thêm checklist phụ, thảo luận (Comment), tải tệp đính kèm và tạo tài liệu Wiki.
 
-### 2.2 Enterprise Permission Matrix (Ma trận phân quyền 3 Role)
+- **Phase 3: Productivity Extensions (Mở Rộng Năng Suất Tối Ưu)**
+  - Bảng Kanban tương tác kéo thả linh hoạt, sơ đồ Gantt Timeline quản lý phụ thuộc (Task Dependencies), kho tri thức Docs/Wiki lưu vết phiên bản, Bảng vẽ tư duy Whiteboard và Tự động hóa quy trình (Automation Rules).
 
-### 2.2 MA TRẬN PHÂN QUYỀN VÀ USE CASE (USE CASE & ACTOR MATRIX)
+- **Phase 4: Intelligent AI Assistant (Trợ Lý AI Thông Minh)**
+  - Tự động phân rã tác vụ (Task Breakdown), tóm tắt tiến độ dự án tự động và gợi ý lập lịch làm việc tối ưu qua mô hình ngôn ngữ lớn (LLM).
+
+- **Phase 5: Native Cross-Platform Integration (Tích Hợp Đa Nền Tảng)**
+  - Mở rộng ứng dụng di động (React Native) tái sử dụng 100% chuẩn payload RESTful API của hệ thống Backend.
+
+---
+
+### 2.2 Enterprise Permission Matrix (Ma Trận Phân Quyền 3 Role)
 
 > [!NOTE]
-> **Quyền hạn toàn năng của Admin**: Admin có quyền quản lý đối với mọi tác vụ trong hệ thống.
+> **Quyền hạn toàn năng của Admin**: Admin có quyền tối cao truy cập và quản trị toàn bộ dữ liệu, người dùng và thiết lập trong hệ thống.
 
-| STT | Mục | Use Case chính | Actor Được Phép Thực Hiện |
-| :---: | :---: | :--- | :--- |
-| 1 | 3.3.3 | Đăng ký tài khoản | Admin / Manager / Staff |
-| 2 | 3.3.4 | Đăng nhập | Admin / Manager / Staff |
-| 3 | 3.3.5 | Tạo Workspace | Admin / Manager |
-| 4 | 3.3.6 | Quản lý Workspace | Admin / Manager |
-| 5 | 3.3.7 | Quản lý thành viên | Admin / Manager |
-| 6 | 3.3.8 | Quản lý biểu mẫu yêu cầu | Admin / Manager |
-| 7 | 3.3.9 | Tạo Task | Admin / Manager / Staff |
-| 8 | 3.3.10 | Quản lý Task | Admin / Manager / Staff |
-| 9 | 3.3.11 | Quản lý Sprint | Admin / Manager |
-| 10 | 3.3.12 | Quản lý Backlog | Admin / Manager / Staff |
-| 11 | 3.3.13 | Quản lý Kanban Board | Admin / Manager / Staff |
-| 12 | 3.3.14 | Xem Timeline | Admin / Manager / Staff |
-| 13 | 3.3.15 | Xem Dashboard | Admin / Manager / Staff |
-| 14 | 3.3.16 | Quản lý Docs/Wiki | Admin / Manager / Staff |
-| 15 | 3.3.17 | Quản lý thông báo | Admin / Manager / Staff |
-
----
-
-### 2.3 MÔ TẢ CHI TIẾT USE CASE 3.3.15 - XEM DASHBOARD
-
-#### **Hình 3.15 Biểu đồ Use Case Xem Dashboard**
-- **Tên Use Case**: Xem Dashboard (Dashboard Overview)
-- **Actor**: Admin, Manager, Staff
-- **Mục đích**: Cung cấp giao diện tổng quan giúp Admin, Manager và Staff theo dõi tình trạng Workspace, Project và tiến độ công việc trong hệ thống (tùy chỉnh phù hợp theo từng vai trò).
-- **Tiền điều kiện**:
-  1. Người dùng đã đăng nhập vào hệ thống.
-  2. Người dùng (Admin, Manager hoặc Staff) có quyền truy cập Dashboard.
-  3. Hệ thống có dữ liệu Workspace, Project hoặc Task để thống kê.
-
-#### **Quy trình thực hiện chuẩn (Main Flow)**:
-- **Bước 1**: Người dùng truy cập chức năng “Dashboard”.
-- **Bước 2**: Hệ thống kiểm tra quyền truy cập và phân loại dữ liệu hiển thị theo vai trò người dùng (Admin xem toàn hệ thống, Manager xem Workspace/Project team, Staff xem công việc cá nhân).
-- **Bước 3**: Hệ thống tải dữ liệu thống kê từ các Workspace và Project mà người dùng có quyền truy cập.
-- **Bước 4**: Hệ thống hiển thị tổng quan số lượng Workspace, Project và Task.
-- **Bước 5**: Hệ thống hiển thị biểu đồ phân bổ trạng thái Task (*To Do, In Progress, In Review, Done*).
-- **Bước 6**: Hệ thống hiển thị biểu đồ phân bổ mức độ ưu tiên của Task (*Low, Medium, High, Urgent*).
-- **Bước 7**: Hệ thống hiển thị thống kê số lượng Task đã hoàn thành trong 7 ngày gần nhất (Productivity Chart).
-- **Bước 8**: Hệ thống hiển thị danh sách Task sắp đến hạn hoặc đã quá hạn (Overdue Alert List).
-
-#### **Kịch bản phụ (Alternative & Exception Flows)**:
-- **Trường hợp 1 (Lọc Dashboard theo thời gian - extend)**:
-  1. Người dùng lựa chọn khoảng thời gian muốn xem (*Hôm nay, 7 ngày, 30 ngày*).
-  2. Hệ thống cập nhật dữ liệu thống kê theo khoảng thời gian được chọn.
-  3. Dashboard hiển thị lại các biểu đồ và số liệu tương ứng.
-- **Trường hợp 2 (Xem Task sắp đến hạn hoặc quá hạn - extend)**:
-  1. Người dùng chọn khu vực cảnh báo trên Dashboard.
-  2. Hệ thống hiển thị danh sách các Task sắp đến hạn hoặc đã quá hạn.
-  3. Người dùng có thể chọn Task để xem chi tiết.
-- **Trường hợp 3 (Không có dữ liệu thống kê)**:
-  1. Hệ thống không tìm thấy dữ liệu trong khoảng thời gian được chọn.
-  2. Dashboard hiển thị trạng thái không có dữ liệu (Empty State).
-  3. Hệ thống thông báo: *“Không có dữ liệu thống kê trong khoảng thời gian đã chọn.”*
-- **Trường hợp 4 (Người dùng không có quyền truy cập)**:
-  1. Người dùng truy cập Dashboard nhưng không có quyền.
-  2. Hệ thống từ chối yêu cầu.
-  3. Hiển thị thông báo: *“Bạn không có quyền truy cập Dashboard.”*
-- **Trường hợp 5 (Lỗi hệ thống)**:
-  1. Hệ thống gặp lỗi khi tải dữ liệu thống kê.
-  2. Dashboard không thể hiển thị đầy đủ dữ liệu.
-  3. Hệ thống thông báo: *“Không thể tải dữ liệu Dashboard, vui lòng thử lại sau.”*
-
-#### **Hậu điều kiện (Post-conditions)**:
-- **Nếu thành công**: Dashboard hiển thị các số liệu và biểu đồ mới nhất. Admin, Manager và Staff có thể theo dõi tình hình hoạt động của hệ thống và công việc cá nhân. Không có dữ liệu nghiệp vụ bị thay đổi.
-- **Nếu thất bại**: Dashboard không hiển thị đầy đủ dữ liệu. Dữ liệu Workspace, Project và Task không bị thay đổi. Người dùng có thể thử tải lại Dashboard sau.
-
-- **Phase 3: Productivity Extensions**
-  - Interactive Kanban boards, integrated Calendar views, rich Notes, and Habit Tracking.
-
-- **Phase 4: Intelligent AI Assistant**
-  - Contextual task breakdown, natural language scheduling, and smart daily summaries.
-
-- **Phase 5: Native Mobile Client Integration**
-  - Cross-platform mobile clients reusing identical backend REST API payloads.
+| STT | Mã Use Case | Tên Use Case Kịch Bản | Admin (`ROLE_ADMIN`) | Manager (`ROLE_MANAGER`) | Staff (`ROLE_USER`) |
+| :---: | :---: | :--- | :---: | :---: | :---: |
+| 1 | UC-01 | Đăng ký & Đăng nhập tài khoản (Auth) | ✅ | ✅ | ✅ |
+| 2 | UC-02 | Quản lý người dùng hệ thống (Admin Users) | ✅ | ❌ | ❌ |
+| 3 | UC-03 | Quản lý Vai trò & Phân quyền (RBAC Matrix) | ✅ | ❌ | ❌ |
+| 4 | UC-04 | Xem Nhật ký hệ thống (System Audit Logs) | ✅ | ❌ | ❌ |
+| 5 | UC-05 | Tạo & Quản lý Workspace | ✅ | ✅ | ❌ |
+| 6 | UC-06 | Mời & Quản lý thành viên Workspace | ✅ | ✅ | ❌ |
+| 7 | UC-07 | Tạo & Quản lý Dự án (Project Management) | ✅ | ✅ | ❌ |
+| 8 | UC-08 | Quản lý Biểu mẫu yêu cầu (Forms Builder) | ✅ | ✅ | ❌ |
+| 9 | UC-09 | Lập kế hoạch Sprint & Backlog | ✅ | ✅ | 👁️ (Xem) |
+| 10 | UC-10 | Tạo & Phân công Công việc (Task Assignment) | ✅ | ✅ | ✅ (Công việc mình tạo) |
+| 11 | UC-11 | Cập nhật tiến độ & Trạng thái Task | ✅ | ✅ | ✅ (Công việc được giao) |
+| 12 | UC-12 | Quản lý Checklist phụ & Comment | ✅ | ✅ | ✅ |
+| 13 | UC-13 | Tương tác Bảng Kanban Drag-and-Drop | ✅ | ✅ | ✅ |
+| 14 | UC-14 | Xem Sơ đồ Gantt Timeline & Phụ thuộc | ✅ | ✅ | ✅ |
+| 15 | UC-15 | Xem Báo cáo Dashboard & Analytics | ✅ (Toàn hệ thống) | ✅ (Workspace team) | ✅ (Cá nhân) |
+| 16 | UC-16 | Quản lý Tri thức Wiki & Whiteboard | ✅ | ✅ | ✅ |
+| 17 | UC-17 | Cấu hình Quy tắc Tự động hóa (Automation) | ✅ | ✅ | ❌ |
 
 ---
 
-## 3. Architecture & Domain Model
+## 3. Detailed Use Case Specifications (Mô Tả Chi Tiết Use Case)
 
-TaskFlow adopts Domain-Driven Design (DDD) with a Feature-First modular strategy.
+### 3.1 USE CASE UC-15: XEM DASHBOARD (DASHBOARD OVERVIEW)
 
-```
-com.taskflow.modules/
-├── auth          # Authentication, token generation, credentials verification
-├── user          # User profile state & security credentials
-├── workspace     # Multi-tenant workspace container
-├── project       # Logical groupings of work items
-├── task          # Core task entity, checklists, status lifecycle
-├── calendar      # Temporal events & synchronization placeholders
-├── notification  # Real-time and scheduled notifications
-├── reminder      # System and email notification alerts
-├── attachment    # File asset meta storage
-├── activity      # System audit trails and user activity logging
-└── ai            # AI agent orchestration and prompt dispatching
-```
+- **Actor**: Admin, Manager, Staff.
+- **Mục đích**: Cung cấp giao diện tổng quan giúp theo dõi tình trạng Workspace, phân bổ trạng thái công việc, tiến độ thực hiện và cảnh báo công việc quá hạn.
+- **Tiền điều kiện**: Người dùng đã xác thực JWT thành công.
+
+#### **Luồng thực hiện chính (Main Flow)**:
+1. Người dùng truy cập menu **Dashboard**.
+2. Backend kiểm tra Token JWT và vai trò (`ROLE_ADMIN`, `ROLE_MANAGER`, `ROLE_USER`).
+3. Hệ thống truy vấn dữ liệu thống kê phù hợp với scope phân quyền.
+4. Hiển thị Widget số liệu tổng quan (Tổng số Workspace, Project, Task hoàn thành).
+5. Hiển thị Biểu đồ Donut phân bổ trạng thái Task (*To Do, In Progress, In Review, Done*).
+6. Hiển thị Biểu đồ Phân bổ mức độ ưu tiên (*Low, Medium, High, Urgent*).
+7. Hiển thị Biểu đồ đường (Line Chart) theo dõi năng suất làm việc 7 ngày gần nhất.
+8. Hiển thị danh sách cảnh báo công việc quá hạn hoặc sắp đến hạn (Overdue Alert List).
+
+#### **Luồng ngoại lệ & Kịch bản phụ (Alternative Flows)**:
+- **Lọc theo thời gian**: Người dùng thay đổi mốc thời gian (7 ngày, 30 ngày) -> Hệ thống re-query dữ liệu biểu đồ.
+- **Không có dữ liệu**: Hiển thị trạng thái Empty State rỗng kèm thông báo *"Chưa có dữ liệu thống kê trong khoảng thời gian này"*.
 
 ---
 
-## 4. Non-Functional Requirements
+### 3.2 USE CASE UC-13: QUẢN LÝ BẢNG KANBAN (KANBAN BOARD INTERACTION)
 
-### 4.1 Performance
-- API response times under 200ms for p95 requests.
-- Statelss JWT authentication with sliding session refresh mechanisms.
+- **Actor**: Admin, Manager, Staff.
+- **Mục đích**: Cho phép kéo thả thẻ công việc giữa các cột trạng thái (*To Do -> In Progress -> In Review -> Done*) để cập nhật tiến độ công việc tức thì.
+- **Tiền điều kiện**: Người dùng có quyền truy cập vào Project/Workspace tương ứng.
 
-### 4.2 Scalability
-- Horizontal scaling capability for stateless Spring Boot backend nodes.
-- PostgreSQL database partitioning and connection pooling managed via Neon Serverless.
+#### **Luồng thực hiện chính (Main Flow)**:
+1. Người dùng mở tab **Board** trong Workspace.
+2. Hệ thống tải danh sách các cột (Board Columns) và thẻ công việc (Task Cards) theo vị trí `position`.
+3. Người dùng kéo thẻ Task từ cột *In Progress* thả sang cột *Done*.
+4. Frontend cập nhật giao diện ngay lập tức (Optimistic Update).
+5. Frontend gửi yêu cầu `PATCH /api/v1/tasks/{taskId}/status` lên Backend.
+6. Backend ghi lại lịch sử thay đổi vào `activity_logs` và trả về `200 OK`.
+
+---
+
+### 3.3 USE CASE UC-16: QUẢN LÝ KHO TRI THỨC (DOCS & WIKI MANAGEMENT)
+
+- **Actor**: Admin, Manager, Staff.
+- **Mục đích**: Cho phép tạo, chỉnh sửa và quản lý các tài liệu kho tri thức dự án với khả năng lưu vết lịch sử phiên bản (Revisions).
+- **Tiền điều kiện**: Người dùng thuộc Workspace tương ứng.
+
+#### **Luồng thực hiện chính (Main Flow)**:
+1. Người dùng chọn tab **Docs** trong Workspace.
+2. Hiển thị danh mục tài liệu cây phân cấp (Wiki Page Tree).
+3. Người dùng tạo bài viết mới hoặc chỉnh sửa nội dung bài viết hiện có.
+4. Nhấn **Save / Lưu bài**: Hệ thống gửi payload `POST /api/v1/wiki/pages` lên Backend.
+5. Backend lưu bản ghi mới vào bảng `wiki_pages` và tự động tạo bản ghi lịch sử trong `wiki_page_revisions`.
+
+---
+
+## 4. Non-Functional Requirements (Yêu Cầu Phi Chức Năng)
+
+### 4.1 Performance (Hiệu Năng Systems)
+- Thời gian phản hồi API (Latency p95) **< 200ms** cho các tác vụ CRUD thông thường.
+- Hỗ trợ tải dữ liệu phân trang (Pagination offset/limit) tối đa 100 bản ghi mỗi request.
+- Cơ chế React Server Components & TanStack Query caching giúp giảm 60% lưu lượng request dư thừa từ Client.
+
+### 4.2 Security (Bảo Mật)
+- Xác thực chuẩn **Stateless JWT** (HMAC-SHA512 key 256-bit).
+- Mã hóa mật khẩu người dùng bằng thuật toán **BCrypt** (Strength factor 10).
+- Chống các lỗ hổng bảo mậtOWASP Top 10 (SQL Injection via JPA Parametrized Queries, XSS Sanitization, CORS Configuration, Rate Limiting).
+
+### 4.3 Scalability & Reliability (Khả Năng Mở Rộng & Độc Lập Module)
+- Backend được thiết kế theo chuẩn Domain-Driven Design (DDD) giúp sẵn sàng tách thành các Spring Boot Microservices độc lập trong tương lai.
+- Cơ sở dữ liệu PostgreSQL kết nối qua HikariCP connection pool, tương thích hoàn hảo với môi trường Serverless Neon DB.
+

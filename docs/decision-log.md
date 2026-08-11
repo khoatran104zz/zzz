@@ -1,133 +1,103 @@
 # TaskFlow Architecture Decision Records (`decision-log.md`)
 
-This log documents key technical decisions made during the architectural design of **TaskFlow**. Each Architecture Decision Record (ADR) outlines the context, rationale, trade-offs, and consequences of chosen technologies and architectural patterns.
+Nhật ký ghi nhận các quyết định kiến trúc quan trọng (ADR) trong quá trình phát triển hệ thống **TaskFlow**. Mỗi bản ghi ADR trình bày bối cảnh, lý do lựa chọn, ưu/nhược điểm và hệ quả kỹ thuật.
 
 ---
 
 ## ADR-001: Selection of Monorepo Repository Structure
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: TaskFlow requires tight coordination between its Next.js frontend web client, Spring Boot backend API, database migration scripts, and architecture documentation. Multi-repository setups introduce repository drift and complex multi-repo CI/CD overhead.
-- **Decision**: Adopt a single unified Monorepo structure (`code/frontend`, `code/backend`, `docs/`, `scripts/`).
-- **Consequences**:
-  - **Positive**: Single source of truth, atomic commits across frontend and backend, simplified development setup, unified documentation.
-  - **Negative**: Git repository size grows faster over time; requires discipline around directory-scoped builds.
-- **Alternatives Considered**: Polyrepo (separate `taskflow-web` and `taskflow-backend` repositories).
+- **Context**: TaskFlow cần sự phối hợp chặt chẽ giữa Next.js Frontend, Spring Boot Backend API, CSDL Flyway SQL migrations và tài liệu kiến trúc `docs/`. Việc chia nhiều repository tạo ra sự lệch pha mã nguồn và phức tạp CI/CD.
+- **Decision**: Áp dụng cấu trúc Monorepo duy nhất (`code/frontend`, `code/backend`, `docs/`, `scripts/`).
+- **Consequences**: Single source of truth, commit đồng bộ tính năng giữa client và server, đơn giản hóa môi trường phát triển cục bộ.
 
 ---
 
-## ADR-002: Next.js 16 (App Router) for Frontend Framework
+## ADR-002: Next.js 15/16 (App Router) for Frontend Framework
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: The frontend requires rapid initial page renders, SEO optimization, efficient routing, and modern UI capabilities for complex productivity dashboards.
-- **Decision**: Select **Next.js 16** featuring React 19 and the App Router architecture.
-- **Consequences**:
-  - **Positive**: React Server Components (RSC) drastically reduce client bundle sizes; built-in layouts, nested routes, and automatic image/font optimization.
-  - **Negative**: Strict boundary separation required between Server Components and Client Components (`'use client'`).
-- **Alternatives Considered**: Vite + React SPA, Remix / React Router v7.
+- **Context**: Frontend cần tốc độ tải trang ban đầu nhanh, SEO tối ưu, hỗ trợ layout lồng nhau (nested layouts) cho bảng điều khiển Workspace phức tạp.
+- **Decision**: Lựa chọn **Next.js 15/16** hỗ trợ React 19 và App Router Architecture.
+- **Consequences**: Tối ưu dung lượng JavaScript nhờ React Server Components (RSC); tích hợp sẵn route handlers, font & image optimization.
 
 ---
 
-## ADR-003: Spring Boot 3.4+ & Java 21 for Backend Framework
+## ADR-003: Spring Boot 3.4+ & Java 21 LTS for Backend Framework
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: The core backend system must process high-concurrency API requests, enforce enterprise-grade security rules, and support complex domain logic with long-term ecosystem stability.
-- **Decision**: Select **Spring Boot 3.4+** running on **Java 21 LTS**.
-- **Consequences**:
-  - **Positive**: Java 21 Virtual Threads (Project Loom) provide high concurrency with low memory footprint; Spring Boot ecosystem offers robust security (Spring Security), persistence (Spring Data JPA), and OpenAPI integration out of the box.
-  - **Negative**: Higher initial cold-start memory consumption compared to lightweight Go or Node.js microservices.
-- **Alternatives Considered**: Node.js (NestJS), Go (Gin/Fiber), Python (FastAPI).
+- **Context**: Hệ thống Backend phải xử lý yêu cầu API với độ tin cậy chuẩn doanh nghiệp, bảo mật vững chắc và duy trì tính ổn định lâu dài.
+- **Decision**: Chọn **Spring Boot 3.4+** trên môi trường runtime **Java 21 LTS**.
+- **Consequences**: Hiệu năng cao nhờ Java 21 Virtual Threads (Project Loom); hệ sinh thái Spring Security, Spring Data JPA và OpenAPI tích hợp sẵn.
 
 ---
 
-## ADR-004: PostgreSQL (Neon Serverless) for Primary Relational Database
+## ADR-004: PostgreSQL (Neon Serverless Cloud) for Relational Database
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: TaskFlow requires strict ACID compliance for workspaces, task assignments, and permission roles, alongside support for flexible JSON metadata storage.
-- **Decision**: Standardize on **PostgreSQL** deployed on **Neon Serverless** for cloud staging/production and local PostgreSQL for offline dev.
-- **Consequences**:
-  - **Positive**: Industry-standard reliability, native `UUID` support, `JSONB` for dynamic metadata, instant branching in Neon serverless DB environments.
-  - **Negative**: Requires strict index management and connection pool tuning for serverless scale.
-- **Alternatives Considered**: MySQL / MariaDB, MongoDB, DynamoDB.
+- **Context**: TaskFlow đòi hỏi tính toàn vẹn dữ liệu ACID cho quan hệ phân quyền, workspace, dự án và tác vụ.
+- **Decision**: Sử dụng **PostgreSQL** kết hợp môi trường **Neon Serverless PostgreSQL** cho cloud staging/production và PostgreSQL local cho phát triển.
+- **Consequences**: Hỗ trợ kiểu dữ liệu `UUID` bản địa, `JSONB` cho metadata động, cơ chế DB branching linh hoạt của Neon DB.
 
 ---
 
 ## ADR-005: Domain-Driven Design (DDD) Architecture
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: As TaskFlow scales from personal task management to enterprise workspace collaboration and AI capabilities, business logic complexity will increase. Monolithic unstructured code leads to tight coupling.
-- **Decision**: Structure backend and business domains around **Domain-Driven Design (DDD)** principles and Bounded Contexts.
-- **Consequences**:
-  - **Positive**: High cohesion within modules, clear domain boundaries, zero inter-module repository leakage, easy future microservices extraction.
-  - **Negative**: Requires writing explicit mappers and DTO abstractions between modules.
-- **Alternatives Considered**: Monolithic Layer-First Architecture (`controllers/`, `services/`, `repositories/` at root).
+- **Context**: Khi dự án mở rộng với nhiều module (Wiki, Whiteboard, Timeline, Automation, AI), mã nguồn đơn khối không ranh giới sẽ dẫn đến coupling cao.
+- **Decision**: Phân rã hệ thống thành 22 **DDD Bounded Context Modules** độc lập.
+- **Consequences**: Tính đóng gói cao, giao tiếp strictly qua Service Interfaces/Events, sẵn sàng tách thành Microservices trong tương lai.
 
 ---
 
 ## ADR-006: Feature-First Folder Organization
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: Navigating files in large projects becomes tedious when related components, hooks, entities, and controllers are scattered across global layer folders.
-- **Decision**: Enforce **Feature-First** packaging (`com.taskflow.modules.<module>` in backend; `src/features/<feature>` in frontend).
-- **Consequences**:
-  - **Positive**: Co-locates all assets belonging to a feature context, simplifying code reviews, feature deletion, and refactoring.
-  - **Negative**: Developers must maintain module discipline and avoid creating arbitrary top-level utility folders.
-- **Alternatives Considered**: Layer-First Organization.
+- **Context**: Việc điều hướng file trong dự án lớn rất tốn thời gian nếu tách riêng các thư mục `controllers`, `services`, `components` ở thư mục gốc.
+- **Decision**: Gom nhóm mã nguồn theo tính năng (**Feature-First**): `com.taskflow.modules.<module>` ở backend và `src/features/<feature>` ở frontend.
+- **Consequences**: Giúp việc xem code, mở rộng và bảo trì tính năng trở nên vô cùng thuận tiện.
 
 ---
 
 ## ADR-007: Stateless JWT Authentication with Refresh Tokens
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: TaskFlow must support web dashboards today and cross-platform mobile clients (React Native) in future roadmap phases without maintaining stateful server sessions.
-- **Decision**: Implement **Stateless JWT Authentication** with short-lived Access Tokens (15 mins) and HttpOnly Refresh Tokens (7 days).
-- **Consequences**:
-  - **Positive**: Scalable, stateless server architecture; no server session storage required; seamlessly reusable for mobile apps.
-  - **Negative**: Access tokens cannot be revoked instantly without maintaining a token blacklist.
-- **Alternatives Considered**: Server-side Stateful Sessions (Redis-backed JSESSIONID).
+- **Context**: Cần cơ chế xác thực stateless hỗ trợ cả Web Dashboard hiện tại và ứng dụng di động trong tương lai.
+- **Decision**: Áp dụng **JWT Authentication** với Access Token ngắn hạn (15 phút) và Refresh Token qua Cookie HttpOnly (7 ngày).
+- **Consequences**: Kiến trúc server hoàn toàn stateless, dễ mở rộng scale ngang mà không phụ thuộc vào session storage.
 
 ---
 
-## ADR-008: Flyway for Versioned Database Migrations
+## ADR-008: Flyway for Versioned Database Migrations (34 Scripts)
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: Database schemas must be version-controlled, repeatable across environments, and safely applied during CI/CD deployments.
-- **Decision**: Adopt **Flyway** for automated SQL version migration management.
-- **Consequences**:
-  - **Positive**: Explicit SQL control, deterministic schema evolution, automatic execution on application startup.
-  - **Negative**: Migration scripts are immutable; mistakes require generating new incremental migration files.
-- **Alternatives Considered**: Liquibase, Hibernate `hbm2ddl.auto=update` (strictly forbidden in production).
+- **Context**: Schema CSDL cần được quản lý phiên bản nghiêm ngặt, lặp lại nhất quán giữa các môi trường dev và production.
+- **Decision**: Sử dụng **Flyway SQL Migrations** (đã khởi tạo 34 scripts versioned migrations).
+- **Consequences**: Quản lý lịch sử thay đổi schema CSDL tự động khi khởi chạy backend.
 
 ---
 
-## ADR-009: TanStack Query (v5) for Server State Management
+## ADR-009: TanStack Query (v5) for Async Server State Management
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: Client components require data fetching, background polling, automatic cache invalidation, and optimistic UI updates without manual `useEffect` boilerplates.
-- **Decision**: Standardize on **TanStack Query (v5)** for all client-side async server state management.
-- **Consequences**:
-  - **Positive**: Eliminates manual loading/error state management, built-in caching, automatic background refetching, seamless optimistic UI updates.
-  - **Negative**: Developers must learn TanStack Query query key management strategies.
-- **Alternatives Considered**: Raw `useEffect` + `fetch`/`axios`, Redux Toolkit RTK Query, SWR.
+- **Context**: Client cần cơ chế fetch dữ liệu, caching, tự động refetch ngầm và optimistic updates mà không phải viết `useEffect` thủ công.
+- **Decision**: Chọn **TanStack Query (v5)** quản lý bất đồng bộ dữ liệu server phía client.
+- **Consequences**: Loại bỏ mã lặp quản lý loading/error state, tự động cache và làm mới dữ liệu thông minh.
 
 ---
 
-## ADR-010: Zustand for Client-Side UI State Management
+## ADR-010: Zustand for Client UI State Management
 
-- **Status**: Accepted
+- **Status**: Accepted (Đã phê duyệt)
 - **Date**: 2026-07-30
-- **Context**: Transient client UI state (sidebar open/closed, active modal ID, current visual layout filters) requires a lightweight state container independent of server data.
-- **Decision**: Use **Zustand** for client-side global UI state management.
-- **Consequences**:
-  - **Positive**: Tiny bundle size (~1KB), simple boilerplate-free API, no Context Provider wrapping required.
-  - **Negative**: Must ensure Zustand is used strictly for client UI state, NOT server data caching (which belongs to TanStack Query).
-- **Alternatives Considered**: Redux Toolkit, MobX, React Context API.
+- **Context**: Trạng thái UI tạm thời (như trạng thái đóng/mở sidebar, modal ID active, bộ lọc giao diện) cần nơi lưu trữ độc lập với server state.
+- **Decision**: Chọn **Zustand** quản lý UI State toàn cục phía client.
+- **Consequences**: Thư viện siêu nhẹ (~1KB), API đơn giản, không làm dư thừa render tree như React Context API.

@@ -10,6 +10,14 @@ interface MonthViewProps {
   onSelectDate: (dateStr: string) => void;
 }
 
+// Format Date object to local YYYY-MM-DD string without UTC timezone shift
+const formatLocalYYYYMMDD = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 export function MonthView({ currentDate, events, onSelectEvent, onSelectDate }: MonthViewProps) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -25,7 +33,7 @@ export function MonthView({ currentDate, events, onSelectEvent, onSelectDate }: 
   const totalCells = Math.ceil((startingDayOfWeek + daysInMonth) / 7) * 7;
 
   const daysOfWeek = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = formatLocalYYYYMMDD(new Date());
 
   const getCellDate = (cellIndex: number): Date => {
     const dayOffset = cellIndex - startingDayOfWeek + 1;
@@ -45,13 +53,13 @@ export function MonthView({ currentDate, events, onSelectEvent, onSelectDate }: 
       <div className="grid grid-cols-7 gap-1.5">
         {Array.from({ length: totalCells }).map((_, index) => {
           const date = getCellDate(index);
-          const dateStr = date.toISOString().slice(0, 10);
+          const dateStr = formatLocalYYYYMMDD(date);
           const isCurrentMonth = date.getMonth() === month;
           const isToday = dateStr === todayStr;
 
           // Find matching events
           const dayEvents = events.filter((e) => {
-            const eDateStr = new Date(e.startTime).toISOString().slice(0, 10);
+            const eDateStr = formatLocalYYYYMMDD(new Date(e.startTime));
             return eDateStr === dateStr;
           });
 
@@ -62,7 +70,7 @@ export function MonthView({ currentDate, events, onSelectEvent, onSelectDate }: 
               className={`min-h-[105px] rounded-xl border p-2 transition flex flex-col justify-between cursor-pointer group ${
                 isCurrentMonth
                   ? isToday
-                    ? 'border-primary bg-primary/10 shadow-xs'
+                    ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40'
                     : 'border-surface-border bg-surface-alt/40 hover:border-primary/40 hover:bg-surface-alt'
                   : 'border-transparent bg-surface-alt/20 opacity-30'
               }`}

@@ -11,7 +11,7 @@
   "namePlaceholder": "Ví dụ: Phòng Marketing, Dự án A...",
   "descriptionLabel": "Mô tả",
   "descriptionPlaceholder": "Mô tả mục đích của không gian làm việc này...",
-  "slugLabel": "Đường dẫn định danh (Slug)",
+  "slugLabel": "Đường dẫn định danh ",
   "members": "Thành viên",
   "addMember": "Thêm thành viên",
   "myWorkspaces": "Không gian làm việc của tôi",
@@ -21,10 +21,11 @@
   "switchWorkspace": "Chuyển không gian làm việc",
   "tabs": {
     "summary": "Tổng quan",
+    "projects": "Danh sách Dự án",
     "board": "Bảng công việc",
-    "backlog": "Danh sách",
-    "timeline": "Tiến độ (Gantt)",
-    "members": "Thành viên",
+    "backlog": "Danh sách Backlog",
+    "timeline": "Tiến độ",
+    "members": "Thành viên & Phân quyền",
     "forms": "Biểu mẫu"
   },
   "summary": {
