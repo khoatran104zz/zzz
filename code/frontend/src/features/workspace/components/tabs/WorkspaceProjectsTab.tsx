@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Folder, Star, Archive, Layers, Calendar, CheckSquare, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Plus, Folder, Star, Archive, CheckSquare, ArrowRight } from 'lucide-react';
 import { useProjects } from '@/features/project/hooks/use-project';
 import { CreateProjectDialog } from '@/features/project/components/create-project-dialog';
 
@@ -14,6 +15,8 @@ type FilterType = 'all' | 'favorites' | 'archived';
 
 export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps) {
   const router = useRouter();
+  const { t } = useTranslation('project');
+  const { t: tCommon } = useTranslation('common');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -31,10 +34,10 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
         <div>
           <h2 className="text-lg font-bold tracking-tight text-text-primary font-heading flex items-center space-x-2">
             <Folder className="h-5 w-5 text-primary" />
-            <span>Danh sách Dự án</span>
+            <span>{t('title', { defaultValue: 'Danh sách Dự án' })}</span>
           </h2>
           <p className="text-xs text-text-secondary">
-            Quản lý và theo dõi danh sách các dự án trong Không gian làm việc
+            {t('subtitle', { defaultValue: 'Quản lý và theo dõi danh sách các dự án trong Không gian làm việc' })}
           </p>
         </div>
 
@@ -43,7 +46,7 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
           className="flex items-center space-x-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-primary-hover transition active:scale-95"
         >
           <Plus className="h-4 w-4" />
-          <span>Tạo dự án mới</span>
+          <span>{t('createProject', { defaultValue: 'Tạo dự án mới' })}</span>
         </button>
       </div>
 
@@ -58,7 +61,7 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
           }`}
         >
           <Folder className="h-3.5 w-3.5" />
-          <span>Tất cả dự án ({projects.length})</span>
+          <span>{t('allProjects', { defaultValue: 'Tất cả dự án' })} ({projects.length})</span>
         </button>
 
         <button
@@ -70,7 +73,7 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
           }`}
         >
           <Star className="h-3.5 w-3.5" />
-          <span>Yêu thích</span>
+          <span>{t('favorites', { defaultValue: 'Yêu thích' })}</span>
         </button>
 
         <button
@@ -82,7 +85,7 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
           }`}
         >
           <Archive className="h-3.5 w-3.5" />
-          <span>Lưu trữ</span>
+          <span>{t('archived', { defaultValue: 'Lưu trữ' })}</span>
         </button>
       </div>
 
@@ -98,16 +101,18 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Folder className="h-6 w-6" />
           </div>
-          <h3 className="mt-3 text-sm font-bold text-text-primary font-heading">Chưa có dự án nào</h3>
+          <h3 className="mt-3 text-sm font-bold text-text-primary font-heading">
+            {t('noProjects', { defaultValue: 'Chưa có dự án nào' })}
+          </h3>
           <p className="mt-1 text-xs text-text-muted max-w-sm">
-            Tạo dự án mới để bắt đầu lập kế hoạch Sprint, quản lý Backlog và phân công công việc.
+            {t('noProjectsDesc', { defaultValue: 'Tạo dự án mới để bắt đầu lập kế hoạch Sprint, quản lý Backlog và phân công công việc.' })}
           </p>
           <button
             onClick={() => setIsCreateOpen(true)}
             className="mt-4 flex items-center space-x-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>Tạo dự án ngay</span>
+            <span>{t('createProjectNow', { defaultValue: 'Tạo dự án ngay' })}</span>
           </button>
         </div>
       ) : (
@@ -151,7 +156,7 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
                       {project.name}
                     </h3>
                     <p className="mt-1 text-xs text-text-secondary line-clamp-2 leading-relaxed">
-                      {project.description || 'Dự án quản lý công việc và Sprint Backlog'}
+                      {project.description || t('defaultDescription', { defaultValue: 'Dự án quản lý công việc và Sprint Backlog' })}
                     </p>
                   </div>
                 </div>
@@ -159,10 +164,10 @@ export function WorkspaceProjectsTab({ workspaceId }: WorkspaceProjectsTabProps)
                 <div className="flex items-center justify-between border-t border-surface-border/60 pt-3 text-[11px] text-text-secondary font-medium">
                   <div className="flex items-center space-x-1.5 text-xs font-semibold text-text-secondary">
                     <CheckSquare className="h-3.5 w-3.5 text-primary" />
-                    <span>Quy trình Scrum & Backlog</span>
+                    <span>Scrum & Backlog</span>
                   </div>
                   <span className="text-primary font-bold group-hover:underline text-xs flex items-center space-x-1">
-                    <span>Mở Dự án</span>
+                    <span>{t('openProject', { defaultValue: 'Mở Dự án' })}</span>
                     <span>→</span>
                   </span>
                 </div>

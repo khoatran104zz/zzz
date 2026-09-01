@@ -18,6 +18,7 @@ import searchVi from '@/locales/vi/search.json';
 import validationVi from '@/locales/vi/validation.json';
 import errorVi from '@/locales/vi/error.json';
 import dashboardVi from '@/locales/vi/dashboard.json';
+import adminVi from '@/locales/vi/admin.json';
 
 import commonEn from '@/locales/en/common.json';
 import authEn from '@/locales/en/auth.json';
@@ -36,6 +37,7 @@ import searchEn from '@/locales/en/search.json';
 import validationEn from '@/locales/en/validation.json';
 import errorEn from '@/locales/en/error.json';
 import dashboardEn from '@/locales/en/dashboard.json';
+import adminEn from '@/locales/en/admin.json';
 
 export const resources = {
   vi: {
@@ -56,6 +58,7 @@ export const resources = {
     validation: validationVi,
     error: errorVi,
     dashboard: dashboardVi,
+    admin: adminVi,
   },
   en: {
     common: commonEn,
@@ -75,6 +78,7 @@ export const resources = {
     validation: validationEn,
     error: errorEn,
     dashboard: dashboardEn,
+    admin: adminEn,
   },
 } as const;
 
@@ -117,6 +121,7 @@ if (!i18n.isInitialized) {
       'validation',
       'error',
       'dashboard',
+      'admin',
     ],
     interpolation: {
       escapeValue: false,

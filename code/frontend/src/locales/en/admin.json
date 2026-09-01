@@ -1,0 +1,45 @@
+{
+  "title": "System Administration (Admin Portal)",
+  "subtitle": "Manage all system users, permissions, and monitor TaskFlow resources.",
+  "systemStatus": "System Status",
+  "stats": {
+    "totalUsers": "Total System Users",
+    "activeUsers": "Active Accounts",
+    "totalWorkspaces": "Total Workspaces"
+  },
+  "userManagement": {
+    "title": "User List & Management",
+    "subtitle": "View, lock/unlock accounts, or assign Admin permissions across the system.",
+    "searchPlaceholder": "Search by name or email...",
+    "columns": {
+      "user": "User",
+      "email": "Email",
+      "role": "System Role",
+      "status": "Status",
+      "actions": "Admin Actions"
+    },
+    "actions": {
+      "lock": "Lock",
+      "unlock": "Unlock",
+      "lockTooltip": "Lock Account",
+      "unlockTooltip": "Unlock Account",
+      "makeAdmin": "Promote to Admin",
+      "makeUser": "Demote to User",
+      "roleTooltip": "Toggle between Admin and User roles",
+      "deleteTooltip": "Deactivate User Account"
+    },
+    "status": {
+      "active": "ACTIVE",
+      "locked": "LOCKED"
+    },
+    "messages": {
+      "lockSuccess": "Account {{email}} has been {{action}} successfully!",
+      "roleSuccess": "Role for {{email}} changed to {{role}} successfully!",
+      "deleteSuccess": "Account {{email}} has been deactivated.",
+      "deleteConfirm": "Are you sure you want to deactivate account {{email}}?",
+      "errorStatus": "Failed to update account status.",
+      "errorRole": "Failed to update user role.",
+      "errorDelete": "Failed to deactivate account."
+    }
+  }
+}

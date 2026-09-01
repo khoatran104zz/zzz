@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   ShieldAlert, 
   Users, 
@@ -12,13 +13,14 @@ import {
   Shield, 
   Trash2, 
   Loader2,
-  CheckCircle2,
-  AlertTriangle
+  CheckCircle2
 } from 'lucide-react';
 import { adminService, type AdminStatsDto, type AdminUserDto } from '@/features/admin/services/admin-service';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation('admin');
+  const { t: tCommon } = useTranslation('common');
   const currentUser = useAuthStore((state) => state.user);
   const [stats, setStats] = useState<AdminStatsDto | null>(null);
   const [users, setUsers] = useState<AdminUserDto[]>([]);
@@ -52,10 +54,11 @@ export default function AdminDashboardPage() {
       setActionLoadingId(user.id);
       const newStatus = user.status === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
       await adminService.updateUserStatus(user.id, newStatus);
-      setSuccessMsg(`Đã ${newStatus === 'LOCKED' ? 'khóa' : 'mở khóa'} tài khoản ${user.email} thành công!`);
+      const actionText = newStatus === 'LOCKED' ? t('userManagement.actions.lock').toLowerCase() : t('userManagement.actions.unlock').toLowerCase();
+      setSuccessMsg(t('userManagement.messages.lockSuccess', { action: actionText, email: user.email }));
       fetchData();
     } catch (err) {
-      alert('Không thể thay đổi trạng thái tài khoản.');
+      alert(t('userManagement.messages.errorStatus'));
     } finally {
       setActionLoadingId(null);
     }
@@ -67,46 +70,28 @@ export default function AdminDashboardPage() {
       const isCurrentlyAdmin = user.roles.includes('ROLE_ADMIN');
       const targetRole = isCurrentlyAdmin ? 'USER' : 'ADMIN';
       await adminService.updateUserRole(user.id, targetRole);
-      setSuccessMsg(`Đã chuyển vai trò tài khoản ${user.email} sang ${targetRole}!`);
+      setSuccessMsg(t('userManagement.messages.roleSuccess', { email: user.email, role: targetRole }));
       fetchData();
     } catch (err) {
-      alert('Không thể thay đổi vai trò tài khoản.');
+      alert(t('userManagement.messages.errorRole'));
     } finally {
       setActionLoadingId(null);
     }
   };
 
   const handleDeleteUser = async (user: AdminUserDto) => {
-    if (!confirm(`Bạn có chắc chắn muốn vô hiệu hóa tài khoản ${user.email}?`)) return;
+    if (!confirm(t('userManagement.messages.deleteConfirm', { email: user.email }))) return;
     try {
       setActionLoadingId(user.id);
       await adminService.deleteUser(user.id);
-      setSuccessMsg(`Đã vô hiệu hóa tài khoản ${user.email}.`);
+      setSuccessMsg(t('userManagement.messages.deleteSuccess', { email: user.email }));
       fetchData();
     } catch (err) {
-      alert('Không thể vô hiệu hóa tài khoản.');
+      alert(t('userManagement.messages.errorDelete'));
     } finally {
       setActionLoadingId(null);
     }
   };
-
-  const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN') || currentUser?.email === 'admin@gmail.com';
-
-  if (!isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 text-text-primary">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 shadow-md">
-          <ShieldAlert className="h-8 w-8" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold font-heading text-text-primary">Quyền truy cập bị từ chối (403 Forbidden)</h2>
-          <p className="text-xs text-text-secondary max-w-md mt-1">
-            Trang Cấu hình & Quản trị Hệ thống chỉ dành riêng cho tài khoản Quản trị viên (<span className="font-semibold text-red-500">ROLE_ADMIN</span>). Quản lý dự án và Nhân viên không có quyền truy cập trang này.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const filteredUsers = users.filter(
     (u) =>
@@ -126,14 +111,14 @@ export default function AdminDashboardPage() {
             <div>
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-extrabold tracking-tight font-heading">
-                  Hệ Thống Quản Trị Quản Lý (Admin Portal)
+                  {t('title', { defaultValue: 'Hệ Thống Quản Trị Quản Lý (Admin Portal)' })}
                 </h1>
                 <span className="rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[10px] font-bold text-red-400 uppercase">
                   System Administrator
                 </span>
               </div>
               <p className="text-xs text-gray-300 mt-1">
-                Quản lý toàn bộ người dùng, quyền hạn hệ thống và giám sát tài nguyên TaskFlow.
+                {t('subtitle', { defaultValue: 'Quản lý toàn bộ người dùng, quyền hạn hệ thống và giám sát tài nguyên TaskFlow.' })}
               </p>
             </div>
           </div>
@@ -141,7 +126,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center space-x-2">
             <span className="flex items-center space-x-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 text-xs font-semibold text-emerald-400">
               <CheckCircle2 className="h-4 w-4" />
-              <span>System: {stats?.systemHealth || 'ONLINE'}</span>
+              <span>{t('systemStatus', { defaultValue: 'Trạng thái hệ thống' })}: {stats?.systemHealth || 'ONLINE'}</span>
             </span>
           </div>
         </div>
@@ -154,7 +139,7 @@ export default function AdminDashboardPage() {
             <span>{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)} className="font-bold underline">
-            Đóng
+            {tCommon('actions.close', { defaultValue: 'Đóng' })}
           </button>
         </div>
       )}
@@ -169,7 +154,9 @@ export default function AdminDashboardPage() {
             <div className="text-2xl font-extrabold text-text-primary font-heading">
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats?.totalUsers || 0}
             </div>
-            <div className="text-xs text-text-muted">Tổng số người dùng hệ thống</div>
+            <div className="text-xs text-text-muted">
+              {t('stats.totalUsers', { defaultValue: 'Tổng số người dùng hệ thống' })}
+            </div>
           </div>
         </div>
 
@@ -181,7 +168,9 @@ export default function AdminDashboardPage() {
             <div className="text-2xl font-extrabold text-text-primary font-heading">
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats?.activeUsers || 0}
             </div>
-            <div className="text-xs text-text-muted">Tài khoản đang hoạt động</div>
+            <div className="text-xs text-text-muted">
+              {t('stats.activeUsers', { defaultValue: 'Tài khoản đang hoạt động' })}
+            </div>
           </div>
         </div>
 
@@ -193,7 +182,9 @@ export default function AdminDashboardPage() {
             <div className="text-2xl font-extrabold text-text-primary font-heading">
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : stats?.totalWorkspaces || 0}
             </div>
-            <div className="text-xs text-text-muted">Tổng số Workspaces</div>
+            <div className="text-xs text-text-muted">
+              {t('stats.totalWorkspaces', { defaultValue: 'Tổng số Workspaces' })}
+            </div>
           </div>
         </div>
       </div>
@@ -203,10 +194,10 @@ export default function AdminDashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-4">
           <div>
             <h2 className="text-base font-bold text-text-primary font-heading">
-              Danh Sách & Quản Lý Người Dùng
+              {t('userManagement.title', { defaultValue: 'Danh Sách & Quản Lý Người Dùng' })}
             </h2>
             <p className="text-xs text-text-secondary">
-              Xem, khóa/mở khóa tài khoản hoặc gán quyền Admin cho các tài khoản trong hệ thống.
+              {t('userManagement.subtitle', { defaultValue: 'Xem, khóa/mở khóa tài khoản hoặc gán quyền Admin cho các tài khoản trong hệ thống.' })}
             </p>
           </div>
 
@@ -214,7 +205,7 @@ export default function AdminDashboardPage() {
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-text-muted" />
             <input
               type="text"
-              placeholder="Tìm theo tên hoặc email..."
+              placeholder={t('userManagement.searchPlaceholder', { defaultValue: 'Tìm theo tên hoặc email...' })}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-xl border border-surface-border bg-surface-alt pl-9 pr-3 py-1.5 text-xs text-text-primary focus:border-primary focus:outline-hidden"
@@ -232,11 +223,11 @@ export default function AdminDashboardPage() {
             <table className="w-full text-left text-xs">
               <thead className="border-b border-surface-border bg-surface-alt/50 text-[11px] font-bold text-text-muted uppercase">
                 <tr>
-                  <th className="px-4 py-3">Người dùng</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Quyền hệ thống</th>
-                  <th className="px-4 py-3">Trạng thái</th>
-                  <th className="px-4 py-3 text-right">Thao tác Admin</th>
+                  <th className="px-4 py-3">{t('userManagement.columns.user', { defaultValue: 'Người dùng' })}</th>
+                  <th className="px-4 py-3">{t('userManagement.columns.email', { defaultValue: 'Email' })}</th>
+                  <th className="px-4 py-3">{t('userManagement.columns.role', { defaultValue: 'Quyền hệ thống' })}</th>
+                  <th className="px-4 py-3">{t('userManagement.columns.status', { defaultValue: 'Trạng thái' })}</th>
+                  <th className="px-4 py-3 text-right">{t('userManagement.columns.actions', { defaultValue: 'Thao tác Admin' })}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-border">
@@ -279,12 +270,12 @@ export default function AdminDashboardPage() {
                         {isLocked ? (
                           <span className="inline-flex items-center space-x-1 rounded-full bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-bold text-amber-500">
                             <Lock className="h-3 w-3" />
-                            <span>BỊ KHÓA</span>
+                            <span>{t('userManagement.status.locked', { defaultValue: 'BỊ KHÓA' })}</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-500">
                             <CheckCircle2 className="h-3 w-3" />
-                            <span>HOẠT ĐỘNG</span>
+                            <span>{t('userManagement.status.active', { defaultValue: 'HOẠT ĐỘNG' })}</span>
                           </span>
                         )}
                       </td>
@@ -300,10 +291,10 @@ export default function AdminDashboardPage() {
                                 ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white'
                                 : 'border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white'
                             } disabled:opacity-30`}
-                            title={isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+                            title={isLocked ? t('userManagement.actions.unlockTooltip', { defaultValue: 'Mở khóa tài khoản' }) : t('userManagement.actions.lockTooltip', { defaultValue: 'Khóa tài khoản' })}
                           >
                             {isLocked ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                            <span>{isLocked ? 'Mở khóa' : 'Khóa'}</span>
+                            <span>{isLocked ? t('userManagement.actions.unlock', { defaultValue: 'Mở khóa' }) : t('userManagement.actions.lock', { defaultValue: 'Khóa' })}</span>
                           </button>
 
                           {/* Toggle Role */}
@@ -311,10 +302,10 @@ export default function AdminDashboardPage() {
                             disabled={actionLoadingId === u.id || u.id === currentUser?.id}
                             onClick={() => handleToggleRole(u)}
                             className="flex items-center space-x-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-[11px] font-medium text-purple-500 hover:bg-purple-500 hover:text-white transition disabled:opacity-30"
-                            title="Chuyển quyền giữa Admin và User"
+                            title={t('userManagement.actions.roleTooltip', { defaultValue: 'Chuyển quyền giữa Admin và User' })}
                           >
                             <Shield className="h-3 w-3" />
-                            <span>{isAdmin ? 'Về User' : 'Lên Admin'}</span>
+                            <span>{isAdmin ? t('userManagement.actions.makeUser', { defaultValue: 'Về User' }) : t('userManagement.actions.makeAdmin', { defaultValue: 'Lên Admin' })}</span>
                           </button>
 
                           {/* Deactivate User */}
@@ -322,7 +313,7 @@ export default function AdminDashboardPage() {
                             disabled={actionLoadingId === u.id || u.id === currentUser?.id}
                             onClick={() => handleDeleteUser(u)}
                             className="rounded-lg border border-red-500/30 bg-red-500/10 p-1 text-red-500 hover:bg-red-500 hover:text-white transition disabled:opacity-30"
-                            title="Xóa / Vô hiệu hóa tài khoản"
+                            title={t('userManagement.actions.deleteTooltip', { defaultValue: 'Xóa / Vô hiệu hóa tài khoản' })}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>

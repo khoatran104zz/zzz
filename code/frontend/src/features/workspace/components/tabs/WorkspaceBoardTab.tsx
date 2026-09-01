@@ -5,16 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   Plus, 
-  AlertTriangle, 
-  CheckSquare, 
-  MoreHorizontal,
   CheckCircle2,
   Clock,
   PlayCircle,
   AlertCircle,
   Calendar,
   Layers,
-  Paperclip,
   ListChecks
 } from 'lucide-react';
 import type { TaskDto, TaskStatus } from '@/features/task/types';
@@ -38,6 +34,7 @@ export function WorkspaceBoardTab({
 }: WorkspaceBoardTabProps) {
   const { t } = useTranslation('workspace');
   const { t: tTask } = useTranslation('task');
+  const { t: tCommon } = useTranslation('common');
   const user = useAuthStore((state) => state.user);
   const updateStatusMutation = useUpdateTaskStatus();
 
@@ -114,13 +111,13 @@ export function WorkspaceBoardTab({
     const p = priority?.toUpperCase() || 'MEDIUM';
     switch (p) {
       case 'URGENT':
-        return <span className="rounded-md border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-500">Khẩn cấp</span>;
+        return <span className="rounded-md border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold text-red-500">{tTask('priorities.URGENT', { defaultValue: 'Khẩn cấp' })}</span>;
       case 'HIGH':
-        return <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-500">Cao</span>;
+        return <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-500">{tTask('priorities.HIGH', { defaultValue: 'Cao' })}</span>;
       case 'LOW':
-        return <span className="rounded-md border border-slate-500/30 bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">Thấp</span>;
+        return <span className="rounded-md border border-slate-500/30 bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">{tTask('priorities.LOW', { defaultValue: 'Thấp' })}</span>;
       default:
-        return <span className="rounded-md border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-bold text-blue-500">Trung bình</span>;
+        return <span className="rounded-md border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-bold text-blue-500">{tTask('priorities.MEDIUM', { defaultValue: 'Trung bình' })}</span>;
     }
   };
 
@@ -186,7 +183,7 @@ export function WorkspaceBoardTab({
             className="flex items-center space-x-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            <span>Thêm công việc</span>
+            <span>{tTask('createTask', { defaultValue: 'Tạo công việc' })}</span>
           </button>
         )}
       </div>
@@ -222,7 +219,7 @@ export function WorkspaceBoardTab({
                     type="button"
                     onClick={onOpenCreateTask}
                     className="p-1 rounded-lg text-text-muted hover:bg-surface-alt hover:text-text-primary transition"
-                    title="Thêm công việc mới vào cột này"
+                    title={tTask('createTask', { defaultValue: 'Tạo công việc' })}
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -284,7 +281,7 @@ export function WorkspaceBoardTab({
                               </span>
                             </div>
                           ) : (
-                            <span className="italic">Không có hạn chót</span>
+                            <span className="italic">{tTask('noDueDate', { defaultValue: 'Không có hạn chót' })}</span>
                           )}
 
                           <div className="flex items-center space-x-2 text-text-muted">
@@ -303,10 +300,10 @@ export function WorkspaceBoardTab({
                             onChange={(e) => handleRequestStatusChange(task, e.target.value as TaskStatus)}
                             className="rounded-lg border border-surface-border bg-surface px-2 py-0.5 text-[10px] font-bold text-text-secondary focus:border-primary focus:outline-none"
                           >
-                            <option value="TODO">Cần làm</option>
-                            <option value="IN_PROGRESS">Đang làm</option>
-                            <option value="IN_REVIEW">Đang xem xét</option>
-                            <option value="DONE">Hoàn thành</option>
+                            <option value="TODO">{tTask('statuses.TODO', { defaultValue: 'Cần làm' })}</option>
+                            <option value="IN_PROGRESS">{tTask('statuses.IN_PROGRESS', { defaultValue: 'Đang làm' })}</option>
+                            <option value="IN_REVIEW">{tTask('statuses.IN_REVIEW', { defaultValue: 'Đang xem xét' })}</option>
+                            <option value="DONE">{tTask('statuses.DONE', { defaultValue: 'Hoàn thành' })}</option>
                           </select>
 
                           {/* Assignee Information */}
@@ -318,7 +315,7 @@ export function WorkspaceBoardTab({
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-[10px] text-text-muted italic">Chưa phân công</span>
+                              <span className="text-[10px] text-text-muted italic">{tTask('unassigned', { defaultValue: 'Chưa phân công' })}</span>
                             )}
                           </div>
                         </div>
@@ -328,7 +325,7 @@ export function WorkspaceBoardTab({
 
                   {colTasks.length === 0 && (
                     <div className="flex h-32 flex-col items-center justify-center rounded-xl border border-dashed border-surface-border bg-surface/40 p-4 text-center">
-                      <p className="text-[11px] text-text-muted italic">Trống</p>
+                      <p className="text-[11px] text-text-muted italic">{tCommon('messages.emptyList', { defaultValue: 'Trống' })}</p>
                     </div>
                   )}
                 </div>

@@ -7,11 +7,8 @@ import {
   Send, 
   Loader2, 
   CheckCircle2, 
-  FolderKanban,
-  Building2,
-  Paperclip,
-  X,
-  SlidersHorizontal
+  Paperclip, 
+  X 
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -60,6 +57,7 @@ const DEFAULT_FORM_TEMPLATES = [
 
 export function WorkspaceFormsTab({ workspaceId }: WorkspaceFormsTabProps) {
   const { t } = useTranslation('workspace');
+  const { t: tCommon } = useTranslation('common');
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
   const targetWorkspaceId = workspaceId || activeWorkspace?.id || '';
 
@@ -139,7 +137,7 @@ ${details || 'Không có mô tả chi tiết'}`;
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-surface-border pb-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-text-primary font-heading flex items-center space-x-2">
-            <span>Biểu mẫu thu thập yêu cầu</span>
+            <span>{t('forms.title', { defaultValue: 'Biểu mẫu thu thập yêu cầu' })}</span>
             {activeWorkspace && (
               <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary border border-primary/20">
                 {activeWorkspace.name}
@@ -147,7 +145,7 @@ ${details || 'Không có mô tả chi tiết'}`;
             )}
           </h2>
           <p className="text-xs text-text-secondary mt-0.5">
-            Tự động chuyển đổi thông tin yêu cầu từ người dùng/đối tác thành công việc trong danh sách Backlog
+            {t('forms.subtitle', { defaultValue: 'Tự động chuyển đổi thông tin yêu cầu từ người dùng/đối tác thành công việc trong danh sách Backlog' })}
           </p>
         </div>
 
@@ -156,7 +154,7 @@ ${details || 'Không có mô tả chi tiết'}`;
           className="flex items-center space-x-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition cursor-pointer"
         >
           <Plus className="h-4 w-4" />
-          <span>Tạo biểu mẫu mới</span>
+          <span>{t('forms.createForm', { defaultValue: 'Tạo biểu mẫu mới' })}</span>
         </button>
       </div>
 
@@ -401,7 +399,7 @@ ${details || 'Không có mô tả chi tiết'}`;
                     onClick={() => setIsSubmitModalOpen(false)}
                     className="rounded-xl border border-surface-border px-4 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt transition cursor-pointer"
                   >
-                    Hủy
+                    {tCommon('actions.cancel', { defaultValue: 'Hủy' })}
                   </button>
                   <button
                     type="submit"
@@ -413,7 +411,7 @@ ${details || 'Không có mô tả chi tiết'}`;
                     ) : (
                       <>
                         <Send className="h-4 w-4" />
-                        <span>Gửi biểu mẫu ngay</span>
+                        <span>{t('forms.submitForm', { defaultValue: 'Gửi biểu mẫu ngay' })}</span>
                       </>
                     )}
                   </button>

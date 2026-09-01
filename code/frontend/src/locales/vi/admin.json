@@ -1,0 +1,45 @@
+{
+  "title": "Hệ Thống Quản Trị Hệ Thống (Admin Portal)",
+  "subtitle": "Quản lý toàn bộ người dùng, quyền hạn hệ thống và giám sát tài nguyên TaskFlow.",
+  "systemStatus": "Trạng thái hệ thống",
+  "stats": {
+    "totalUsers": "Tổng số người dùng hệ thống",
+    "activeUsers": "Tài khoản đang hoạt động",
+    "totalWorkspaces": "Tổng số Workspaces"
+  },
+  "userManagement": {
+    "title": "Danh Sách & Quản Lý Người Dùng",
+    "subtitle": "Xem, khóa/mở khóa tài khoản hoặc gán quyền Admin cho các tài khoản trong hệ thống.",
+    "searchPlaceholder": "Tìm theo tên hoặc email...",
+    "columns": {
+      "user": "Người dùng",
+      "email": "Email",
+      "role": "Quyền hệ thống",
+      "status": "Trạng thái",
+      "actions": "Thao tác Admin"
+    },
+    "actions": {
+      "lock": "Khóa",
+      "unlock": "Mở khóa",
+      "lockTooltip": "Khóa tài khoản",
+      "unlockTooltip": "Mở khóa tài khoản",
+      "makeAdmin": "Lên Admin",
+      "makeUser": "Về User",
+      "roleTooltip": "Chuyển quyền giữa Admin và User",
+      "deleteTooltip": "Xóa / Vô hiệu hóa tài khoản"
+    },
+    "status": {
+      "active": "HOẠT ĐỘNG",
+      "locked": "BỊ KHÓA"
+    },
+    "messages": {
+      "lockSuccess": "Đã {{action}} tài khoản {{email}} thành công!",
+      "roleSuccess": "Đã chuyển vai trò tài khoản {{email}} sang {{role}}!",
+      "deleteSuccess": "Đã vô hiệu hóa tài khoản {{email}}.",
+      "deleteConfirm": "Bạn có chắc chắn muốn vô hiệu hóa tài khoản {{email}}?",
+      "errorStatus": "Không thể thay đổi trạng thái tài khoản.",
+      "errorRole": "Không thể thay đổi vai trò tài khoản.",
+      "errorDelete": "Không thể vô hiệu hóa tài khoản."
+    }
+  }
+}

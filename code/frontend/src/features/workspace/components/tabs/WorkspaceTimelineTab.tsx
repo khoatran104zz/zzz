@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Calendar, Clock, User, CheckCircle2 } from 'lucide-react';
+import { Plus, Clock } from 'lucide-react';
 import type { TaskDto, TaskStatus } from '@/features/task/types';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -20,21 +20,22 @@ export function WorkspaceTimelineTab({
   onSelectTask,
 }: WorkspaceTimelineTabProps) {
   const { t } = useTranslation('workspace');
+  const { t: tTask } = useTranslation('task');
   const user = useAuthStore((state) => state.user);
   const canCreateTask = !!user;
 
   const getStatusBadge = (status: TaskStatus) => {
     switch (status) {
       case 'TODO':
-        return <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">Cần làm</span>;
+        return <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">{tTask('statuses.TODO', { defaultValue: 'Cần làm' })}</span>;
       case 'IN_PROGRESS':
-        return <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">Đang làm</span>;
+        return <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">{tTask('statuses.IN_PROGRESS', { defaultValue: 'Đang làm' })}</span>;
       case 'IN_REVIEW':
-        return <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-bold text-purple-600 dark:text-purple-400 border border-purple-500/20">Đang xem xét</span>;
+        return <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-bold text-purple-600 dark:text-purple-400 border border-purple-500/20">{tTask('statuses.IN_REVIEW', { defaultValue: 'Đang xem xét' })}</span>;
       case 'COMPLETED':
       case 'DONE':
       default:
-        return <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Hoàn thành</span>;
+        return <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{tTask('statuses.DONE', { defaultValue: 'Hoàn thành' })}</span>;
     }
   };
 
@@ -92,7 +93,7 @@ export function WorkspaceTimelineTab({
             <div className="grid grid-cols-4 gap-2 bg-surface-alt/70 px-4 py-3 text-[11px] font-bold text-text-muted border-b border-surface-border uppercase">
               <span className="col-span-1">{t('timeline.work', { defaultValue: 'Công việc' })}</span>
               <span className="text-center">{t('timeline.status', { defaultValue: 'Trạng thái' })}</span>
-              <span className="text-center">Ngày tạo & Hạn chót</span>
+              <span className="text-center">{tTask('createdAndDueDate', { defaultValue: 'Ngày tạo & Hạn chót' })}</span>
               <span className="text-right">{t('timeline.assignee', { defaultValue: 'Người thực hiện' })}</span>
             </div>
 
@@ -111,7 +112,7 @@ export function WorkspaceTimelineTab({
                 </div>
               ) : (
                 tasks.map((task) => {
-                  const assigneeName = task.assignee?.fullName || task.assignee?.email || 'Chưa gán';
+                  const assigneeName = task.assignee?.fullName || task.assignee?.email || tTask('unassigned', { defaultValue: 'Chưa gán' });
                   const initials = assigneeName.substring(0, 1).toUpperCase();
 
                   return (
@@ -155,7 +156,7 @@ export function WorkspaceTimelineTab({
                   className="flex items-center space-x-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 transition"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>{t('timeline.create', { defaultValue: 'Tạo công việc mới' })}</span>
+                  <span>{tTask('createTask', { defaultValue: 'Tạo công việc mới' })}</span>
                 </button>
               </div>
             )}
@@ -193,7 +194,7 @@ export function WorkspaceTimelineTab({
                         left: `${offset}%`,
                         width: `${Math.max(pct, 32)}%`,
                       }}
-                      title={`${task.title} (Bấm để xem chi tiết) - Hạn chót: ${formattedDueDate}`}
+                      title={`${task.title} - ${tTask('dueDate', { defaultValue: 'Hạn chót' })}: ${formattedDueDate}`}
                     >
                       <span className="truncate mr-2 font-heading">{task.title}</span>
                       <span className="text-[10px] font-mono opacity-95 shrink-0 bg-black/20 px-1.5 py-0.5 rounded">
