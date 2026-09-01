@@ -6,6 +6,7 @@ import { X, BookOpen, Loader2, Plus, Paperclip } from 'lucide-react';
 import { useWorkspaces } from '@/features/workspace/hooks/use-workspace';
 import { useProjects } from '@/features/project/hooks/use-project';
 import { useWorkspaceStore } from '@/store/workspace-store';
+import { SuccessModal } from '@/components/success-modal';
 
 export interface WikiDocItem {
   id: string;
@@ -19,8 +20,6 @@ export interface WikiDocItem {
   updatedBy: string;
   attachedFilesCount?: number;
 }
-
-import { SuccessModal } from '@/components/success-modal';
 
 interface CreateWikiDocModalProps {
   isOpen: boolean;

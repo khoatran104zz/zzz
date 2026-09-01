@@ -44,12 +44,12 @@ export function WikiEditor({
   const currentUser = useAuthStore((state) => state.user);
 
   const formatCreatorName = (createdBy?: string) => {
-    if (!createdBy) return currentUser?.fullName || currentUser?.username || 'Bạn (Quản lý hệ thống)';
+    if (!createdBy) return currentUser?.fullName || currentUser?.email || 'Bạn (Quản lý hệ thống)';
     // Check if UUID pattern or mock UUID
     const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(createdBy) || createdBy.includes('-0000-');
     if (isUuid) {
       if (currentUser && (currentUser.id === createdBy || createdBy.startsWith('a1000000'))) {
-        return currentUser.fullName || currentUser.username || 'Bạn (Quản lý hệ thống)';
+        return currentUser.fullName || currentUser.email || 'Bạn (Quản lý hệ thống)';
       }
       return 'Quản trị viên hệ thống';
     }

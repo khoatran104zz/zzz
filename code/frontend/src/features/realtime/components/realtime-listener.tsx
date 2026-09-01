@@ -7,10 +7,12 @@ import type { RealtimeEvent } from '../types';
 
 interface RealtimeListenerProps {
   projectId?: string;
+  onTaskEvent?: (event: RealtimeEvent) => void;
+  onProjectEvent?: (event: RealtimeEvent) => void;
   children?: React.ReactNode;
 }
 
-export function RealtimeListener({ projectId, children }: RealtimeListenerProps) {
+export function RealtimeListener({ projectId, onTaskEvent, onProjectEvent, children }: RealtimeListenerProps) {
   const queryClient = useQueryClient();
 
   useRealtimeConnection();
@@ -22,8 +24,9 @@ export function RealtimeListener({ projectId, children }: RealtimeListenerProps)
         queryClient.invalidateQueries({ queryKey: ['timeline', 'project', projectId] });
         queryClient.invalidateQueries({ queryKey: ['board', 'project', projectId] });
       }
+      onTaskEvent?.(event);
     },
-    [projectId, queryClient]
+    [projectId, queryClient, onTaskEvent]
   );
 
   useProjectTaskRealtime(projectId || '', handleTaskEvent);

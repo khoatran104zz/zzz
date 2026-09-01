@@ -22,6 +22,7 @@ export interface TaskDto {
 
 export interface CreateTaskInput {
   title: string;
+  projectId?: string;
   description?: string;
   status?: TaskStatus;
   priority?: TaskPriority;
@@ -32,6 +33,7 @@ export interface CreateTaskInput {
 
 export interface UpdateTaskInput {
   title: string;
+  projectId?: string;
   description?: string;
   status?: TaskStatus;
   priority?: TaskPriority;

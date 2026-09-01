@@ -160,11 +160,18 @@ HVB_DATN/
 
 ## ☁️ 7. Hướng Dẫn Deployment Production
 
-- **Frontend (Vercel)**:
-  - Connect Repository -> Select `Root Directory: code/frontend`.
-  - Set Environment Variable: `NEXT_PUBLIC_API_URL=https://your-backend-domain.com/api/v1`.
-- **Backend (Railway.app / Render / AWS)**:
-  - Select `Root Directory: code/backend`.
-  - Add PostgreSQL Database (Neon DB or Railway Postgres).
-  - Set Environment Variables: `SPRING_PROFILES_ACTIVE=prod`, `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET`.
+Tài liệu chi tiết hướng dẫn Triển khai Production được lưu trữ tại [docs/deployment.md](file:///docs/deployment.md).
+
+- **Phương án 1: Cloud Server (Vercel + Railway / Render + Neon Postgres)**
+  - **Frontend (Vercel)**: Connect Repository -> Root `code/frontend`, Set `NEXT_PUBLIC_API_URL`.
+  - **Backend (Railway / Render)**: Connect Repository -> Root `code/backend`, cấu hình `railway.toml`, Set `SPRING_PROFILES_ACTIVE=prod`, `DATABASE_URL`, `JWT_SECRET`.
+  - **Database (Neon Cloud)**: Serverless PostgreSQL tự động chạy 34 Flyway scripts khi khởi chạy.
+
+- **Phương án 2: Docker Compose (VPS / Server Riêng)**
+  - Dự án tích hợp sẵn [docker-compose.yml](file:///docker-compose.yml), [Backend Dockerfile](file:///code/backend/Dockerfile) và [Frontend Dockerfile](file:///code/frontend/Dockerfile).
+  - Khởi chạy toàn bộ hệ thống bằng 1 lệnh:
+    ```bash
+    docker-compose up -d --build
+    ```
+
 

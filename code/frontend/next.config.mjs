@@ -5,8 +5,8 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  typedRoutes: true,
   experimental: {
-    typedRoutes: true,
     optimizePackageImports: ['lucide-react', '@tanstack/react-query'],
   },
 };

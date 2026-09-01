@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Folder, Loader2, X, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCreateProject } from '../hooks/use-project';
+import { SuccessModal } from '@/components/success-modal';
 
 const COLOR_OPTIONS = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
 

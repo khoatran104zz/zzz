@@ -34,6 +34,7 @@ export interface CreateWorkspaceInput {
 
 export interface UpdateWorkspaceInput {
   name: string;
+  slug?: string;
   description?: string;
   iconUrl?: string;
   themeColor?: string;

@@ -2,16 +2,17 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Star, Folder, Settings, Archive } from 'lucide-react';
+import { Star, Folder, Settings, Archive, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ProjectDto } from '../types';
 import { useToggleFavoriteProject } from '../hooks/use-project';
 
 interface ProjectHeaderProps {
   project: ProjectDto;
+  onOpenCreateTask?: () => void;
 }
 
-export function ProjectHeader({ project }: ProjectHeaderProps) {
+export function ProjectHeader({ project, onOpenCreateTask }: ProjectHeaderProps) {
   const { t } = useTranslation('project');
   const { t: tCommon } = useTranslation('common');
   const toggleFavorite = useToggleFavoriteProject();
@@ -52,6 +53,17 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
         </div>
 
         <div className="flex items-center space-x-3">
+          {onOpenCreateTask && (
+            <button
+              type="button"
+              onClick={onOpenCreateTask}
+              className="flex items-center space-x-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-md hover:bg-primary-hover transition active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t('createTask', { defaultValue: 'Tạo Task mới' })}</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => toggleFavorite.mutate(project.id)}

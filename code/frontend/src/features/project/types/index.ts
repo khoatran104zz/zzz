@@ -8,6 +8,7 @@ export interface ProjectStatsDto {
 export interface ProjectDto {
   id: string;
   name: string;
+  key?: string;
   description?: string;
   workspaceId: string;
   color: string;
@@ -21,6 +22,7 @@ export interface ProjectDto {
 
 export interface CreateProjectInput {
   name: string;
+  key?: string;
   description?: string;
   color?: string;
   icon?: string;
@@ -28,6 +30,7 @@ export interface CreateProjectInput {
 
 export interface UpdateProjectInput {
   name: string;
+  key?: string;
   description?: string;
   color?: string;
   icon?: string;
